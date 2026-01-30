@@ -4,4 +4,10 @@
         "route": "/home",
         "icon": "mdi-home"
     }
+    ,
+     {
+        "title": "Categoria",
+        "route": "/categoria",
+        "icon": "mdi-folder"
+    }
 ]
