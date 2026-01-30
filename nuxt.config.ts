@@ -3,18 +3,26 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+  compatibilityDate: '2026-01-30',
 
   modules: ['vuetify-nuxt-module'],
 
   vuetify: {
     moduleOptions: {
-      /* Aquí puedes agregar estilos específicos si quieres */
+
     },
     vuetifyOptions: {
       theme: {
         defaultTheme: 'light',
       },
     },
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://verdustock-backend.test',
+      laravelUrl: 'http://localhost:8000'
+    }
   },
 
   devtools: { enabled: true }
