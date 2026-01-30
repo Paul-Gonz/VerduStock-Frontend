@@ -1,18 +1,21 @@
-import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
-  build: {
-    transpile: ['vuetify'],
+  // Nuxt 4 utiliza la carpeta app/ por defecto
+  future: {
+    compatibilityVersion: 4,
   },
-  vite: {
-    plugins: [
-      vuetify({ autoImport: true }),
-    ],
-    vue: {
-      template: {
-        transformAssetUrls,
+
+  modules: ['vuetify-nuxt-module'],
+
+  vuetify: {
+    moduleOptions: {
+      /* Aquí puedes agregar estilos específicos si quieres */
+    },
+    vuetifyOptions: {
+      theme: {
+        defaultTheme: 'light',
       },
     },
   },
+
+  devtools: { enabled: true }
 })
