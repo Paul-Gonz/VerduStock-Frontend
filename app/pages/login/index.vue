@@ -53,17 +53,6 @@
                             Iniciar Sesión
                         </v-btn>
 
-                        <div class="d-flex align-center my-6">
-                            <v-divider></v-divider>
-                            <span class="mx-4 text-caption text-grey">O continúa con</span>
-                            <v-divider></v-divider>
-                        </div>
-
-                        <div class="d-flex justify-center align-center gap-4">
-                            <v-btn icon="mdi-google" color="red-darken-1" variant="flat"></v-btn>
-                            <v-btn icon="mdi-facebook" color="blue-darken-2" variant="flat"></v-btn>
-                        </div>
-
                         <p class="text-center mt-8 text-body-2 text-grey">
                             ¿No tienes una cuenta?
                             <a href="#" class="text-success font-weight-bold">Solicitar acceso</a>
@@ -87,15 +76,22 @@ const veggies = [
     { icon: 'mdi-food-apple', color: 'orange' },
     { icon: 'mdi-chili-hot', color: 'red-accent-4' },
     { icon: 'mdi-leaf', color: 'green-lighten-1' },
-    { icon: 'mdi-water-melon', color: 'green' }
+    { icon: 'mdi-fruit-pineapple', color: 'yellow' }
 ]
 
+definePageMeta({
+    layout: false,
+})
+
 const handleLogin = async () => {
+    // Agregar logica de autenticación aquí para validar usuario y contraseña
+
+    // Simulación de API:
     loading.value = true
-    // Simulación de API
     setTimeout(() => {
         loading.value = false
         console.log('Login exitoso con:', { user: user.value, password: password.value })
+        navigateTo('/home')
     }, 2000)
 }
 </script>
@@ -131,6 +127,7 @@ const handleLogin = async () => {
     align-items: center;
     background: rgba(255, 255, 255, 0.1);
     padding: 10px;
+    box-sizing: content-box;
     border-radius: 50%;
     backdrop-filter: blur(5px);
 }

@@ -6,4 +6,7 @@
 onMounted(() => {
     navigateTo('/login')
 })
+definePageMeta({
+    layout: false,
+})
 </script>
