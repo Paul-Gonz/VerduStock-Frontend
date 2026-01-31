@@ -3,7 +3,13 @@
         <v-card class="mb-8 section-card" rounded="lg" border>
             <v-card-title class="d-flex align-center justify-space-between">
                 <span class="text-subtitle-1 font-weight-bold">Estadísticas por Categoría</span>
-                <v-btn class="new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus">
+                <v-btn
+                    class="new-category-btn"
+                    color="success"
+                    variant="flat"
+                    prepend-icon="mdi-plus"
+                    @click="openCreateDialog"
+                >
                     Nueva categoría
                 </v-btn>
             </v-card-title>
@@ -117,10 +123,59 @@
                 </div>
             </v-card-text>
         </v-card>
+
+        <v-dialog v-model="showCreateDialog" max-width="520" persistent>
+            <v-card class="modal-card" rounded="xl" border>
+                <v-card-title class="text-subtitle-1 font-weight-bold pb-0">
+                    Registrar nueva categoría
+                </v-card-title>
+                <v-card-text>
+                    <p class="text-body-2 text-medium-emphasis mb-4">
+                        Ingresa los datos básicos para crear una categoría que podrás usar al asignar productos.
+                    </p>
+                    <v-form ref="categoryForm" @submit.prevent="submitCategory" class="d-flex flex-column ga-4">
+                        <v-text-field
+                            v-model="formulario.nombre"
+                            label="Nombre"
+                            variant="outlined"
+                            density="comfortable"
+                            :rules="[requiredRule]"
+                            autofocus
+                        ></v-text-field>
+                        <v-textarea
+                            v-model="formulario.descripcion"
+                            label="Descripción"
+                            variant="outlined"
+                            density="comfortable"
+                            rows="3"
+                            auto-grow
+                            :rules="[requiredRule]"
+                        ></v-textarea>
+                        <div class="d-flex justify-end ga-3 mt-2">
+                            <v-btn variant="text" color="grey" @click="closeCreateDialog">Cancelar</v-btn>
+                            <v-btn
+                                type="submit"
+                                color="success"
+                                class="submit-btn"
+                                prepend-icon="mdi-content-save"
+                                :loading="cargando"
+                                :disabled="cargando"
+                            >
+                                Guardar
+                            </v-btn>
+                        </div>
+                    </v-form>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
     </section>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
+const { secureRequest } = useApi()
+
 const formatter = new Intl.NumberFormat('es-EC', {
     style: 'currency',
     currency: 'USD',
@@ -182,6 +237,52 @@ const productGroups = [
         createProduct(7, 'Naranja', 2.1, 'Mercado Central', '12 kg', 'warning', 'Media', 50, 'warning'),
     ]),
 ]
+
+const showCreateDialog = ref(false)
+const categoryForm = ref(null)
+const formulario = ref({
+    nombre: '',
+    descripcion: '',
+})
+const cargando = ref(false)
+
+const requiredRule = (value) => !!value?.trim() || 'Este campo es obligatorio'
+
+const resetForm = () => {
+    formulario.value = {
+        nombre: '',
+        descripcion: '',
+    }
+    categoryForm.value?.resetValidation?.()
+}
+
+const openCreateDialog = () => {
+    resetForm()
+    showCreateDialog.value = true
+}
+
+const closeCreateDialog = () => {
+    showCreateDialog.value = false
+}
+
+const submitCategory = async () => {
+
+    cargando.value = true
+    try {
+        console.log(formulario.value)
+        await secureRequest('/categorias', {
+            method: 'POST',
+            body: formulario.value,
+        })
+
+        resetForm()
+        closeCreateDialog()
+    } catch (error) {
+        console.error(error?.data || error)
+    } finally {
+        cargando.value = false
+    }
+}
 </script>
 
 <style scoped>
@@ -259,5 +360,16 @@ const productGroups = [
 
 .progress--low :deep(.v-progress-linear__determinate) {
     background-color: #df2f26 !important;
+}
+
+.modal-card {
+    background: #ffffff;
+    border-color: rgba(34, 197, 94, 0.18);
+    box-shadow: 0 18px 40px rgba(5, 165, 82, 0.22);
+}
+
+.submit-btn {
+    text-transform: none;
+    font-weight: 600;
 }
 </style>
