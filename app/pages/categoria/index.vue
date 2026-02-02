@@ -29,7 +29,15 @@
                 </div>
             </v-card-title>
             <v-card-text>
-                <v-row align="center" class="ga-2">
+                <v-progress-linear
+                    v-if="categoriasLoading"
+                    indeterminate
+                    color="success"
+                    height="6"
+                    rounded
+                    class="mb-4"
+                ></v-progress-linear>
+                <v-row v-if="visibleCategories.length" align="center" class="ga-2">
                     <v-col cols="auto" class="d-flex justify-center">
                         <v-btn
                             icon="mdi-chevron-left"
@@ -96,13 +104,34 @@
                         ></v-btn>
                     </v-col>
                 </v-row>
+                <div v-else class="text-body-2 text-medium-emphasis py-8 text-center">
+                    Aún no registras categorías.
+                </div>
             </v-card-text>
         </v-card>
 
         <v-card class="section-card" rounded="lg" border>
             <v-card-title class="text-subtitle-1 font-weight-bold">Productos por Categoría</v-card-title>
             <v-card-text>
-                <div v-for="group in productGroups" :key="group.id" class="mb-8">
+                <v-progress-linear
+                    v-if="productosLoading"
+                    indeterminate
+                    color="success"
+                    height="6"
+                    rounded
+                    class="mb-4"
+                ></v-progress-linear>
+                <v-alert
+                    v-if="productosError"
+                    type="error"
+                    density="comfortable"
+                    variant="tonal"
+                    class="mb-4"
+                >
+                    {{ productosError }}
+                </v-alert>
+                <template v-if="productGroups.length">
+                    <div v-for="group in productGroups" :key="group.id" class="mb-8">
                     <div class="d-flex align-center ga-2 mb-4">
                         <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
                             <span class="emoji-avatar__emoji">{{ group.emoji }}</span>
@@ -110,52 +139,59 @@
                         <div class="text-subtitle-2 font-weight-bold">{{ group.name }} ({{ group.items.length }})</div>
                     </div>
 
-                    <v-row>
-                        <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
-                            <v-card class="product-card" rounded="lg" border>
-                                <v-card-text>
-                                    <div class="d-flex align-center justify-space-between">
-                                        <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
-                                        <v-chip
-                                            :color="product.stockColor"
-                                            size="small"
-                                            variant="tonal"
-                                            :class="{ 'stock-chip--success': product.stockColor === 'success' }"
-                                        >
-                                            {{ product.stock }}
-                                        </v-chip>
-                                    </div>
+                        <v-row v-if="group.items.length">
+                            <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
+                                <v-card class="product-card" rounded="lg" border>
+                                    <v-card-text>
+                                        <div class="d-flex align-center justify-space-between">
+                                            <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
+                                            <v-chip
+                                                :color="product.stockColor"
+                                                size="small"
+                                                variant="tonal"
+                                                :class="{ 'stock-chip--success': product.stockColor === 'success' }"
+                                            >
+                                                {{ product.stock }}
+                                            </v-chip>
+                                        </div>
 
-                                    <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                        <span> Venta: {{ formatCurrency(product.price) }}</span>
-                                    </div>
-                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                        <span> {{ product.source }}</span>
-                                    </div>
+                                        <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                            <span> Venta: {{ formatCurrency(product.price) }}</span>
+                                        </div>
+                                        <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                            <span> {{ product.source }}</span>
+                                        </div>
 
-                                    <v-divider class="my-3"></v-divider>
+                                        <v-divider class="my-3"></v-divider>
 
-                                    <div class="d-flex align-center justify-space-between text-body-2">
-                                        <span class="text-medium-emphasis">Disponibilidad</span>
-                                        <span
-                                            class="font-weight-semibold"
-                                            :class="{ 'availability--low': product.progressColor === 'error' }"
-                                        >
-                                            {{ product.availability }}
-                                        </span>
-                                    </div>
-                                    <v-progress-linear
-                                        class="mt-2"
-                                        :model-value="product.progress"
-                                        :color="product.progressColor"
-                                        height="6"
-                                        rounded
-                                        :class="{ 'progress--low': product.progressColor === 'error' }"
-                                    ></v-progress-linear>
-                                </v-card-text>
-                            </v-card>
-                        </v-col>
-                    </v-row>
+                                        <div class="d-flex align-center justify-space-between text-body-2">
+                                            <span class="text-medium-emphasis">Disponibilidad</span>
+                                            <span
+                                                class="font-weight-semibold"
+                                                :class="{ 'availability--low': product.progressColor === 'error' }"
+                                            >
+                                                {{ product.availability }}
+                                            </span>
+                                        </div>
+                                        <v-progress-linear
+                                            class="mt-2"
+                                            :model-value="product.progress"
+                                            :color="product.progressColor"
+                                            height="6"
+                                            rounded
+                                            :class="{ 'progress--low': product.progressColor === 'error' }"
+                                        ></v-progress-linear>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                        <div v-else class="text-body-2 text-medium-emphasis py-4 px-3 bg-grey-lighten-5 rounded-lg">
+                            Esta categoría aún no tiene productos registrados.
+                        </div>
+                    </div>
+                </template>
+                <div v-else-if="!productosLoading" class="text-body-2 text-medium-emphasis py-6 text-center">
+                    No hay categorías o productos para mostrar todavía.
                 </div>
             </v-card-text>
         </v-card>
@@ -353,64 +389,27 @@ import 'vue3-emoji-picker/css'
 
 const { secureRequest } = useApi()
 
-const formatter = new Intl.NumberFormat('es-EC', {
+const currencyFormatter = new Intl.NumberFormat('es-EC', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
 })
 
-const formatCurrency = (value) => formatter.format(value)
-
-const createStat = (id, name, products, totalQty, totalValue, profit, emoji, tag = 'Activo') => ({
-    id,
-    name,
-    products,
-    totalQty,
-    totalValue,
-    profit,
-    emoji,
-    tag,
+const weightFormatter = new Intl.NumberFormat('es-EC', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
 })
 
-const createProduct = (
-    id,
-    name,
-    price,
-    source,
-    stock,
-    stockColor,
-    availability,
-    progress,
-    progressColor = stockColor,
-) => ({
-    id,
-    name,
-    price,
-    source,
-    stock,
-    stockColor,
-    availability,
-    progress,
-    progressColor,
-})
+const formatCurrency = (value = 0) => currencyFormatter.format(Number(value) || 0)
+const formatWeight = (value = 0) => `${weightFormatter.format(Number(value) || 0)} kg`
 
-const createGroup = (id, name, emoji, items) => ({ id, name, emoji, items })
-
-const categoryStats = [
-    createStat(1, 'Verduras', 4, '78.00', 149.2, 70.6, '🥬'),
-    createStat(2, 'Frutas', 3, '70.00', 171, 78.4, '🍎'),
-]
-
-const categoriasRegistradas = ref([])
-const categoriasLoading = ref(false)
-const categoriasError = ref('')
-const categoriaEliminando = ref(null)
-const formError = ref('')
+const MAX_CATEGORIAS_PER_PAGE = 100
+const MAX_PRODUCTOS_PER_PAGE = 200
+const visibleSlots = 2
+const HIGH_STOCK_THRESHOLD = 30
+const MEDIUM_STOCK_THRESHOLD = 10
 
 const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
-const MAX_CATEGORIAS_PER_PAGE = 100
-const visibleSlots = 2
-const categoryCursor = ref(0)
 const emojiAllowedGroup = 'food_drink'
 const emojiDisabledGroups = [
     'smileys_people',
@@ -422,21 +421,202 @@ const emojiDisabledGroups = [
     'flags',
 ].filter((group) => group !== emojiAllowedGroup)
 
+const categoriasRegistradas = ref([])
+const productosRegistrados = ref([])
+const proveedoresLookup = ref(new Map())
+const categoriasLoading = ref(false)
+const productosLoading = ref(false)
+const categoriasError = ref('')
+const productosError = ref('')
+const categoriaEliminando = ref(null)
+const formError = ref('')
+
+const showCreateDialog = ref(false)
+const showListDialog = ref(false)
+const categoryForm = ref(null)
+const formulario = ref({
+    nombre: '',
+    detalle: '',
+    emoji: '',
+})
+const cargando = ref(false)
+const categoriaEditando = ref(null)
+const showEmojiPicker = ref(false)
+const categoryCursor = ref(0)
+
+const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
+const submitLabel = computed(() => (categoriaEditando.value ? 'Actualizar' : 'Guardar'))
+const submitIcon = computed(() => (categoriaEditando.value ? 'mdi-content-save-edit' : 'mdi-content-save'))
+
+const requiredRule = (value) => !!value?.trim() || 'Este campo es obligatorio'
+
+const toNumber = (value) => {
+    const num = Number(value)
+    return Number.isFinite(num) ? num : 0
+}
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+
+const extractKilos = (producto) =>
+    toNumber(
+        producto?.kilogramos ??
+            producto?.kilogramos_netos ??
+            producto?.kilo ??
+            producto?.kilo ??
+            producto?.cantidad ??
+            producto?.stock ??
+            0,
+    )
+
+const extractPrecioVenta = (producto) =>
+    toNumber(
+        producto?.precio_ventakg ??
+            producto?.precio_venta_kg ??
+            producto?.precio_venta ??
+            producto?.precio ??
+            0,
+    )
+
+const extractPrecioCompra = (producto) =>
+    toNumber(producto?.precio_compra ?? producto?.costo ?? producto?.precio ?? 0)
+
+const extractCollection = (payload) => {
+    if (!payload) return []
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.data)) return payload.data
+    if (Array.isArray(payload?.data?.data)) return payload.data.data
+    return []
+}
+
+const resolvePaginationMeta = (payload) => {
+    if (!payload || typeof payload !== 'object') return null
+    if (payload?.data?.meta && typeof payload.data.meta === 'object') {
+        return payload.data.meta
+    }
+    if (payload?.meta && typeof payload.meta === 'object') {
+        return payload.meta
+    }
+    return null
+}
+
+const getCategoriaEmoji = (categoria, index) => {
+    return (
+        categoria?.emoji ??
+        categoria?.icono ??
+        emojiFallbacks[index % emojiFallbacks.length]
+    )
+}
+
+const proveedorNameFor = (producto) => {
+    const proveedorId =
+        producto?.proveedor_id ??
+        producto?.proveedorId ??
+        producto?.proveedor?.id
+
+    if (proveedorId && proveedoresLookup.value.has(proveedorId)) {
+        return proveedoresLookup.value.get(proveedorId)?.nombre ?? `Proveedor #${proveedorId}`
+    }
+
+    if (producto?.proveedor?.nombre) {
+        return producto.proveedor.nombre
+    }
+
+    return proveedorId ? `Proveedor #${proveedorId}` : 'Proveedor no asignado'
+}
+
+const computeStockMeta = (kilo) => {
+    const value = Math.max(0, toNumber(kilo))
+    if (value === 0) {
+        return {
+            stockColor: 'error',
+            availability: 'Sin stock',
+            progress: 10,
+        }
+    }
+
+    if (value >= HIGH_STOCK_THRESHOLD) {
+        return {
+            stockColor: 'success',
+            availability: 'Alta',
+            progress: clamp(Math.round((value / 50) * 100), 45, 100),
+        }
+    }
+
+    if (value >= MEDIUM_STOCK_THRESHOLD) {
+        return {
+            stockColor: 'warning',
+            availability: 'Media',
+            progress: clamp(Math.round((value / 40) * 100), 25, 75),
+        }
+    }
+
+    return {
+        stockColor: 'error',
+        availability: 'Baja',
+        progress: clamp(Math.round((value / 25) * 100), 10, 45),
+    }
+}
+
+const buildProductCard = (producto, fallbackKey = 'producto') => {
+    const kilo = extractKilos(producto)
+    const meta = computeStockMeta(kilo)
+    const price = extractPrecioVenta(producto)
+
+    const productId = producto?.id ?? producto?.uuid ?? `producto-${fallbackKey}`
+
+    return {
+        id: productId,
+        name: producto?.nombre ?? producto?.name ?? 'Producto sin nombre',
+        price,
+        source: proveedorNameFor(producto),
+        stock: kilo ? `${weightFormatter.format(kilo)} kg` : 'Sin unidades registradas',
+        ...meta,
+        progressColor: meta.stockColor,
+    }
+}
+
+const productosPorCategoriaMap = computed(() => {
+    const map = new Map()
+    productosRegistrados.value.forEach((producto) => {
+        const categoriaId =
+            producto?.categoria_id ??
+            producto?.categoriaId ??
+            producto?.categoria?.id ??
+            null
+        const key = categoriaId ?? 'sin-categoria'
+        if (!map.has(key)) {
+            map.set(key, [])
+        }
+        map.get(key).push(producto)
+    })
+    return map
+})
+
 const mappedCategories = computed(() => {
-    if (!categoriasRegistradas.value.length) return categoryStats
-    return categoriasRegistradas.value.map((categoria, index) => ({
-        id: categoria.id ?? index,
-        name: categoria.nombre ?? `Categoría ${index + 1}`,
-        products: categoria.total_productos ?? categoria.productos?.length ?? '--',
-        totalQty: categoria.cantidad_total ?? categoria.totalQty ?? '--',
-        totalValue: categoria.valor_total ?? categoria.totalValue ?? 0,
-        profit: categoria.ganancia ?? categoria.profit ?? 0,
-        emoji:
-            categoria.emoji ??
-            categoria.icono ??
-            emojiFallbacks[index % emojiFallbacks.length],
-        tag: categoria.estado ?? 'Activa',
-    }))
+    if (!categoriasRegistradas.value.length) return []
+    return categoriasRegistradas.value.map((categoria, index) => {
+        const productos = productosPorCategoriaMap.value.get(categoria.id) ?? []
+        const totalQtyNumber = productos.reduce((sum, producto) => sum + extractKilos(producto), 0)
+        const totalValue = productos.reduce((sum, producto) => {
+            const kilos = extractKilos(producto)
+            return sum + kilos * extractPrecioVenta(producto)
+        }, 0)
+        const profit = productos.reduce((sum, producto) => {
+            const kilos = extractKilos(producto)
+            return sum + (extractPrecioVenta(producto) - extractPrecioCompra(producto)) * kilos
+        }, 0)
+
+        return {
+            id: categoria?.id ?? index,
+            name: categoria?.nombre ?? `Categoría ${index + 1}`,
+            products: productos.length,
+            totalQty: formatWeight(totalQtyNumber),
+            totalValue,
+            profit,
+            emoji: getCategoriaEmoji(categoria, index),
+            tag: categoria?.estado ?? 'Activa',
+        }
+    })
 })
 
 const visibleCategories = computed(() => {
@@ -459,48 +639,51 @@ const nextCategory = () => {
     categoryCursor.value += 1
 }
 
-const resolvePaginationMeta = (payload) => {
-    if (!payload || typeof payload !== 'object') return null
-    if (payload?.data?.meta && typeof payload.data.meta === 'object') {
-        return payload.data.meta
+const productGroups = computed(() => {
+    if (!categoriasRegistradas.value.length && !productosRegistrados.value.length) {
+        return []
     }
-    if (payload?.meta && typeof payload.meta === 'object') {
-        return payload.meta
+
+    const groups = categoriasRegistradas.value.map((categoria, index) => {
+        const productos = productosPorCategoriaMap.value.get(categoria.id) ?? []
+        return {
+            id: categoria?.id ?? `categoria-${index}`,
+            name: categoria?.nombre ?? `Categoría ${index + 1}`,
+            emoji: getCategoriaEmoji(categoria, index),
+            items: productos.map((producto, productoIndex) =>
+                buildProductCard(producto, `${categoria?.id ?? 'categoria'}-${productoIndex}`),
+            ),
+        }
+    })
+
+    const knownCategoryIds = new Set(categoriasRegistradas.value.map((categoria) => categoria?.id))
+    productosPorCategoriaMap.value.forEach((productos, categoriaId) => {
+        if (categoriaId === 'sin-categoria') return
+        if (!categoriaId || knownCategoryIds.has(categoriaId)) return
+        groups.push({
+            id: categoriaId,
+            name: `Categoría ${categoriaId}`,
+            emoji: '📦',
+            items: productos.map((producto, productoIndex) =>
+                buildProductCard(producto, `${categoriaId}-${productoIndex}`),
+            ),
+        })
+    })
+
+    const uncategorized = productosPorCategoriaMap.value.get('sin-categoria')
+    if (uncategorized?.length) {
+        groups.push({
+            id: 'sin-categoria',
+            name: 'Sin categoría',
+            emoji: '❔',
+            items: uncategorized.map((producto, productoIndex) =>
+                buildProductCard(producto, `sin-${productoIndex}`),
+            ),
+        })
     }
-    return null
-}
 
-const productGroups = [
-    createGroup(1, 'Verduras', '🥬', [
-        createProduct(1, 'Tomate', 2.8, 'Mercado Central', '25 kg', 'success', 'Alta', 85),
-        createProduct(2, 'Lechuga', 1.5, 'Huerta Local', '30 unidad', 'success', 'Alta', 80),
-        createProduct(3, 'Cebolla', 1.8, 'Mercado Central', '5 kg', 'error', 'Baja', 25, 'error'),
-        createProduct(4, 'Zanahoria', 1.4, 'Huerta Local', '18 kg', 'success', 'Media', 60, 'warning'),
-    ]),
-    createGroup(2, 'Frutas', '🍎', [
-        createProduct(5, 'Manzana', 2.2, 'Productor Local', '8 kg', 'warning', 'Media', 55, 'warning'),
-        createProduct(6, 'Banana', 1.9, 'Importadora', '40 kg', 'success', 'Alta', 90),
-        createProduct(7, 'Naranja', 2.1, 'Mercado Central', '12 kg', 'warning', 'Media', 50, 'warning'),
-    ]),
-]
-
-const showCreateDialog = ref(false)
-const showListDialog = ref(false)
-const categoryForm = ref(null)
-const formulario = ref({
-    nombre: '',
-    detalle: '',
-    emoji: '',
+    return groups
 })
-const cargando = ref(false)
-const categoriaEditando = ref(null)
-const showEmojiPicker = ref(false)
-
-const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
-const submitLabel = computed(() => (categoriaEditando.value ? 'Actualizar' : 'Guardar'))
-const submitIcon = computed(() => (categoriaEditando.value ? 'mdi-content-save-edit' : 'mdi-content-save'))
-
-const requiredRule = (value) => !!value?.trim() || 'Este campo es obligatorio'
 
 const normalizeText = (value = '') => value?.toString?.().trim().toLowerCase() ?? ''
 
@@ -552,15 +735,9 @@ const handleEmojiSelect = (emoji) => {
 const submitCategory = async () => {
     formError.value = ''
     const nombreActual = formulario.value.nombre?.trim()
-    const emojiActual = formulario.value.emoji?.trim()
 
     if (!nombreActual) {
         formError.value = 'El nombre es obligatorio.'
-        return
-    }
-
-    if (!emojiActual) {
-        formError.value = 'Selecciona un emoji para la categoría.'
         return
     }
 
@@ -571,16 +748,10 @@ const submitCategory = async () => {
     }
 
     const detalleActual = formulario.value.detalle?.trim?.() || ''
-    formulario.value = {
-        nombre: nombreActual,
-        detalle: detalleActual,
-        emoji: emojiActual,
-    }
 
     const payload = {
         nombre: nombreActual,
         detalle: detalleActual || null,
-        emoji: emojiActual,
     }
 
     cargando.value = true
@@ -597,12 +768,11 @@ const submitCategory = async () => {
             })
         }
 
+        await fetchCategorias()
         resetForm()
         closeCreateDialog()
-        if (showListDialog.value) {
-            await fetchCategorias()
-        }
     } catch (error) {
+        formError.value = error?.data?.message || 'No se pudo guardar la categoría.'
         console.error(error?.data || error)
     } finally {
         cargando.value = false
@@ -619,14 +789,6 @@ const closeListDialog = () => {
     showListDialog.value = false
 }
 
-const parseCategoriaData = (payload) => {
-    if (!payload) return []
-    if (Array.isArray(payload)) return payload
-    if (Array.isArray(payload?.data)) return payload.data
-    if (Array.isArray(payload?.data?.data)) return payload.data.data
-    return []
-}
-
 const fetchCategorias = async () => {
     categoriasLoading.value = true
     categoriasError.value = ''
@@ -641,9 +803,9 @@ const fetchCategorias = async () => {
                 per_page: String(MAX_CATEGORIAS_PER_PAGE),
             })
             const response = await secureRequest(`/categorias?${params.toString()}`)
-            let lista = parseCategoriaData(response?.data)
+            let lista = extractCollection(response?.data)
             if (!lista.length) {
-                lista = parseCategoriaData(response)
+                lista = extractCollection(response)
             }
             todas.push(...lista)
 
@@ -661,6 +823,61 @@ const fetchCategorias = async () => {
         categoriasError.value = error?.data?.message || 'No se pudieron cargar las categorías.'
     } finally {
         categoriasLoading.value = false
+    }
+}
+
+const fetchProductos = async () => {
+    productosLoading.value = true
+    productosError.value = ''
+    try {
+        const todos = []
+        let currentPage = 1
+        let lastPage = 1
+
+        do {
+            const params = new URLSearchParams({
+                page: String(currentPage),
+                per_page: String(MAX_PRODUCTOS_PER_PAGE),
+            })
+            const response = await secureRequest(`/productos?${params.toString()}`)
+            let lista = extractCollection(response?.data)
+            if (!lista.length) {
+                lista = extractCollection(response)
+            }
+            todos.push(...lista)
+
+            const meta =
+                resolvePaginationMeta(response) || resolvePaginationMeta(response?.data) || {}
+            lastPage = meta?.last_page ?? meta?.lastPage ?? currentPage
+            if (!lastPage || lastPage < currentPage) {
+                lastPage = currentPage
+            }
+            currentPage += 1
+        } while (currentPage <= lastPage)
+
+        productosRegistrados.value = todos
+    } catch (error) {
+        productosError.value = error?.data?.message || 'No se pudieron cargar los productos.'
+    } finally {
+        productosLoading.value = false
+    }
+}
+
+const fetchProveedores = async () => {
+    try {
+        const response = await secureRequest('/proveedores')
+        let lista = extractCollection(response?.data)
+        if (!lista.length) {
+            lista = extractCollection(response)
+        }
+        const map = new Map()
+        lista.forEach((proveedor) => {
+            if (!proveedor?.id) return
+            map.set(proveedor.id, proveedor)
+        })
+        proveedoresLookup.value = map
+    } catch (error) {
+        console.warn('No se pudieron cargar los proveedores.', error)
     }
 }
 
@@ -692,14 +909,19 @@ const deleteCategoria = async (categoria) => {
             closeCreateDialog()
         }
     } catch (error) {
+        categoriasError.value = error?.data?.message || 'No se pudo eliminar la categoría.'
         console.error(error?.data || error)
     } finally {
         categoriaEliminando.value = null
     }
 }
 
+const initializeCategoriaModulo = async () => {
+    await Promise.allSettled([fetchCategorias(), fetchProductos(), fetchProveedores()])
+}
+
 onMounted(() => {
-    fetchCategorias()
+    initializeCategoriaModulo()
 })
 
 watch(
