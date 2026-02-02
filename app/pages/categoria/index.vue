@@ -46,8 +46,8 @@
                                     <v-card-text>
                                         <div class="d-flex align-center justify-space-between">
                                             <div class="d-flex align-center ga-3">
-                                                <v-avatar color="success-lighten-4" size="44">
-                                                    <v-icon color="success" :icon="item.icon"></v-icon>
+                                                <v-avatar color="success-lighten-4" size="44" class="emoji-avatar">
+                                                    <span class="emoji-avatar__emoji">{{ item.emoji }}</span>
                                                 </v-avatar>
                                                 <div>
                                                     <div class="text-subtitle-1 font-weight-bold">{{ item.name }}</div>
@@ -104,8 +104,8 @@
             <v-card-text>
                 <div v-for="group in productGroups" :key="group.id" class="mb-8">
                     <div class="d-flex align-center ga-2 mb-4">
-                        <v-avatar color="success-lighten-4" size="36">
-                            <v-icon color="success" :icon="group.icon"></v-icon>
+                        <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
+                            <span class="emoji-avatar__emoji">{{ group.emoji }}</span>
                         </v-avatar>
                         <div class="text-subtitle-2 font-weight-bold">{{ group.name }} ({{ group.items.length }})</div>
                     </div>
@@ -127,10 +127,10 @@
                                     </div>
 
                                     <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                        <span>💰 Venta: {{ formatCurrency(product.price) }}</span>
+                                        <span> Venta: {{ formatCurrency(product.price) }}</span>
                                     </div>
                                     <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                        <span>🚛 {{ product.source }}</span>
+                                        <span> {{ product.source }}</span>
                                     </div>
 
                                     <v-divider class="my-3"></v-divider>
@@ -180,41 +180,69 @@
                         {{ formError }}
                     </v-alert>
                     <v-form ref="categoryForm" @submit.prevent="submitCategory" class="flex flex-col gap-5">
-                        <v-text-field
-                            v-model="formulario.nombre"
-                            label="Nombre"
-                            placeholder="Ej. Vegetales hoja verde"
-                            variant="solo-filled"
-                            density="comfortable"
-                            color="success"
-                            base-color="success"
-                            bg-color="success-lighten-4"
-                            :rules="[requiredRule]"
-                            class="rounded-2xl shadow-lg ring-1 ring-emerald-100 focus-within:ring-2 focus-within:ring-emerald-400 transition-all"
-                            clearable
-                            :counter="60"
-                            :maxlength="60"
-                            hint="Nombre visible en listados y tarjetas."
-                            persistent-hint
-                            autofocus
-                        ></v-text-field>
-                        <v-textarea
-                            v-model="formulario.detalle"
-                            label="Descripción"
-                            placeholder="Describe cómo usarás esta categoría"
-                            variant="solo-filled"
-                            density="comfortable"
-                            rows="3"
-                            auto-grow
-                            color="success"
-                            base-color="success"
-                            bg-color="success-lighten-4"
-                            class="rounded-2xl shadow-lg ring-1 ring-emerald-100 focus-within:ring-2 focus-within:ring-emerald-400 transition-all"
-                            :counter="160"
-                            :maxlength="160"
-                            hint="Descripción opcional para identificarla mejor."
-                            persistent-hint
-                        ></v-textarea>
+                        <div class="name-input-block">
+                            <v-menu
+                                v-model="showEmojiPicker"
+                                :close-on-content-click="false"
+                                location="bottom"
+                                offset="8"
+                            >
+                                <template #activator="{ props }">
+                                    <v-btn
+                                        v-bind="props"
+                                        class="emoji-selector emoji-selector--floating"
+                                        variant="flat"
+                                        color="grey-lighten-4"
+                                        elevation="0"
+                                        size="large"
+                                        rounded="circle"
+                                        height="55px"
+                                        location="top"
+                                    >
+                                        <span v-if="formulario.emoji" class="emoji-selector__value">
+                                            {{ formulario.emoji }}
+                                        </span>
+                                        <v-icon v-else icon="mdi-plus" class="emoji-selector__icon"></v-icon>
+                                    </v-btn>
+                                </template>
+                                <ClientOnly>
+                                    <div class="emoji-picker-surface">
+                                        <EmojiPicker
+                                            :native="true"
+                                            :hide-search="false"
+                                            theme="light"
+                                            :disabled-groups="emojiDisabledGroups"
+                                            :disable-skin-tones="true"
+                                            @select="handleEmojiSelect"
+                                        />
+                                    </div>
+                                </ClientOnly>
+                            </v-menu>
+                            <div class="name-input-block__inputs">
+                                <v-text-field
+                                    v-model="formulario.nombre"
+                                    label="Nombre"
+                                    placeholder="Ej. Vegetales hoja verde"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    class="name-field"
+                                    :rules="[requiredRule]"
+                                    color="success"
+                                    base-color="success"
+                                ></v-text-field>
+                                <v-textarea
+                                    v-model="formulario.detalle"
+                                    label="Descripción"
+                                    placeholder="Describe cómo usarás esta categoría"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    rows="3"
+                                    class="description-field"
+                                    :counter="160"
+                                    :maxlength="160"
+                                ></v-textarea>
+                            </div>
+                        </div>
                         <div class="modal-actions d-flex justify-end ga-3 mt-2">
                             <v-btn variant="text" color="grey-darken-1" class="cancel-btn" @click="cancelCreateDialog">
                                 Cancelar
@@ -270,6 +298,7 @@
                     <v-table v-else-if="categoriasRegistradas.length" class="categoria-table" density="comfortable">
                         <thead>
                             <tr>
+                                <th>Emoji</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
                                 <th class="text-right">Acciones</th>
@@ -277,6 +306,9 @@
                         </thead>
                         <tbody>
                             <tr v-for="categoria in categoriasRegistradas" :key="categoria.id" class="categoria-table-row">
+                                <td class="emoji-cell">
+                                    <span class="emoji-avatar__emoji">{{ categoria.emoji || '❔' }}</span>
+                                </td>
                                 <td>{{ categoria.nombre }}</td>
                                 <td>{{ categoria.detalle || 'Sin detalle' }}</td>
                                 <td class="text-right">
@@ -316,6 +348,8 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import EmojiPicker from 'vue3-emoji-picker'
+import 'vue3-emoji-picker/css'
 
 const { secureRequest } = useApi()
 
@@ -327,14 +361,14 @@ const formatter = new Intl.NumberFormat('es-EC', {
 
 const formatCurrency = (value) => formatter.format(value)
 
-const createStat = (id, name, products, totalQty, totalValue, profit, icon, tag = 'Activo') => ({
+const createStat = (id, name, products, totalQty, totalValue, profit, emoji, tag = 'Activo') => ({
     id,
     name,
     products,
     totalQty,
     totalValue,
     profit,
-    icon,
+    emoji,
     tag,
 })
 
@@ -360,11 +394,11 @@ const createProduct = (
     progressColor,
 })
 
-const createGroup = (id, name, icon, items) => ({ id, name, icon, items })
+const createGroup = (id, name, emoji, items) => ({ id, name, emoji, items })
 
 const categoryStats = [
-    createStat(1, 'Verduras', 4, '78.00', 149.2, 70.6, 'mdi-leaf'),
-    createStat(2, 'Frutas', 3, '70.00', 171, 78.4, 'mdi-food-apple'),
+    createStat(1, 'Verduras', 4, '78.00', 149.2, 70.6, '🥬'),
+    createStat(2, 'Frutas', 3, '70.00', 171, 78.4, '🍎'),
 ]
 
 const categoriasRegistradas = ref([])
@@ -373,9 +407,20 @@ const categoriasError = ref('')
 const categoriaEliminando = ref(null)
 const formError = ref('')
 
-const iconPool = ['mdi-leaf', 'mdi-food-apple', 'mdi-food-carrot', 'mdi-sprout', 'mdi-basket']
+const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
+const MAX_CATEGORIAS_PER_PAGE = 100
 const visibleSlots = 2
 const categoryCursor = ref(0)
+const emojiAllowedGroup = 'food_drink'
+const emojiDisabledGroups = [
+    'smileys_people',
+    'animals_nature',
+    'activities',
+    'travel_places',
+    'objects',
+    'symbols',
+    'flags',
+].filter((group) => group !== emojiAllowedGroup)
 
 const mappedCategories = computed(() => {
     if (!categoriasRegistradas.value.length) return categoryStats
@@ -386,7 +431,10 @@ const mappedCategories = computed(() => {
         totalQty: categoria.cantidad_total ?? categoria.totalQty ?? '--',
         totalValue: categoria.valor_total ?? categoria.totalValue ?? 0,
         profit: categoria.ganancia ?? categoria.profit ?? 0,
-        icon: categoria.icono ?? iconPool[index % iconPool.length],
+        emoji:
+            categoria.emoji ??
+            categoria.icono ??
+            emojiFallbacks[index % emojiFallbacks.length],
         tag: categoria.estado ?? 'Activa',
     }))
 })
@@ -411,14 +459,25 @@ const nextCategory = () => {
     categoryCursor.value += 1
 }
 
+const resolvePaginationMeta = (payload) => {
+    if (!payload || typeof payload !== 'object') return null
+    if (payload?.data?.meta && typeof payload.data.meta === 'object') {
+        return payload.data.meta
+    }
+    if (payload?.meta && typeof payload.meta === 'object') {
+        return payload.meta
+    }
+    return null
+}
+
 const productGroups = [
-    createGroup(1, 'Verduras', 'mdi-leaf', [
+    createGroup(1, 'Verduras', '🥬', [
         createProduct(1, 'Tomate', 2.8, 'Mercado Central', '25 kg', 'success', 'Alta', 85),
         createProduct(2, 'Lechuga', 1.5, 'Huerta Local', '30 unidad', 'success', 'Alta', 80),
         createProduct(3, 'Cebolla', 1.8, 'Mercado Central', '5 kg', 'error', 'Baja', 25, 'error'),
         createProduct(4, 'Zanahoria', 1.4, 'Huerta Local', '18 kg', 'success', 'Media', 60, 'warning'),
     ]),
-    createGroup(2, 'Frutas', 'mdi-food-apple', [
+    createGroup(2, 'Frutas', '🍎', [
         createProduct(5, 'Manzana', 2.2, 'Productor Local', '8 kg', 'warning', 'Media', 55, 'warning'),
         createProduct(6, 'Banana', 1.9, 'Importadora', '40 kg', 'success', 'Alta', 90),
         createProduct(7, 'Naranja', 2.1, 'Mercado Central', '12 kg', 'warning', 'Media', 50, 'warning'),
@@ -431,9 +490,11 @@ const categoryForm = ref(null)
 const formulario = ref({
     nombre: '',
     detalle: '',
+    emoji: '',
 })
 const cargando = ref(false)
 const categoriaEditando = ref(null)
+const showEmojiPicker = ref(false)
 
 const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
 const submitLabel = computed(() => (categoriaEditando.value ? 'Actualizar' : 'Guardar'))
@@ -456,10 +517,12 @@ const resetForm = () => {
     formulario.value = {
         nombre: '',
         detalle: '',
+        emoji: '',
     }
     categoryForm.value?.resetValidation?.()
     categoriaEditando.value = null
     formError.value = ''
+    showEmojiPicker.value = false
 }
 
 const openCreateDialog = () => {
@@ -476,12 +539,28 @@ const cancelCreateDialog = () => {
     closeCreateDialog()
 }
 
-const submitCategory = async () => {
+const handleEmojiSelect = (emoji) => {
+    const symbol = emoji?.i ?? emoji?.native ?? emoji?.u ?? ''
+    if (!symbol) return
+    formulario.value.emoji = symbol
+    showEmojiPicker.value = false
+    if (formError.value) {
+        formError.value = ''
+    }
+}
 
+const submitCategory = async () => {
     formError.value = ''
     const nombreActual = formulario.value.nombre?.trim()
+    const emojiActual = formulario.value.emoji?.trim()
+
     if (!nombreActual) {
         formError.value = 'El nombre es obligatorio.'
+        return
+    }
+
+    if (!emojiActual) {
+        formError.value = 'Selecciona un emoji para la categoría.'
         return
     }
 
@@ -491,17 +570,30 @@ const submitCategory = async () => {
         return
     }
 
+    const detalleActual = formulario.value.detalle?.trim?.() || ''
+    formulario.value = {
+        nombre: nombreActual,
+        detalle: detalleActual,
+        emoji: emojiActual,
+    }
+
+    const payload = {
+        nombre: nombreActual,
+        detalle: detalleActual || null,
+        emoji: emojiActual,
+    }
+
     cargando.value = true
     try {
         if (categoriaEditando.value) {
             await secureRequest(`/categorias/${categoriaEditando.value.id}`, {
                 method: 'PUT',
-                body: formulario.value,
+                body: payload,
             })
         } else {
             await secureRequest('/categorias', {
                 method: 'POST',
-                body: formulario.value,
+                body: payload,
             })
         }
 
@@ -539,12 +631,32 @@ const fetchCategorias = async () => {
     categoriasLoading.value = true
     categoriasError.value = ''
     try {
-        const response = await secureRequest('/categorias')
-        let lista = parseCategoriaData(response?.data)
-        if (!lista.length) {
-            lista = parseCategoriaData(response)
-        }
-        categoriasRegistradas.value = lista
+        const todas = []
+        let currentPage = 1
+        let lastPage = 1
+
+        do {
+            const params = new URLSearchParams({
+                page: String(currentPage),
+                per_page: String(MAX_CATEGORIAS_PER_PAGE),
+            })
+            const response = await secureRequest(`/categorias?${params.toString()}`)
+            let lista = parseCategoriaData(response?.data)
+            if (!lista.length) {
+                lista = parseCategoriaData(response)
+            }
+            todas.push(...lista)
+
+            const meta =
+                resolvePaginationMeta(response) || resolvePaginationMeta(response?.data) || {}
+            lastPage = meta?.last_page ?? meta?.lastPage ?? currentPage
+            if (!lastPage || lastPage < currentPage) {
+                lastPage = currentPage
+            }
+            currentPage += 1
+        } while (currentPage <= lastPage)
+
+        categoriasRegistradas.value = todas
     } catch (error) {
         categoriasError.value = error?.data?.message || 'No se pudieron cargar las categorías.'
     } finally {
@@ -556,6 +668,7 @@ const startUpdate = async (categoria) => {
     formulario.value = {
         nombre: categoria?.nombre ?? '',
         detalle: categoria?.detalle ?? '',
+        emoji: categoria?.emoji ?? categoria?.icono ?? '',
     }
     categoriaEditando.value = categoria
     showCreateDialog.value = true
@@ -585,6 +698,19 @@ const deleteCategoria = async (categoria) => {
     }
 }
 
+onMounted(() => {
+    fetchCategorias()
+})
+
+watch(
+    () => formulario.value.nombre,
+    () => {
+        if (formError.value) {
+            formError.value = ''
+        }
+    },
+)
+
 watch(
     () => mappedCategories.value.length,
     (length) => {
@@ -599,12 +725,8 @@ watch(
     },
 )
 
-onMounted(() => {
-    fetchCategorias()
-})
-
 watch(
-    () => formulario.value.nombre,
+    () => formulario.value.emoji,
     () => {
         if (formError.value) {
             formError.value = ''
@@ -795,5 +917,93 @@ watch(
 
 :deep(.categoria-dialog .categoria-dialog-content > .v-overlay__scrim) {
     backdrop-filter: blur(2px);
+}
+
+
+.emoji-avatar {
+    background: #e7f9ee !important;
+    color: #05934a !important;
+}
+
+.emoji-avatar__emoji {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+
+
+.name-input-block {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 1.2rem;
+}
+
+.emoji-selector {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 50% !important;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #f8fafc !important;
+    color: #111827;
+    font-size: 1.5rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-selector--floating {
+    margin-top: 4px;
+}
+
+.emoji-selector__icon {
+    color: #6b7280;
+}
+
+.emoji-selector__value {
+    line-height: 1;
+}
+
+.name-input-block__inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.name-field,
+.description-field {
+    border-radius: 18px;
+}
+
+.name-field :deep(.v-field__input),
+.description-field :deep(.v-field__input) {
+    min-height: 56px;
+}
+
+.name-field :deep(.v-field__outline),
+.description-field :deep(.v-field__outline) {
+    border-width: 1.5px;
+    border-color: rgba(15, 103, 60, 0.18);
+}
+
+.name-field :deep(.v-field__outline--notch),
+.description-field :deep(.v-field__outline--notch) {
+    border-color: rgba(15, 103, 60, 0.18);
+}
+
+.emoji-picker-surface {
+    border-radius: 20px;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    width: min(360px, 80vw);
+}
+
+.emoji-cell {
+    width: 72px;
+    text-align: center;
 }
 </style>
