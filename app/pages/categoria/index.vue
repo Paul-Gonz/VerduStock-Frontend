@@ -243,26 +243,42 @@
         </v-card>
 
         <v-dialog v-model="showCreateDialog" max-width="520" persistent transition="dialog-bottom-transition">
-            <v-card class="modal-card form-modal" rounded="xl" border>
-                <v-card-title class="text-subtitle-1 font-weight-bold pb-0 px-6 pt-6">
-                    {{ formTitle }}
-                </v-card-title>
-                <v-card-text class="px-6 pb-6">
-                    <p class="text-body-2 text-medium-emphasis mb-4">
-                        Ingresa los datos básicos para crear una categoría que podrás usar al asignar productos.
-                    </p>
-                    <v-alert
-                        v-if="formError"
-                        type="warning"
-                        density="comfortable"
-                        variant="tonal"
-                        color="warning"
-                        class="mb-2"
-                    >
-                        {{ formError }}
-                    </v-alert>
-                    <v-form ref="categoryForm" @submit.prevent="submitCategory" class="flex flex-col gap-5">
-                        <div class="name-input-block">
+            <v-card rounded="xl" border class="modal-shell">
+                <div class="modal-shell__header">
+                    <div>
+                        <p class="modal-shell__eyebrow">{{ categoriaEditando ? 'Modo edición' : 'Nueva categoría' }}</p>
+                        <h3 class="modal-shell__title">{{ formTitle }}</h3>
+                        <p class="modal-shell__subtitle">
+                            {{
+                                categoriaEditando
+                                    ? 'Actualiza el nombre, emoji y descripción antes de guardar los cambios.'
+                                    : 'Ingresa los datos básicos para clasificar tus productos de forma clara.'
+                            }}
+                        </p>
+                    </div>
+                    <v-btn
+                        icon="mdi-close"
+                        variant="text"
+                        color="grey-darken-1"
+                        class="modal-shell__dismiss"
+                        @click="cancelCreateDialog"
+                    ></v-btn>
+                </div>
+                <div class="modal-shell__divider"></div>
+                <div class="modal-shell__body">
+                    <v-form ref="categoryForm" class="modal-shell__form" @submit.prevent="submitCategory">
+                        <div class="modal-shell__content">
+                            <v-alert
+                                v-if="formError"
+                                type="warning"
+                                density="comfortable"
+                                variant="tonal"
+                                color="warning"
+                                class="modal-shell__alert"
+                            >
+                                {{ formError }}
+                            </v-alert>
+                            <div class="name-input-block">
                             <v-menu
                                 v-model="showEmojiPicker"
                                 :close-on-content-click="false"
@@ -325,14 +341,15 @@
                                 ></v-textarea>
                             </div>
                         </div>
-                        <div class="modal-actions d-flex justify-end ga-3 mt-2">
-                            <v-btn variant="text" color="grey-darken-1" class="cancel-btn" @click="cancelCreateDialog">
+                    </div>
+                    <div class="modal-shell__actions">
+                            <v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost" @click="cancelCreateDialog">
                                 Cancelar
                             </v-btn>
                             <v-btn
                                 type="submit"
                                 color="success"
-                                class="action-btn new-category-btn submit-btn"
+                                class="action-btn new-category-btn modal-shell__cta"
                                 :prepend-icon="submitIcon"
                                 :loading="cargando"
                                 :disabled="cargando"
@@ -341,7 +358,7 @@
                             </v-btn>
                         </div>
                     </v-form>
-                </v-card-text>
+                </div>
             </v-card>
         </v-dialog>
 
@@ -1106,27 +1123,144 @@ watch(
     padding: 18px 18px 16px;
 }
 
-.form-modal {
-    padding: 6px 6px 18px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #ffffff 65%);
-    box-shadow: 0 18px 40px rgba(25, 132, 86, 0.25);
+.modal-shell {
+    padding: 26px 30px;
+    background: linear-gradient(135deg, #ffffff 0%, #f5fff9 70%);
+    border-color: rgba(11, 155, 74, 0.2);
+    box-shadow: 0 26px 55px rgba(5, 84, 40, 0.18);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
 }
 
-.form-modal :deep(.v-card-title) {
-    padding: 18px 26px 6px;
+.modal-shell__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
 }
 
-.form-modal :deep(.v-card-text) {
-    padding: 8px 26px 26px;
+.modal-shell__eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.74rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #0b8a4a;
 }
 
-.modal-actions {
-    margin-top: 8px;
+.modal-shell__title {
+    margin: 0;
+    font-size: 1.35rem;
+    color: #062f1b;
 }
 
-.cancel-btn {
+.modal-shell__subtitle {
+    margin: 6px 0 0;
+    color: #5a6a61;
+    font-size: 0.92rem;
+}
+
+.modal-shell__dismiss {
+    margin-top: -6px;
+}
+
+.modal-shell__divider {
+    height: 1px;
+    background: rgba(11, 155, 74, 0.14);
+    margin: 18px 0 24px;
+}
+
+.modal-shell__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+}
+
+.modal-shell__alert {
+    margin: 0;
+}
+
+.modal-shell__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+    min-height: 0;
+}
+
+.modal-shell__content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    padding-right: 6px;
+    padding-bottom: 6px;
+}
+
+.modal-shell__content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-shell__content::-webkit-scrollbar-track {
+    background: rgba(11, 155, 74, 0.08);
+    border-radius: 999px;
+}
+
+.modal-shell__content::-webkit-scrollbar-thumb {
+    background: rgba(11, 155, 74, 0.45);
+    border-radius: 999px;
+}
+
+.modal-shell__content::-webkit-scrollbar-thumb:hover {
+    background: rgba(11, 155, 74, 0.6);
+}
+
+.modal-shell__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-shell__ghost {
     font-weight: 600;
-    letter-spacing: 0.12rem;
+    letter-spacing: 0.08em;
+}
+
+.modal-shell__cta {
+    text-transform: none;
+    font-weight: 600;
+}
+
+.modal-shell :deep(.v-field__outline) {
+    border-radius: 18px;
+    border-width: 1.5px;
+    border-color: rgba(15, 138, 78, 0.18);
+}
+
+.modal-shell :deep(.v-field__input) {
+    padding-top: 18px;
+    padding-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+    .modal-shell {
+        padding: 22px 20px;
+    }
+
+    .modal-shell__header {
+        flex-direction: column;
+    }
+
+    .modal-shell__actions {
+        flex-direction: column;
+    }
 }
 
 .action-btn {

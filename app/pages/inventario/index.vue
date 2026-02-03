@@ -1,20 +1,17 @@
 <template>
 	<section class="inventario-page">
-		<v-container class="inventory-shell">
-			<v-card class="inventory-board" rounded="xl" border>
+		<v-container class="inventory-shell" fluid>
+			<v-card class="inventory-board" rounded="lg" border>
 				<header class="board-header">
 					<div class="board-heading">
 						<span class="board-icon">📋</span>
 						<div>
 							<p class="board-label">Lista de Productos</p>
-							<p class="board-subtitle">Gestión de frutas y verduras frescas</p>
 						</div>
 					</div>
 					<div class="board-actions">
 						<v-btn
-							class="action-btn"
-							color="success"
-							variant="tonal"
+							class="action-btn primary-gradient-btn"
 							prepend-icon="mdi-plus"
 							@click="openCreateDialog"
 						>
@@ -241,139 +238,173 @@
 					</v-container>
 
 				<v-dialog v-model="formDialog" max-width="720" persistent>
-					<v-card rounded="xl" border class="form-card">
-						<v-card-title class="text-subtitle-1 font-weight-bold">
-							{{ editingProducto ? 'Editar producto' : 'Registrar producto' }}
-						</v-card-title>
-						<v-card-text>
-							<v-alert
-								v-if="formError"
-								type="error"
-								variant="tonal"
-								border="start"
-								border-color="error"
-								class="mb-4"
-							>
-								{{ formError }}
-							</v-alert>
-
-							<v-form ref="productFormRef" @submit.prevent="submitProducto">
-								<v-row dense class="form-grid">
-									<v-col cols="12">
+					<v-card rounded="xl" border class="modal-shell">
+						<div class="modal-shell__header">
+							<div>
+								<p class="modal-shell__eyebrow">{{ editingProducto ? 'Modo edición' : 'Nuevo registro' }}</p>
+								<h3 class="modal-shell__title">
+									{{ editingProducto ? 'Actualizar producto' : 'Registrar producto' }}
+								</h3>
+								<p class="modal-shell__subtitle">
+									{{
+										editingProducto
+											? 'Ajusta la información del inventario antes de guardar los cambios.'
+											: 'Completa el formulario para añadir un producto al inventario general.'
+									}}
+								</p>
+							</div>
+							<v-btn
+								icon="mdi-close"
+								variant="text"
+								color="grey-darken-1"
+								class="modal-shell__dismiss"
+								@click="closeFormDialog"
+							></v-btn>
+						</div>
+						<div class="modal-shell__divider"></div>
+						<div class="modal-shell__body">
+							<v-form ref="productFormRef" class="modal-shell__form" @submit.prevent="submitProducto">
+								<v-alert
+									v-if="formError"
+									type="error"
+									variant="tonal"
+									border="start"
+									border-color="error"
+									class="modal-shell__alert"
+								>
+									{{ formError }}
+								</v-alert>
+								<div class="modal-shell__content">
+									<div class="modal-form-grid">
 										<v-text-field
-											v-model="productForm.nombre"
-											label="Nombre del producto"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											:rules="[requiredRule]"
-										></v-text-field>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.nombre"
+										label="Nombre del producto"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__item--top-gap"
+									></v-text-field>
 										<v-select
-											v-model="productForm.categoria_id"
-											:items="categorySelectItems"
-											item-title="title"
-											item-value="value"
-											label="Categoría"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											:rules="[requiredRule]"
-										></v-select>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.categoria_id"
+										:items="categorySelectItems"
+										item-title="title"
+										item-value="value"
+										label="Categoría"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item"
+									></v-select>
 										<v-select
-											v-model="productForm.proveedor_id"
-											:items="providerSelectItems"
-											item-title="title"
-											item-value="value"
-											label="Proveedor"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											:rules="[requiredRule]"
-										></v-select>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.proveedor_id"
+										:items="providerSelectItems"
+										item-title="title"
+										item-value="value"
+										label="Proveedor"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item"
+									></v-select>
 										<v-text-field
-											v-model="productForm.kilogramos"
-											type="number"
-											label="Cantidad (kg)"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											min="0"
-											step="0.001"
-											:rules="[requiredRule]"
-										></v-text-field>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.kilogramos"
+										type="number"
+										label="Cantidad (kg)"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										min="0"
+										step="0.001"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item"
+									></v-text-field>
 										<v-text-field
-											v-model="productForm.desperdicio"
-											type="number"
-											label="Desperdicio (kg)"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											min="0"
-											step="0.001"
-										></v-text-field>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.desperdicio"
+										type="number"
+										label="Desperdicio (kg)"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										min="0"
+										step="0.001"
+										class="modal-form-grid__item"
+									></v-text-field>
 										<v-text-field
-											v-model="productForm.precio_compra"
-											type="number"
-											label="Precio de compra ($)"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											min="0"
-											step="0.01"
-											:rules="[requiredRule]"
-										></v-text-field>
-									</v-col>
-									<v-col cols="12" md="6">
+										v-model="productForm.precio_compra"
+										type="number"
+										label="Precio de compra ($)"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										min="0"
+										step="0.01"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item"
+									></v-text-field>
 										<v-text-field
-											v-model="productForm.precio_venta_kg"
-											type="number"
-											label="Precio de venta por kg ($)"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											min="0"
-											step="0.01"
-											:rules="[requiredRule]"
-										></v-text-field>
-									</v-col>
-									<v-col cols="12" md="6">
-										<v-text-field
-											v-model="productForm.usuario_id"
-											type="number"
-											label="ID responsable"
-											variant="outlined"
-											density="comfortable"
-											color="success"
-											min="1"
-											hint="Temporalmente se asigna el usuario {{ DEFAULT_USER_ID }} si no especificas otro."
-											persistent-hint
-										></v-text-field>
-									</v-col>
-									<v-col cols="12">
+										v-model="productForm.precio_venta_kg"
+										type="number"
+										label="Precio de venta por kg ($)"
+										variant="outlined"
+										density="comfortable"
+										color="success"
+										min="0"
+										step="0.01"
+										:rules="[requiredRule]"
+										class="modal-form-grid__item"
+									></v-text-field>
+										<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
+											<v-text-field
+												v-model="productForm.usuario_id"
+												type="number"
+												label="ID responsable"
+												variant="outlined"
+												density="comfortable"
+												color="success"
+												min="1"
+												hint="Temporalmente se asigna el usuario {{ DEFAULT_USER_ID }} si no especificas otro."
+												persistent-hint
+												class="modal-form-grid__pair-field"
+											></v-text-field>
+											<div class="stock-slider-field">
+												<div class="stock-slider-field__header">
+													<span>Stock mínimo</span>
+													<strong>{{ formatKilograms(productForm.stock_minimo ?? STOCK_MIN_KG) }}</strong>
+												</div>
+												<v-slider
+													v-model.number="productForm.stock_minimo"
+													class="stock-slider-field__slider"
+													color="success"
+													:step="0.5"
+													:min="0"
+													:max="200"
+													hide-details
+												></v-slider>
+												<p class="stock-slider-field__hint">
+													Define el umbral que detonará las alertas de bajo stock para este producto.
+												</p>
+											</div>
+										</div>
 										<v-textarea
 											v-model="productForm.detalle"
 											label="Detalle o notas"
 											variant="outlined"
 											density="comfortable"
 											rows="3"
+											class="modal-form-grid__item modal-form-grid__item--full"
 										></v-textarea>
-									</v-col>
-								</v-row>
-								<div class="form-actions">
-									<v-btn variant="text" color="grey" @click="closeFormDialog">Cancelar</v-btn>
+										</div>
+									</div>
+									<div class="modal-shell__actions">
+									<v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost" @click="closeFormDialog">
+										Cancelar
+									</v-btn>
 									<v-btn
 										type="submit"
-										color="success"
+										class="modal-shell__cta primary-gradient-btn"
 										:loading="formLoading"
 										:prepend-icon="editingProducto ? 'mdi-content-save-edit' : 'mdi-content-save'"
 									>
@@ -381,7 +412,7 @@
 									</v-btn>
 								</div>
 							</v-form>
-						</v-card-text>
+						</div>
 					</v-card>
 				</v-dialog>
 
@@ -418,6 +449,7 @@ const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const DEFAULT_USER_ID = 1
 const FALLBACK_FETCH_SIZE = 100
 const MAX_FALLBACK_PAGES = 10
+const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
 
 const productosRaw = ref([])
 const productosLoading = ref(false)
@@ -438,6 +470,7 @@ const formLoading = ref(false)
 const deleteLoading = ref(false)
 const productFormRef = ref(null)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
+const localStockThresholds = ref({})
 let searchDebounce = null
 let skipRemoteSearch = false
 
@@ -451,6 +484,7 @@ const getDefaultForm = () => ({
 	precio_venta_kg: '',
 	usuario_id: DEFAULT_USER_ID,
 	detalle: '',
+	stock_minimo: STOCK_MIN_KG,
 })
 
 const productForm = ref(getDefaultForm())
@@ -525,6 +559,74 @@ const toNumber = (value, fallback = 0) => {
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 
+const persistLocalStockThresholds = () => {
+	if (typeof window === 'undefined') return
+	try {
+		const payload = JSON.stringify({
+			thresholds: localStockThresholds.value,
+		})
+		localStorage.setItem(STOCK_THRESHOLD_STORAGE_KEY, payload)
+	} catch (error) {
+		console.warn('No se pudieron guardar los límites locales de stock.', error)
+	}
+}
+
+const loadLocalStockThresholds = () => {
+	if (typeof window === 'undefined') return
+	try {
+		const raw = localStorage.getItem(STOCK_THRESHOLD_STORAGE_KEY)
+		if (!raw) return
+		const parsed = JSON.parse(raw)
+		if (parsed?.thresholds) {
+			localStockThresholds.value = parsed.thresholds
+		} else if (typeof parsed === 'object' && parsed !== null) {
+			localStockThresholds.value = parsed
+		}
+	} catch (error) {
+		console.warn('No se pudieron cargar los límites locales de stock.', error)
+	}
+}
+
+const setStockThresholdForProduct = (productId, value) => {
+	if (!productId) return
+	const sanitized = toNumber(value, STOCK_MIN_KG)
+	localStockThresholds.value = {
+		...localStockThresholds.value,
+		[productId]: sanitized,
+	}
+	persistLocalStockThresholds()
+}
+
+const removeStockThresholdForProduct = (productId) => {
+	if (!productId || localStockThresholds.value[productId] == null) return
+	const clone = { ...localStockThresholds.value }
+	delete clone[productId]
+	localStockThresholds.value = clone
+	persistLocalStockThresholds()
+}
+
+const resolveStockThreshold = (producto) => {
+	const productId = producto?.id
+	if (productId && localStockThresholds.value[productId] != null) {
+		return localStockThresholds.value[productId]
+	}
+	if (producto?.stock_minimo != null) {
+		return producto.stock_minimo
+	}
+	return STOCK_MIN_KG
+}
+
+const extractProductoId = (response, fallbackId = null) => {
+	return response?.data?.id ?? response?.id ?? fallbackId ?? null
+}
+
+const persistThresholdFromPayload = (response, payload, fallbackId = null) => {
+	const productId = extractProductoId(response, fallbackId)
+	if (productId) {
+		setStockThresholdForProduct(productId, payload.stock_minimo)
+	}
+}
+
 const formatCurrency = (value) => currencyFormatter.format(toNumber(value))
 const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, toNumber(value)))} kg`
 
@@ -538,6 +640,21 @@ const normalizeText = (value = '') => {
 	if (value == null) return ''
 	return String(value).trim().toLowerCase()
 }
+
+const categoryEmojiMap = computed(() => {
+	return categorias.value.reduce((acc, categoria) => {
+		const emoji = categoria?.emoji ?? categoria?.icono ?? categoria?.icon ?? null
+		if (!emoji) return acc
+		if (categoria?.id != null) {
+			acc[String(categoria.id)] = emoji
+		}
+		const normalizedName = normalizeText(categoria?.nombre)
+		if (normalizedName) {
+			acc[`name:${normalizedName}`] = emoji
+		}
+		return acc
+	}, {})
+})
 
 const getCategoryName = (producto) =>
 	producto?.categoria_nombre ?? producto?.categoria?.nombre ?? 'Sin categoría'
@@ -561,14 +678,29 @@ const isDetalleColumnError = (error) => {
 	return typeof message === 'string' && message.toLowerCase().includes('detalle')
 }
 
-const getCategoryBadge = (producto, index) => {
-	const fallback = ['🍅', '🥬', '🍋', '🥕', '🍇', '🍉']
-	return (
+const resolveCategoryEmojiFromMap = (producto) => {
+	const categoryId = producto?.categoria_id ?? producto?.categoria?.id
+	if (categoryId != null) {
+		const emoji = categoryEmojiMap.value[String(categoryId)]
+		if (emoji) return emoji
+	}
+	const normalizedName = normalizeText(getCategoryName(producto))
+	if (normalizedName) {
+		const emoji = categoryEmojiMap.value[`name:${normalizedName}`]
+		if (emoji) return emoji
+	}
+	return null
+}
+
+const getCategoryBadge = (producto) => {
+	const emoji =
 		producto?.categoria?.emoji ??
 		producto?.categoria_emoji ??
 		producto?.emoji ??
-		fallback[index % fallback.length]
-	)
+		resolveCategoryEmojiFromMap(producto)
+	if (emoji) return emoji
+	const categoryName = getCategoryName(producto)
+	return categoryName ? categoryName.trim().charAt(0).toUpperCase() : '❖'
 }
 
 const getKilos = (producto) =>
@@ -629,11 +761,13 @@ const productCards = computed(() =>
 	productosRaw.value
 		.map((producto, index) => {
 			const kilos = getNetKilos(producto)
+			const stockMinimumRaw = toNumber(resolveStockThreshold(producto), STOCK_MIN_KG)
+			const stockMinimum = stockMinimumRaw > 0 ? stockMinimumRaw : STOCK_MIN_KG
 			const expiryDate = deriveExpiryDate(producto)
 			const daysToExpire = expiryDate
 				? Math.ceil((expiryDate.getTime() - Date.now()) / ONE_DAY_MS)
 				: null
-			const isLowStock = kilos <= STOCK_MIN_KG
+			const isLowStock = kilos <= stockMinimum
 			const isExpiring = typeof daysToExpire === 'number' && daysToExpire <= EXPIRY_WARNING_DAYS && daysToExpire >= 0
 			const status = buildStatus({ isLowStock, isExpiring, daysToExpire })
 			const saleTotal = kilos * toNumber(producto?.precio_venta_kg)
@@ -645,16 +779,20 @@ const productCards = computed(() =>
 				name: producto?.nombre ?? 'Producto sin nombre',
 				category: getCategoryName(producto),
 				provider: getProviderName(producto),
-				badge: getCategoryBadge(producto, index),
+				badge: getCategoryBadge(producto),
 				kilosLabel: formatKilograms(kilos),
-				stockMinimumLabel: formatKilograms(STOCK_MIN_KG),
+				stockMinimumLabel: formatKilograms(stockMinimum),
 				purchaseLabel: formatCurrency(producto?.precio_compra),
 				saleLabel: formatCurrency(producto?.precio_venta_kg),
 				profitLabel: formatCurrency(profit),
 				ingresoLabel: formatDate(producto?.created_at),
 				venceLabel: expiryDate ? formatDate(expiryDate) : 'Pendiente',
 				status,
-				progress: clamp(Math.round((kilos / (STOCK_MIN_KG * 3)) * 100), 6, 100),
+				progress: clamp(
+					Math.round((kilos / (Math.max(stockMinimum, 1) * 3)) * 100),
+					6,
+					100,
+				),
 			}
 		})
 		.sort((a, b) => a.status.weight - b.status.weight || a.name.localeCompare(b.name))
@@ -830,6 +968,7 @@ const openEditDialog = (producto) => {
 		precio_venta_kg: toNumber(producto?.precio_venta_kg).toString(),
 		usuario_id: producto?.usuario_id ?? DEFAULT_USER_ID,
 		detalle: producto?.detalle ?? '',
+		stock_minimo: toNumber(resolveStockThreshold(producto), STOCK_MIN_KG),
 	}
 	formDialog.value = true
 }
@@ -869,29 +1008,36 @@ const submitProducto = async () => {
 
 	formLoading.value = true
 
+	const kilosValue = toNumber(productForm.value.kilogramos)
+	const stockMinValue = toNumber(productForm.value.stock_minimo, STOCK_MIN_KG)
+
 	const payload = {
 		nombre: productForm.value.nombre.trim(),
 		categoria_id: Number(productForm.value.categoria_id),
 		proveedor_id: Number(productForm.value.proveedor_id),
-		kilogramos: toNumber(productForm.value.kilogramos),
+		kilogramos: kilosValue,
+		kilo: kilosValue,
 		desperdicio: productForm.value.desperdicio ? toNumber(productForm.value.desperdicio) : 0,
 		precio_compra: toNumber(productForm.value.precio_compra),
 		precio_venta_kg: toNumber(productForm.value.precio_venta_kg),
 		usuario_id: Number(productForm.value.usuario_id) || DEFAULT_USER_ID,
+		stock_minimo: stockMinValue > 0 ? stockMinValue : STOCK_MIN_KG,
 	}
 
 	try {
 		if (editingProducto.value?.id) {
-			await secureRequest(`/productos/${editingProducto.value.id}`, {
+			const response = await secureRequest(`/productos/${editingProducto.value.id}`, {
 				method: 'PUT',
 				body: payload,
 			})
+			persistThresholdFromPayload(response, payload, editingProducto.value.id)
 			showSnackbar('Producto actualizado correctamente.')
 		} else {
-			await secureRequest('/productos', {
+			const response = await secureRequest('/productos', {
 				method: 'POST',
 				body: payload,
 			})
+			persistThresholdFromPayload(response, payload)
 			showSnackbar('Producto registrado correctamente.')
 		}
 
@@ -918,6 +1064,7 @@ const confirmDelete = async () => {
 			method: 'DELETE',
 		})
 		showSnackbar('Producto eliminado correctamente.')
+		removeStockThresholdForProduct(productoSeleccionado.value.id)
 		closeDeleteDialog()
 		await fetchProductos(pagination.page)
 	} catch (error) {
@@ -997,6 +1144,7 @@ watch(
 )
 
 onMounted(async () => {
+	loadLocalStockThresholds()
 	await Promise.all([fetchCategorias(), fetchProveedores()])
 	fetchProductos()
 })
@@ -1017,15 +1165,15 @@ defineExpose({ refreshInventario })
 }
 
 .inventory-shell {
-	max-width: 1300px;
-	margin: 0 auto;
+	width: 100%;
+	padding-inline: 0;
 }
 
 .inventory-board {
 	background: #ffffff;
-	border: 1.5px solid rgb(33, 229, 118);
-	box-shadow: 0 18px 40px rgba(5, 93, 55, 0.08);
-	padding: 28px 32px 32px;
+	border: 1px solid rgba(34, 197, 94, 0.22);
+	box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
+	padding: 18px 22px 22px;
 }
 
 .board-header {
@@ -1073,8 +1221,12 @@ defineExpose({ refreshInventario })
 }
 
 .action-btn {
-	border-radius: 999px;
+	height: 44px;
+	min-height: 44px;
+	border-radius: 14px;
 	text-transform: none;
+	font-weight: 600;
+	font-family: inherit;
 }
 
 .filters-bar {
@@ -1392,21 +1544,235 @@ defineExpose({ refreshInventario })
 	align-items: center;
 }
 
-.form-card {
-	padding: 8px 8px 24px;
-}
-
-.form-grid {
+.modal-shell {
+	padding: 28px 32px;
+	background: linear-gradient(145deg, #ffffff 0%, #f6fff9 70%);
+	border-color: rgba(11, 155, 74, 0.2);
+	box-shadow: 0 28px 60px rgba(5, 68, 36, 0.18);
 	display: flex;
 	flex-direction: column;
+	max-height: 85vh;
+	overflow: hidden;
+}
+
+.modal-shell__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
 	gap: 16px;
 }
 
-.form-actions {
+.modal-shell__eyebrow {
+	margin-bottom: 4px;
+	font-size: 0.75rem;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: #0f8a4e;
+}
+
+.modal-shell__title {
+	margin: 0;
+	font-size: 1.45rem;
+	color: #0b3421;
+}
+
+.modal-shell__subtitle {
+	margin: 6px 0 0;
+	color: #5c6d63;
+	font-size: 0.95rem;
+}
+
+.modal-shell__dismiss {
+	margin-top: -6px;
+}
+
+.modal-shell__divider {
+	margin: 20px 0 28px;
+	height: 1px;
+	background: rgba(11, 155, 74, 0.15);
+}
+
+.modal-shell__body {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	flex: 1;
+	min-height: 0;
+}
+
+.modal-shell__alert {
+	margin: 0 0 20px;
+}
+
+.modal-shell__form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	flex: 1;
+	min-height: 0;
+}
+
+.modal-shell__content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	flex: 1;
+	min-height: 0;
+	max-height: 100%;
+	overflow-y: auto;
+	scrollbar-gutter: stable both-edges;
+	padding: 0 6px 6px;
+}
+
+.modal-shell__content::-webkit-scrollbar {
+	width: 6px;
+}
+
+.modal-shell__content::-webkit-scrollbar-track {
+	background: rgba(15, 138, 78, 0.08);
+	border-radius: 999px;
+}
+
+.modal-shell__content::-webkit-scrollbar-thumb {
+	background: rgba(15, 138, 78, 0.4);
+	border-radius: 999px;
+}
+
+.modal-shell__content::-webkit-scrollbar-thumb:hover {
+	background: rgba(15, 138, 78, 0.55);
+}
+
+.modal-form-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.modal-form-grid__item--full {
+	grid-column: 1 / -1;
+}
+
+.modal-form-grid__item--top-gap {
+	margin-top: 10px;
+}
+
+.modal-form-grid__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+	align-items: stretch;
+}
+
+.stock-slider-field {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1.5px solid rgba(15, 138, 78, 0.18);
+	border-radius: 16px;
+	background: linear-gradient(180deg, #f9fefb 0%, #f3fbf6 100%);
+	padding: 16px 18px 12px;
+}
+
+.stock-slider-field__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.78rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #55685f;
+}
+
+.stock-slider-field__header strong {
+	font-size: 1rem;
+	letter-spacing: normal;
+	text-transform: none;
+	color: #0b4c2a;
+}
+
+.stock-slider-field__hint {
+	margin: 0;
+	font-size: 0.75rem;
+	color: #6b7a71;
+}
+
+.stock-slider-field__slider :deep(.v-slider-track__background) {
+	background: rgba(11, 155, 74, 0.2);
+}
+
+.stock-slider-field__slider :deep(.v-slider-track__fill) {
+	background: #05a552;
+}
+
+.stock-slider-field__slider :deep(.v-slider-thumb) {
+	border: 3px solid #ffffff;
+	box-shadow: 0 4px 10px rgba(5, 84, 40, 0.25);
+}
+
+.modal-shell__actions {
 	display: flex;
 	justify-content: flex-end;
 	gap: 12px;
-	margin-top: 8px;
+}
+
+.modal-shell__ghost {
+	font-weight: 600;
+	letter-spacing: 0.08em;
+}
+
+.modal-shell__cta {
+	min-width: 160px;
+	text-transform: none;
+	font-weight: 600;
+}
+
+.primary-gradient-btn {
+	padding: 0 1.4rem;
+	min-width: 180px;
+	border-radius: 14px;
+	background: linear-gradient(135deg, #0cc665 0%, #06a453 100%) !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(6, 164, 83, 0.14) !important;
+	font-weight: 600;
+}
+
+.primary-gradient-btn :deep(.v-btn__content) {
+	letter-spacing: 0.2px;
+}
+
+.primary-gradient-btn :deep(.v-btn__overlay) {
+	opacity: 0;
+}
+
+.modal-shell :deep(.v-field__outline) {
+	border-radius: 16px;
+	border-width: 1.5px;
+	border-color: rgba(15, 138, 78, 0.18);
+}
+
+.modal-shell :deep(.v-field__input) {
+	padding-top: 18px;
+	padding-bottom: 14px;
+}
+
+.modal-shell :deep(.v-select__selection-text) {
+	font-weight: 500;
+}
+
+@media (max-width: 720px) {
+	.modal-shell {
+		padding: 22px;
+	}
+
+	.modal-shell__header {
+		flex-direction: column;
+	}
+}
+
+@media (max-width: 600px) {
+	.modal-shell__actions {
+		flex-direction: column;
+	}
 }
 
 @media (max-width: 960px) {
