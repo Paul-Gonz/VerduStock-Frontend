@@ -113,6 +113,42 @@
         <v-card class="section-card" rounded="lg" border>
             <v-card-title class="text-subtitle-1 font-weight-bold">Productos por Categoría</v-card-title>
             <v-card-text>
+                <div class="filters-bar mb-4">
+                    <div class="filters-bar__search">
+                        <v-text-field
+                            v-model="productSearchQuery"
+                            label="Buscar producto"
+                            placeholder="Escribe el nombre o proveedor"
+                            variant="outlined"
+                            density="comfortable"
+                            prepend-inner-icon="mdi-magnify"
+                            clearable
+                            color="success"
+                            base-color="success"
+                        ></v-text-field>
+                    </div>
+                    <div class="filters-bar__categories">
+                      
+                        <v-chip-group
+                            v-model="categoriaFiltroSeleccionada"
+                            class="category-chip-group filters-bar__chips"
+                            column
+                        >
+                            <v-chip
+                                v-for="item in categoriaFilterItems"
+                                :key="item.value"
+                                :value="item.value"
+                                variant="outlined"
+                                size="small"
+                                class="category-chip"
+                                :class="{ 'category-chip--active': categoriaFiltroSeleccionada === item.value }"
+                            >
+                                <span v-if="item.emoji" class="category-chip__emoji">{{ item.emoji }}</span>
+                                <span class="category-chip__label">{{ item.title }}</span>
+                            </v-chip>
+                        </v-chip-group>
+                    </div>
+                </div>
                 <v-progress-linear
                     v-if="productosLoading"
                     indeterminate
@@ -130,16 +166,19 @@
                 >
                     {{ productosError }}
                 </v-alert>
-                <template v-if="productGroups.length">
-                    <div v-for="group in productGroups" :key="group.id" class="mb-8">
-                    <div class="d-flex align-center ga-2 mb-4">
-                        <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
-                            <span class="emoji-avatar__emoji">{{ group.emoji }}</span>
-                        </v-avatar>
-                        <div class="text-subtitle-2 font-weight-bold">{{ group.name }} ({{ group.items.length }})</div>
-                    </div>
+                <template v-if="filteredProductGroups.length">
+                    <div v-for="group in filteredProductGroups" :key="group.id" class="category-group">
+                        <div class="category-group__header d-flex align-center ga-2 mb-4">
+                            <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
+                                <span class="emoji-avatar__emoji">{{ group.emoji }}</span>
+                            </v-avatar>
+                            <div class="text-subtitle-2 font-weight-bold">
+                                {{ group.name }} ({{ group.items.length }})
+                            </div>
+                        </div>
 
-                        <v-row v-if="group.items.length">
+                        <div class="category-group__content" v-if="group.items.length">
+                            <v-row>
                             <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
                                 <v-card class="product-card" rounded="lg" border>
                                     <v-card-text>
@@ -185,11 +224,18 @@
                                 </v-card>
                             </v-col>
                         </v-row>
+                        </div>
                         <div v-else class="text-body-2 text-medium-emphasis py-4 px-3 bg-grey-lighten-5 rounded-lg">
                             Esta categoría aún no tiene productos registrados.
                         </div>
                     </div>
                 </template>
+                <div
+                    v-else-if="productGroups.length && !productosLoading"
+                    class="text-body-2 text-medium-emphasis py-6 text-center"
+                >
+                    No hay productos que coincidan con los filtros aplicados.
+                </div>
                 <div v-else-if="!productosLoading" class="text-body-2 text-medium-emphasis py-6 text-center">
                     No hay categorías o productos para mostrar todavía.
                 </div>
@@ -341,9 +387,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="categoria in categoriasRegistradas" :key="categoria.id" class="categoria-table-row">
+                            <tr
+                                v-for="(categoria, index) in categoriasRegistradas"
+                                :key="categoria.id"
+                                class="categoria-table-row"
+                            >
                                 <td class="emoji-cell">
-                                    <span class="emoji-avatar__emoji">{{ categoria.emoji || '❔' }}</span>
+                                    <span class="emoji-avatar__emoji">{{ getCategoriaEmoji(categoria, index) }}</span>
                                 </td>
                                 <td>{{ categoria.nombre }}</td>
                                 <td>{{ categoria.detalle || 'Sin detalle' }}</td>
@@ -408,6 +458,7 @@ const MAX_PRODUCTOS_PER_PAGE = 200
 const visibleSlots = 2
 const HIGH_STOCK_THRESHOLD = 30
 const MEDIUM_STOCK_THRESHOLD = 10
+const ALL_CATEGORIES_VALUE = '__all__'
 
 const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
 const emojiAllowedGroup = 'food_drink'
@@ -430,6 +481,8 @@ const categoriasError = ref('')
 const productosError = ref('')
 const categoriaEliminando = ref(null)
 const formError = ref('')
+const productSearchQuery = ref('')
+const categoriaFiltroSeleccionada = ref(ALL_CATEGORIES_VALUE)
 
 const showCreateDialog = ref(false)
 const showListDialog = ref(false)
@@ -685,6 +738,60 @@ const productGroups = computed(() => {
     return groups
 })
 
+const categoriaFilterItems = computed(() => {
+    if (!productGroups.value.length) {
+        return [{ title: 'Todas las categorías', value: ALL_CATEGORIES_VALUE, emoji: '⭐' }]
+    }
+
+    const map = new Map()
+    productGroups.value.forEach((group) => {
+        const id = group?.id ?? 'sin-categoria'
+        const value = id != null ? String(id) : 'sin-categoria'
+        map.set(value, {
+            title: group?.name ?? `Categoría ${value}`,
+            emoji: group?.emoji ?? null,
+        })
+    })
+
+    return [
+        { title: 'Todas las categorías', value: ALL_CATEGORIES_VALUE, emoji: '⭐' },
+        ...Array.from(map.entries()).map(([value, meta]) => ({ value, ...meta })),
+    ]
+})
+
+const filteredProductGroups = computed(() => {
+    if (!productGroups.value.length) {
+        return []
+    }
+
+    const term = normalizeText(productSearchQuery.value)
+    const selectedValue = categoriaFiltroSeleccionada.value
+    const selected = selectedValue && selectedValue !== ALL_CATEGORIES_VALUE ? String(selectedValue) : null
+
+    return productGroups.value
+        .map((group) => {
+            const groupId = group?.id != null ? String(group.id) : 'sin-categoria'
+            if (selected && groupId !== selected) {
+                return null
+            }
+
+            const items = term
+                ? group.items.filter((item) => {
+                      const name = normalizeText(item?.name)
+                      const source = normalizeText(item?.source)
+                      return name.includes(term) || source.includes(term)
+                  })
+                : group.items
+
+            if (!items.length) {
+                return null
+            }
+
+            return { ...group, items }
+        })
+        .filter(Boolean)
+})
+
 const normalizeText = (value = '') => value?.toString?.().trim().toLowerCase() ?? ''
 
 const hasDuplicateName = (name, ignoreId = null) => {
@@ -752,6 +859,7 @@ const submitCategory = async () => {
     const payload = {
         nombre: nombreActual,
         detalle: detalleActual || null,
+        emoji: formulario.value.emoji || null,
     }
 
     cargando.value = true
@@ -1227,5 +1335,81 @@ watch(
 .emoji-cell {
     width: 72px;
     text-align: center;
+}
+
+.category-group {
+    margin-bottom: 2.5rem;
+    padding: 14px 16px;
+    border: 1px solid rgba(5, 165, 82, 0.12);
+    border-radius: 20px;
+    background: #f7fff9;
+}
+
+.category-group__content {
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+}
+
+.category-group__header {
+    position: sticky;
+    top: 0;
+    background: #f7fff9;
+    padding-bottom: 10px;
+    z-index: 1;
+}
+
+.category-group__content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.category-group__content::-webkit-scrollbar-thumb {
+    background: rgba(5, 165, 82, 0.35);
+    border-radius: 4px;
+}
+
+
+.filters-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (min-width: 960px) {
+    .filters-bar {
+        flex-direction: row;
+        align-items: top;
+        gap: 50px;
+    }
+
+    .filters-bar__search {
+        flex: 1 1 50%;
+    }
+
+    .filters-bar__categories {
+        flex: 1 1 50%;
+        flex-direction: row;
+        align-items: top;
+        gap: 16px;
+    }
+}
+
+.category-chip {
+    border-radius: 14px;
+    border-color: rgba(5, 165, 82, 0.24) !important;
+    color: #05934a !important;
+    background: #ffffff;
+}
+
+.category-chip--active {
+    background: #e8fdf0 !important;
+    border-color: #06a453 !important;
+    color: #06a453 !important;
+}
+
+.category-chip__emoji {
+    margin-right: 6px;
+    font-size: 1rem;
 }
 </style>
