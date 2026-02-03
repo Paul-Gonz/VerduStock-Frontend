@@ -533,6 +533,13 @@ const extractPrecioVenta = (producto) =>
 const extractPrecioCompra = (producto) =>
     toNumber(producto?.precio_compra ?? producto?.costo ?? producto?.precio ?? 0)
 
+const computeProductoProfit = (producto) => {
+    const kilos = extractKilos(producto)
+    const ventaKg = extractPrecioVenta(producto)
+    const compraKg = extractPrecioCompra(producto)
+    return kilos * (ventaKg - compraKg)
+}
+
 const extractCollection = (payload) => {
     if (!payload) return []
     if (Array.isArray(payload)) return payload
@@ -654,10 +661,7 @@ const mappedCategories = computed(() => {
             const kilos = extractKilos(producto)
             return sum + kilos * extractPrecioVenta(producto)
         }, 0)
-        const profit = productos.reduce((sum, producto) => {
-            const kilos = extractKilos(producto)
-            return sum + (extractPrecioVenta(producto) - extractPrecioCompra(producto)) * kilos
-        }, 0)
+        const profit = productos.reduce((sum, producto) => sum + computeProductoProfit(producto), 0)
 
         return {
             id: categoria?.id ?? index,
