@@ -5,7 +5,8 @@ export const useApi = () => {
     // Creamos una instancia de fetch personalizada
     const api = $fetch.create({
         baseURL: config.public.apiBase as string,
-        credentials: 'include',
+        // Descomentar la linea 9 si se necesitan cookies en las peticiones
+        //credentials: 'include',
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'

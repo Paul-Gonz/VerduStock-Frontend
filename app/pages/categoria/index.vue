@@ -8,7 +8,7 @@
                 </v-btn>
             </v-card-title>
             <v-card-text>
-                
+
                 <v-row>
                     <v-col v-for="item in categoryStats" :key="item.id" cols="12" md="6">
                         <v-card class="stat-card" rounded="lg" border>
@@ -74,12 +74,8 @@
                                 <v-card-text>
                                     <div class="d-flex align-center justify-space-between">
                                         <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
-                                        <v-chip
-                                            :color="product.stockColor"
-                                            size="small"
-                                            variant="tonal"
-                                            :class="{ 'stock-chip--success': product.stockColor === 'success' }"
-                                        >
+                                        <v-chip :color="product.stockColor" size="small" variant="tonal"
+                                            :class="{ 'stock-chip--success': product.stockColor === 'success' }">
                                             {{ product.stock }}
                                         </v-chip>
                                     </div>
@@ -95,21 +91,14 @@
 
                                     <div class="d-flex align-center justify-space-between text-body-2">
                                         <span class="text-medium-emphasis">Disponibilidad</span>
-                                        <span
-                                            class="font-weight-semibold"
-                                            :class="{ 'availability--low': product.progressColor === 'error' }"
-                                        >
+                                        <span class="font-weight-semibold"
+                                            :class="{ 'availability--low': product.progressColor === 'error' }">
                                             {{ product.availability }}
                                         </span>
                                     </div>
-                                    <v-progress-linear
-                                        class="mt-2"
-                                        :model-value="product.progress"
-                                        :color="product.progressColor"
-                                        height="6"
-                                        rounded
-                                        :class="{ 'progress--low': product.progressColor === 'error' }"
-                                    ></v-progress-linear>
+                                    <v-progress-linear class="mt-2" :model-value="product.progress"
+                                        :color="product.progressColor" height="6" rounded
+                                        :class="{ 'progress--low': product.progressColor === 'error' }"></v-progress-linear>
                                 </v-card-text>
                             </v-card>
                         </v-col>
