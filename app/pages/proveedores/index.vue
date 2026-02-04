@@ -10,7 +10,8 @@
                         bg-color="#f2fff6" class="search-input max-w-sm" rounded="lg" clearable></v-text-field>
                 </div>
 
-                <v-btn class="new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus">
+                <v-btn class="new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus"
+                    @click="abrirCrear">
                     Nuevo proveedor
                 </v-btn>
             </v-card-title>
@@ -22,13 +23,9 @@
                     </v-col>
                 </v-row>
 
-                <v-alert v-else-if="error" type="error" variant="tonal" class="mb-4">
-                    Error al conectar con el backend de VerduStock.
-                </v-alert>
-
                 <div v-else>
                     <v-row v-if="proveedoresPaginados.length > 0">
-                        <v-col v-for="prov in proveedoresPaginados" :key="prov.id" cols="12" md="4">
+                        <v-col v-for="prov in proveedoresPaginados" :key="prov.id || prov.nombre" cols="12" md="4">
                             <v-card class="product-card" rounded="lg" border>
                                 <v-card-text>
                                     <div class="d-flex align-center justify-space-between mb-3">
@@ -41,17 +38,15 @@
                                     <div class="flex flex-col gap-2 mt-2">
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-phone</v-icon>
-                                            <span class="font-medium text-slate-700">{{ prov.telefono || 'Sin teléfono'
-                                                }}</span>
+                                            <span class="text-slate-700 font-medium">{{ prov.telefono || 'Sin teléfono'
+                                            }}</span>
                                         </div>
-
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-map-marker</v-icon>
-                                            <span class="text-truncate">
+                                            <span class="text-truncate" :title="prov.direccion || ''">
                                                 {{ prov.direccion || 'Sin dirección' }}
                                             </span>
                                         </div>
-
                                         <div v-if="prov.detalle"
                                             class="text-[11px] bg-white p-2 rounded-md border border-green-100 text-slate-500 italic mt-1">
                                             "{{ prov.detalle }}"
@@ -59,9 +54,9 @@
                                     </div>
 
                                     <v-divider class="my-4"></v-divider>
-
                                     <div class="flex justify-end gap-1">
-                                        <v-btn icon="mdi-pencil" variant="text" size="small" color="success"></v-btn>
+                                        <v-btn icon="mdi-pencil" variant="text" size="small" color="success"
+                                            @click="abrirEditar(prov)"></v-btn>
                                         <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
                                             color="error"></v-btn>
                                     </div>
@@ -71,10 +66,8 @@
                     </v-row>
 
                     <div v-else class="text-center py-12">
-                        <v-avatar color="grey-lighten-4" size="70" class="mb-4">
-                            <v-icon size="36" color="grey-lighten-1">mdi-magnify-remove</v-icon>
-                        </v-avatar>
-                        <p class="text-grey-darken-1 font-weight-medium">No se encontraron proveedores</p>
+                        <v-icon size="64" color="grey-lighten-2">mdi-account-off-outline</v-icon>
+                        <p class="text-grey-darken-1 mt-4">No se encontraron proveedores.</p>
                     </div>
 
                     <div class="d-flex justify-center mt-8">
@@ -84,14 +77,68 @@
                 </div>
             </v-card-text>
         </v-card>
+
+        <v-dialog v-model="isDialogOpen" max-width="500px" persistent>
+            <v-card rounded="lg">
+                <v-card-title class="pa-5 d-flex align-center">
+                    <v-icon color="success" class="mr-2">
+                        {{ editMode ? 'mdi-pencil' : 'mdi-account-plus' }}
+                    </v-icon>
+                    <span class="text-h6 font-weight-bold text-green-800">
+                        {{ editMode ? 'Editar Proveedor' : 'Registrar Proveedor' }}
+                    </span>
+                </v-card-title>
+
+                <v-card-text class="pa-5 pt-0">
+                    <v-expand-transition>
+                        <v-alert v-if="showError" type="error" variant="tonal" density="compact"
+                            class="mb-4 text-caption" closable @click:close="showError = false">
+                            {{ errorMessage }}
+                        </v-alert>
+                    </v-expand-transition>
+
+                    <v-row dense>
+                        <v-col cols="12">
+                            <v-text-field v-model="form.nombre" label="Nombre del proveedor*" variant="outlined"
+                                color="success" hide-details="auto"></v-text-field>
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <v-text-field v-model="form.telefono" label="Teléfono" variant="outlined" color="success"
+                                prepend-inner-icon="mdi-phone" hide-details="auto" type="tel"
+                                :rules="phoneRules"></v-text-field>
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <v-text-field v-model="form.direccion" label="Dirección" variant="outlined" color="success"
+                                prepend-inner-icon="mdi-map-marker" hide-details="auto"></v-text-field>
+                        </v-col>
+                        <v-col cols="12">
+                            <v-textarea v-model="form.detalle" label="Detalles o Notas" variant="outlined"
+                                color="success" rows="2" hide-details="auto"></v-textarea>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+
+                <v-divider></v-divider>
+                <v-card-actions class="pa-5">
+                    <v-spacer></v-spacer>
+                    <v-btn color="grey-darken-1" variant="text" @click="cerrarDialogo"
+                        :disabled="isSaving">Cancelar</v-btn>
+                    <v-btn color="success" variant="flat" rounded="lg" class="px-6" :loading="isSaving"
+                        @click="guardarProveedor">
+                        {{ editMode ? 'Actualizar' : 'Guardar' }}
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </section>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 
+// 1. Interfaz flexible: El ID es opcional y permitimos null del backend
 interface Proveedor {
-    id: number;
+    id?: number | null;
     nombre: string;
     telefono: string | null;
     direccion: string | null;
@@ -103,55 +150,112 @@ const search = ref('')
 const page = ref(1)
 const itemsPerPage = 9
 
-const { data: response, pending, error } = await useAsyncData(
+// --- ESTADO DEL MODAL Y FORMULARIO ---
+const isDialogOpen = ref(false)
+const isSaving = ref(false)
+const editMode = ref(false)
+const showError = ref(false)
+const errorMessage = ref('')
+
+// 2. Definimos el form con tipos que acepten nulos pero inicializados como string
+const form = ref<Proveedor>({
+    id: null,
+    nombre: '',
+    telefono: '',
+    direccion: '',
+    detalle: ''
+})
+
+// --- CARGA DE DATOS ---
+const { data: response, pending, refresh } = await useAsyncData(
     'proveedores',
     () => api('/proveedores'),
-    {
-        lazy: true,
-        default: () => ({ data: [] })
-    }
+    { default: () => ({ data: [] }) }
 )
 
 const todosLosProveedores = computed(() => {
     const res = response.value as any
-    const lista = res?.data || (Array.isArray(res) ? res : [])
-    return lista as Proveedor[]
+    return (res?.data || (Array.isArray(res) ? res : [])) as Proveedor[]
 })
 
+// --- FILTRADO Y PAGINACIÓN ---
 const proveedoresFiltrados = computed(() => {
     const lista = todosLosProveedores.value
     if (!search.value) return lista
-
     const term = search.value.toLowerCase()
-    return lista.filter((prov: Proveedor) =>
-        prov.nombre?.toLowerCase().includes(term) ||
-        prov.direccion?.toLowerCase().includes(term) ||
-        prov.telefono?.toLowerCase().includes(term)
+    return lista.filter(p =>
+        p.nombre?.toLowerCase().includes(term) ||
+        p.direccion?.toLowerCase().includes(term)
     )
 })
 
-const totalPaginas = computed(() => {
-    const totalItems = proveedoresFiltrados.value.length
-    return Math.max(1, Math.ceil(totalItems / itemsPerPage))
-})
+const totalPaginas = computed(() => Math.max(1, Math.ceil(proveedoresFiltrados.value.length / itemsPerPage)))
 
 const proveedoresPaginados = computed(() => {
     const inicio = (page.value - 1) * itemsPerPage
-    const fin = inicio + itemsPerPage
-    return proveedoresFiltrados.value.slice(inicio, fin)
+    return proveedoresFiltrados.value.slice(inicio, inicio + itemsPerPage)
 })
 
-watch(search, () => {
-    page.value = 1
-})
+// 3. Regla de validación de números (Acepta nulo o string vacío)
+const phoneRules = [
+    (v: any) => !v || /^[0-9]+$/.test(v) || 'El teléfono solo debe contener números'
+]
 
-watch(page, () => {
-    if (import.meta.client) {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        })
+const abrirCrear = () => {
+    editMode.value = false
+    form.value = { id: null, nombre: '', telefono: '', direccion: '', detalle: '' }
+    isDialogOpen.value = true
+}
+
+// 4. LIMPIEZA DE DATOS: Convertimos nulls en strings vacíos para evitar errores
+const abrirEditar = (prov: Proveedor) => {
+    editMode.value = true
+    form.value = {
+        id: prov.id,
+        nombre: prov.nombre,
+        telefono: prov.telefono ?? '', // Si es null de la DB, ponemos ''
+        direccion: prov.direccion ?? '',
+        detalle: prov.detalle ?? ''
     }
+    isDialogOpen.value = true
+}
+
+const cerrarDialogo = () => {
+    isDialogOpen.value = false
+    showError.value = false
+    form.value = { id: null, nombre: '', telefono: '', direccion: '', detalle: '' }
+}
+
+const guardarProveedor = async () => {
+    if (!form.value.nombre) {
+        errorMessage.value = "El nombre es obligatorio."
+        showError.value = true
+        return
+    }
+
+    isSaving.value = true
+    showError.value = false
+
+    try {
+        const url = editMode.value ? `/proveedores/${form.value.id}` : '/proveedores'
+        const method = editMode.value ? 'PUT' : 'POST'
+
+        await api(url, { method, body: form.value })
+
+        await refresh()
+        cerrarDialogo()
+    } catch (err: any) {
+        errorMessage.value = err.data?.message || "Error al procesar la solicitud."
+        showError.value = true
+    } finally {
+        isSaving.value = false
+    }
+}
+
+// --- UX WATCHERS ---
+watch(search, () => { page.value = 1 })
+watch(page, () => {
+    if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 </script>
 
@@ -171,7 +275,6 @@ watch(page, () => {
 .product-card {
     background: #f2fff6;
     border-color: rgba(34, 197, 94, 0.28);
-    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.08);
     min-height: 180px;
     transition: transform 0.2s ease;
 }
