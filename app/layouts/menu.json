@@ -14,5 +14,16 @@
         "title": "Categoria",
         "route": "/categoria",
         "icon": "mdi-folder"
+    },
+    {
+        "title": "Proveedores",
+        "route": "/proveedores",
+        "icon": "mdi-account-group"
+    }
+    ,
+    {
+        "title": "Usuarios",
+        "route": "/usuarios",
+        "icon": "mdi-account-group"
     }
 ]
