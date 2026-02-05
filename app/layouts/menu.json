@@ -4,6 +4,12 @@
         "route": "/home",
         "icon": "mdi-home"
     },
+    
+    {
+        "title": "Inventario",
+        "route": "/inventario",
+        "icon": "mdi-food-apple"
+    },
     {
         "title": "Categoria",
         "route": "/categoria",

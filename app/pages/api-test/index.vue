@@ -8,5 +8,5 @@
 
 <script setup>
 const { api } = useApi()
-const { data, error } = await useAsyncData('test', () => api('/api-test'))
+const { data, error } = await useAsyncData('test', () => api('/categorias'))
 </script>
