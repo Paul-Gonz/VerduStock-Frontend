@@ -39,7 +39,7 @@
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-phone</v-icon>
                                             <span class="text-slate-700 font-medium">{{ prov.telefono || 'Sin teléfono'
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-map-marker</v-icon>
