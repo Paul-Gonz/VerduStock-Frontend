@@ -11,13 +11,13 @@
                 </div>
 
                 <v-btn class="new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus"
-                    @click="abrirCrear">
+                    @click="openNewDialog">
                     Nuevo proveedor
                 </v-btn>
             </v-card-title>
 
             <v-card-text class="px-6 pb-6">
-                <v-row v-if="pending">
+                <v-row v-if="loading">
                     <v-col v-for="n in 9" :key="n" cols="12" md="4">
                         <v-skeleton-loader type="card" class="bg-[#f2fff6] border-[#22c55e28]"></v-skeleton-loader>
                     </v-col>
@@ -39,7 +39,7 @@
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-phone</v-icon>
                                             <span class="text-slate-700 font-medium">{{ prov.telefono || 'Sin teléfono'
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
                                             <v-icon size="16" color="success">mdi-map-marker</v-icon>
@@ -56,9 +56,9 @@
                                     <v-divider class="my-4"></v-divider>
                                     <div class="flex justify-end gap-1">
                                         <v-btn icon="mdi-pencil" variant="text" size="small" color="success"
-                                            @click="abrirEditar(prov)"></v-btn>
-                                        <v-btn icon="mdi-trash-can-outline" variant="text" size="small"
-                                            color="error"></v-btn>
+                                            @click="editProveedor(prov)"></v-btn>
+                                        <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="error"
+                                            @click="confirmDelete(prov)"></v-btn>
                                     </div>
                                 </v-card-text>
                             </v-card>
@@ -78,181 +78,438 @@
             </v-card-text>
         </v-card>
 
-        <v-dialog v-model="isDialogOpen" max-width="500px" persistent>
+        <!-- Diálogo para nuevo/editar proveedor -->
+        <v-dialog v-model="dialog" max-width="500" persistent>
             <v-card rounded="lg">
-                <v-card-title class="pa-5 d-flex align-center">
-                    <v-icon color="success" class="mr-2">
-                        {{ editMode ? 'mdi-pencil' : 'mdi-account-plus' }}
-                    </v-icon>
-                    <span class="text-h6 font-weight-bold text-green-800">
-                        {{ editMode ? 'Editar Proveedor' : 'Registrar Proveedor' }}
+                <v-card-title class="d-flex align-center justify-space-between">
+                    <span class="text-h6 font-weight-bold">
+                        {{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
                     </span>
+                    <v-btn icon @click="closeDialog">
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
                 </v-card-title>
-
-                <v-card-text class="pa-5 pt-0">
-                    <v-expand-transition>
-                        <v-alert v-if="showError" type="error" variant="tonal" density="compact"
-                            class="mb-4 text-caption" closable @click:close="showError = false">
+                <v-card-text>
+                    <v-form @submit.prevent="saveProveedor" ref="proveedorForm">
+                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
                             {{ errorMessage }}
                         </v-alert>
-                    </v-expand-transition>
 
-                    <v-row dense>
-                        <v-col cols="12">
-                            <v-text-field v-model="form.nombre" label="Nombre del proveedor*" variant="outlined"
-                                color="success" hide-details="auto"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="6">
-                            <v-text-field v-model="form.telefono" label="Teléfono" variant="outlined" color="success"
-                                prepend-inner-icon="mdi-phone" hide-details="auto" type="tel"
-                                :rules="phoneRules"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="6">
-                            <v-text-field v-model="form.direccion" label="Dirección" variant="outlined" color="success"
-                                prepend-inner-icon="mdi-map-marker" hide-details="auto"></v-text-field>
-                        </v-col>
-                        <v-col cols="12">
-                            <v-textarea v-model="form.detalle" label="Detalles o Notas" variant="outlined"
-                                color="success" rows="2" hide-details="auto"></v-textarea>
-                        </v-col>
-                    </v-row>
+                        <v-text-field v-model="form.nombre" label="Nombre del proveedor*"
+                            placeholder="Ingresa el nombre del proveedor" variant="outlined"
+                            :rules="[v => !!v || 'El nombre es requerido', v => v.length >= 3 || 'Mínimo 3 caracteres']"
+                            required class="mb-4" rounded="lg"></v-text-field>
+
+                        <v-text-field v-model="form.telefono" label="Teléfono" placeholder="Ingresa el teléfono"
+                            variant="outlined"
+                            :rules="[v => !v || /^[0-9]+$/.test(v) || 'El teléfono solo debe contener números']"
+                            class="mb-4" rounded="lg" prepend-inner-icon="mdi-phone"></v-text-field>
+
+                        <v-text-field v-model="form.direccion" label="Dirección" placeholder="Ingresa la dirección"
+                            variant="outlined" class="mb-4" rounded="lg"
+                            prepend-inner-icon="mdi-map-marker"></v-text-field>
+
+                        <v-textarea v-model="form.detalle" label="Detalles o notas"
+                            placeholder="Ingresa detalles adicionales" variant="outlined" rows="3" rounded="lg"
+                            class="mb-4"></v-textarea>
+                    </v-form>
                 </v-card-text>
-
-                <v-divider></v-divider>
-                <v-card-actions class="pa-5">
+                <v-card-actions class="px-6 pb-6">
                     <v-spacer></v-spacer>
-                    <v-btn color="grey-darken-1" variant="text" @click="cerrarDialogo"
-                        :disabled="isSaving">Cancelar</v-btn>
-                    <v-btn color="success" variant="flat" rounded="lg" class="px-6" :loading="isSaving"
-                        @click="guardarProveedor">
-                        {{ editMode ? 'Actualizar' : 'Guardar' }}
+                    <v-btn variant="tonal" @click="closeDialog">Cancelar</v-btn>
+                    <v-btn color="success" @click="saveProveedor" :loading="saving" variant="flat">
+                        {{ isEditing ? 'Actualizar' : 'Crear' }}
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Diálogo de confirmación para eliminar -->
+        <v-dialog v-model="deleteDialog" max-width="400">
+            <v-card rounded="lg">
+                <v-card-title class="text-h6 font-weight-bold">¿Eliminar proveedor?</v-card-title>
+                <v-card-text>
+                    <div class="text-body-1">
+                        ¿Estás seguro de eliminar al proveedor <strong>{{ proveedorToDelete?.nombre }}</strong>?
+                    </div>
+                    <div class="text-caption text-medium-emphasis mt-2">
+                        Esta acción no se puede deshacer.
+                    </div>
+                    <v-alert v-if="deleteError" type="error" variant="tonal" class="mt-2">
+                        {{ deleteError }}
+                    </v-alert>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn variant="tonal" @click="deleteDialog = false">Cancelar</v-btn>
+                    <v-btn color="error" @click="deleteProveedor" :loading="deleting" variant="flat">
+                        Eliminar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Snackbar para notificaciones -->
+        <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="snackbar.timeout" location="top right"
+            rounded="lg" elevation="10">
+            <div class="d-flex align-center ga-3">
+                <v-icon :icon="snackbar.icon" size="24"></v-icon>
+                <div>
+                    <div class="text-subtitle-2 font-weight-bold">{{ snackbar.title }}</div>
+                    <div class="text-body-2">{{ snackbar.message }}</div>
+                </div>
+            </div>
+
+            <template v-slot:actions>
+                <v-btn icon variant="text" :color="snackbar.color" @click="snackbar.show = false">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
+            </template>
+        </v-snackbar>
     </section>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { navigateTo } from '#app'
 
-// 1. Interfaz flexible: El ID es opcional y permitimos null del backend
-interface Proveedor {
-    id?: number | null;
-    nombre: string;
-    telefono: string | null;
-    direccion: string | null;
-    detalle: string | null;
-}
-
-const { api } = useApi()
+// Estados
+const proveedores = ref([])
+const loading = ref(false)
+const saving = ref(false)
+const deleting = ref(false)
 const search = ref('')
 const page = ref(1)
 const itemsPerPage = 9
-
-// --- ESTADO DEL MODAL Y FORMULARIO ---
-const isDialogOpen = ref(false)
-const isSaving = ref(false)
-const editMode = ref(false)
-const showError = ref(false)
 const errorMessage = ref('')
+const deleteError = ref('')
 
-// 2. Definimos el form con tipos que acepten nulos pero inicializados como string
-const form = ref<Proveedor>({
+// Diálogos
+const dialog = ref(false)
+const deleteDialog = ref(false)
+
+// Formularios
+const form = ref({
     id: null,
     nombre: '',
     telefono: '',
     direccion: '',
     detalle: ''
 })
+const proveedorForm = ref(null)
+const proveedorToDelete = ref(null)
+const selectedProveedor = ref(null)
+const isEditing = ref(false)
 
-// --- CARGA DE DATOS ---
-const { data: response, pending, refresh } = await useAsyncData(
-    'proveedores',
-    () => api('/proveedores'),
-    { default: () => ({ data: [] }) }
-)
-
-const todosLosProveedores = computed(() => {
-    const res = response.value as any
-    return (res?.data || (Array.isArray(res) ? res : [])) as Proveedor[]
+// Snackbar
+const snackbar = ref({
+    show: false,
+    title: '',
+    message: '',
+    color: 'success',
+    icon: 'mdi-check-circle',
+    timeout: 4000
 })
 
-// --- FILTRADO Y PAGINACIÓN ---
+// Función para mostrar notificaciones
+const showNotification = (title, message, type = 'success') => {
+    const types = {
+        success: {
+            color: 'success',
+            icon: 'mdi-check-circle',
+            timeout: 4000
+        },
+        error: {
+            color: 'error',
+            icon: 'mdi-alert-circle',
+            timeout: 5000
+        },
+        warning: {
+            color: 'warning',
+            icon: 'mdi-alert',
+            timeout: 4500
+        },
+        info: {
+            color: 'info',
+            icon: 'mdi-information',
+            timeout: 4000
+        }
+    }
+
+    const config = types[type] || types.success
+
+    snackbar.value = {
+        show: true,
+        title,
+        message,
+        color: config.color,
+        icon: config.icon,
+        timeout: config.timeout
+    }
+}
+
+// Verificar estado de autenticación
+const checkAuthStatus = async () => {
+    try {
+        const response = await $fetch('http://localhost:8000/check-auth', {
+            credentials: 'include'
+        })
+        return response.authenticated
+    } catch (error) {
+        console.error('Error verificando autenticación:', error)
+        return false
+    }
+}
+
+// Cargar proveedores
+const fetchProveedores = async () => {
+    loading.value = true
+    errorMessage.value = ''
+    try {
+        const response = await $fetch('http://localhost:8000/proveedores', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+
+        // Diferentes formatos de respuesta posibles
+        if (Array.isArray(response)) {
+            proveedores.value = response
+        } else if (response.data && Array.isArray(response.data)) {
+            proveedores.value = response.data
+        } else if (response.success && response.data) {
+            proveedores.value = response.data
+        } else {
+            proveedores.value = []
+        }
+
+    } catch (error) {
+        console.error('Error al cargar proveedores:', error)
+
+        if (error.status === 401) {
+            errorMessage.value = 'No estás autenticado. Por favor inicia sesión.'
+            await navigateTo('/login')
+        } else {
+            errorMessage.value = `Error al cargar proveedores: ${error.message || 'Error desconocido'}`
+            showNotification('Error', errorMessage.value, 'error')
+        }
+
+        proveedores.value = []
+    } finally {
+        loading.value = false
+    }
+}
+
+// Computed para filtrado y paginación
+const todosLosProveedores = computed(() => {
+    return proveedores.value
+})
+
 const proveedoresFiltrados = computed(() => {
     const lista = todosLosProveedores.value
     if (!search.value) return lista
     const term = search.value.toLowerCase()
     return lista.filter(p =>
         p.nombre?.toLowerCase().includes(term) ||
+        p.telefono?.toLowerCase().includes(term) ||
         p.direccion?.toLowerCase().includes(term)
     )
 })
 
-const totalPaginas = computed(() => Math.max(1, Math.ceil(proveedoresFiltrados.value.length / itemsPerPage)))
+const totalPaginas = computed(() => {
+    return Math.max(1, Math.ceil(proveedoresFiltrados.value.length / itemsPerPage))
+})
 
 const proveedoresPaginados = computed(() => {
     const inicio = (page.value - 1) * itemsPerPage
     return proveedoresFiltrados.value.slice(inicio, inicio + itemsPerPage)
 })
 
-// 3. Regla de validación de números (Acepta nulo o string vacío)
-const phoneRules = [
-    (v: any) => !v || /^[0-9]+$/.test(v) || 'El teléfono solo debe contener números'
-]
-
-const abrirCrear = () => {
-    editMode.value = false
-    form.value = { id: null, nombre: '', telefono: '', direccion: '', detalle: '' }
-    isDialogOpen.value = true
+// Diálogos
+const openNewDialog = () => {
+    isEditing.value = false
+    resetForm()
+    errorMessage.value = ''
+    dialog.value = true
 }
 
-// 4. LIMPIEZA DE DATOS: Convertimos nulls en strings vacíos para evitar errores
-const abrirEditar = (prov: Proveedor) => {
-    editMode.value = true
+const editProveedor = (proveedor) => {
+    isEditing.value = true
+    selectedProveedor.value = proveedor
     form.value = {
-        id: prov.id,
-        nombre: prov.nombre,
-        telefono: prov.telefono ?? '', // Si es null de la DB, ponemos ''
-        direccion: prov.direccion ?? '',
-        detalle: prov.detalle ?? ''
+        id: proveedor.id,
+        nombre: proveedor.nombre,
+        telefono: proveedor.telefono || '',
+        direccion: proveedor.direccion || '',
+        detalle: proveedor.detalle || ''
     }
-    isDialogOpen.value = true
+    errorMessage.value = ''
+    dialog.value = true
 }
 
-const cerrarDialogo = () => {
-    isDialogOpen.value = false
-    showError.value = false
-    form.value = { id: null, nombre: '', telefono: '', direccion: '', detalle: '' }
+const confirmDelete = (proveedor) => {
+    proveedorToDelete.value = proveedor
+    deleteError.value = ''
+    deleteDialog.value = true
 }
 
-const guardarProveedor = async () => {
-    if (!form.value.nombre) {
-        errorMessage.value = "El nombre es obligatorio."
-        showError.value = true
+const resetForm = () => {
+    form.value = {
+        id: null,
+        nombre: '',
+        telefono: '',
+        direccion: '',
+        detalle: ''
+    }
+    if (proveedorForm.value) {
+        proveedorForm.value.reset()
+    }
+}
+
+const closeDialog = () => {
+    dialog.value = false
+    resetForm()
+}
+
+// Guardar proveedor
+const saveProveedor = async () => {
+    if (!proveedorForm.value) return
+
+    const { valid } = await proveedorForm.value.validate()
+    if (!valid) {
+        console.log('Validación del formulario fallida')
         return
     }
 
-    isSaving.value = true
-    showError.value = false
+    saving.value = true
+    errorMessage.value = ''
 
     try {
-        const url = editMode.value ? `/proveedores/${form.value.id}` : '/proveedores'
-        const method = editMode.value ? 'PUT' : 'POST'
+        let url, method
 
-        await api(url, { method, body: form.value })
+        if (isEditing.value) {
+            // Editar proveedor existente
+            url = `http://localhost:8000/proveedores/${form.value.id}`
+            method = 'PUT'
+        } else {
+            // Crear nuevo proveedor
+            url = 'http://localhost:8000/proveedores'
+            method = 'POST'
+        }
 
-        await refresh()
-        cerrarDialogo()
-    } catch (err: any) {
-        errorMessage.value = err.data?.message || "Error al procesar la solicitud."
-        showError.value = true
+        const response = await $fetch(url, {
+            method,
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(form.value)
+        })
+
+        if (response) {
+            await fetchProveedores()
+            closeDialog()
+            showNotification(
+                isEditing.value ? 'Proveedor actualizado' : 'Proveedor creado',
+                isEditing.value ? 'Proveedor actualizado exitosamente' : 'Proveedor creado exitosamente',
+                'success'
+            )
+        } else {
+            errorMessage.value = 'Error en la operación'
+        }
+
+    } catch (error) {
+        console.error('Error al guardar proveedor:', error)
+
+        if (error.status === 401) {
+            errorMessage.value = 'No estás autenticado. Por favor inicia sesión.'
+            await navigateTo('/login')
+        } else if (error.status === 403) {
+            errorMessage.value = 'No tienes permiso para realizar esta acción.'
+        } else if (error.data) {
+            if (error.data.message) {
+                errorMessage.value = error.data.message
+            } else if (error.data.errors) {
+                const errors = Object.values(error.data.errors).flat()
+                errorMessage.value = errors.join(', ')
+            }
+        } else {
+            errorMessage.value = 'Ocurrió un error al guardar el proveedor'
+        }
+
+        showNotification('Error', errorMessage.value, 'error')
     } finally {
-        isSaving.value = false
+        saving.value = false
     }
 }
 
-// --- UX WATCHERS ---
+// Eliminar proveedor
+const deleteProveedor = async () => {
+    if (!proveedorToDelete.value) return
+
+    deleting.value = true
+    deleteError.value = ''
+
+    try {
+        // Nota: Según tu API, es posible que necesites cambiar esto a DELETE
+        // Verifica si tu backend usa DELETE o POST para eliminar
+        const response = await $fetch(`http://localhost:8000/proveedores/${proveedorToDelete.value.id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (response && (response.success || response.status === 'success')) {
+            await fetchProveedores()
+            deleteDialog.value = false
+            showNotification(
+                'Proveedor eliminado',
+                'Proveedor eliminado exitosamente',
+                'success'
+            )
+        } else {
+            throw new Error(response?.message || 'Error al eliminar proveedor')
+        }
+
+    } catch (error) {
+        console.error('Error al eliminar proveedor:', error)
+
+        if (error.status === 401) {
+            deleteError.value = 'No estás autenticado. Por favor inicia sesión.'
+            await navigateTo('/login')
+        } else if (error.data) {
+            deleteError.value = error.data.message || 'Error al eliminar proveedor'
+        } else {
+            deleteError.value = 'Ocurrió un error al eliminar el proveedor'
+        }
+
+        showNotification('Error', deleteError.value, 'error')
+    } finally {
+        deleting.value = false
+    }
+}
+
+// Lifecycle
+onMounted(async () => {
+    const isAuthenticated = await checkAuthStatus()
+
+    if (isAuthenticated) {
+        await fetchProveedores()
+    } else {
+        errorMessage.value = 'Debes iniciar sesión para ver los proveedores'
+        await navigateTo('/login')
+    }
+})
+
+// Watchers para paginación
 watch(search, () => { page.value = 1 })
 watch(page, () => {
     if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -284,14 +541,14 @@ watch(page, () => {
 }
 
 .new-category-btn {
-	min-height: 34px;
+    min-height: 34px;
     width: 185px;
     min-width: 185px;
-	border-radius: 14px;
-	text-transform: none;
-	font-weight: 600;
-	font-family: inherit;
-	font-size: 14px;
+    border-radius: 14px;
+    text-transform: none;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 14px;
 }
 
 .search-input :deep(.v-field__outline) {
@@ -305,5 +562,10 @@ watch(page, () => {
 
 .search-input :deep(.v-field--focused) {
     border: 1px solid #05a552 !important;
+}
+
+:deep(.v-pagination__item--is-active) {
+    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
+    color: white !important;
 }
 </style>

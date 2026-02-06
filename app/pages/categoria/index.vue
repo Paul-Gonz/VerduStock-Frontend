@@ -6,46 +6,24 @@
                 <div class="d-flex align-center ga-2">
                     <v-tooltip location="bottom">
                         <template #activator="{ props }">
-                            <v-btn
-                                v-bind="props"
-                                class="action-btn list-categories-btn"
-                                color="success"
-                                variant="tonal"
-                                icon="mdi-format-list-bulleted"
-                                @click="openListDialog"
-                            ></v-btn>
+                            <v-btn v-bind="props" class="action-btn list-categories-btn" color="success" variant="tonal"
+                                icon="mdi-format-list-bulleted" @click="openListDialog"></v-btn>
                         </template>
                         <span>Ver categorías registradas</span>
                     </v-tooltip>
-                    <v-btn
-                        class="action-btn new-category-btn"
-                        color="success"
-                        variant="flat"
-                        prepend-icon="mdi-plus"
-                        @click="openCreateDialog"
-                    >
+                    <v-btn class="action-btn new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus"
+                        @click="openCreateDialog">
                         Nueva categoría
                     </v-btn>
                 </div>
             </v-card-title>
             <v-card-text>
-                <v-progress-linear
-                    v-if="categoriasLoading"
-                    indeterminate
-                    color="success"
-                    height="6"
-                    rounded
-                    class="mb-4"
-                ></v-progress-linear>
+                <v-progress-linear v-if="categoriasLoading" indeterminate color="success" height="6" rounded
+                    class="mb-4"></v-progress-linear>
                 <v-row v-if="visibleCategories.length" align="center" class="ga-2">
                     <v-col cols="auto" class="d-flex justify-center">
-                        <v-btn
-                            icon="mdi-chevron-left"
-                            variant="text"
-                            color="success"
-                            :disabled="!canGoPrev"
-                            @click="prevCategory"
-                        ></v-btn>
+                        <v-btn icon="mdi-chevron-left" variant="text" color="success" :disabled="!canGoPrev"
+                            @click="prevCategory"></v-btn>
                     </v-col>
                     <v-col>
                         <v-row>
@@ -76,7 +54,8 @@
                                             </v-col>
                                             <v-col cols="6">
                                                 <div class="text-medium-emphasis">Valor en venta</div>
-                                                <div class="font-weight-semibold">{{ formatCurrency(item.totalValue) }}</div>
+                                                <div class="font-weight-semibold">{{ formatCurrency(item.totalValue) }}
+                                                </div>
                                             </v-col>
                                         </v-row>
 
@@ -95,13 +74,8 @@
                         </v-row>
                     </v-col>
                     <v-col cols="auto" class="d-flex justify-center">
-                        <v-btn
-                            icon="mdi-chevron-right"
-                            variant="text"
-                            color="success"
-                            :disabled="!canGoNext"
-                            @click="nextCategory"
-                        ></v-btn>
+                        <v-btn icon="mdi-chevron-right" variant="text" color="success" :disabled="!canGoNext"
+                            @click="nextCategory"></v-btn>
                     </v-col>
                 </v-row>
                 <div v-else class="text-body-2 text-medium-emphasis py-8 text-center">
@@ -115,55 +89,27 @@
             <v-card-text>
                 <div class="filters-bar mb-4">
                     <div class="filters-bar__search">
-                        <v-text-field
-                            v-model="productSearchQuery"
-                            label="Buscar producto"
-                            placeholder="Escribe el nombre o proveedor"
-                            variant="outlined"
-                            density="comfortable"
-                            prepend-inner-icon="mdi-magnify"
-                            clearable
-                            color="success"
-                            base-color="success"
-                        ></v-text-field>
+                        <v-text-field v-model="productSearchQuery" label="Buscar producto"
+                            placeholder="Escribe el nombre o proveedor" variant="outlined" density="comfortable"
+                            prepend-inner-icon="mdi-magnify" clearable color="success"
+                            base-color="success"></v-text-field>
                     </div>
                     <div class="filters-bar__categories">
-                      
-                        <v-chip-group
-                            v-model="categoriaFiltroSeleccionada"
-                            class="category-chip-group filters-bar__chips"
-                            column
-                        >
-                            <v-chip
-                                v-for="item in categoriaFilterItems"
-                                :key="item.value"
-                                :value="item.value"
-                                variant="outlined"
-                                size="small"
-                                class="category-chip"
-                                :class="{ 'category-chip--active': categoriaFiltroSeleccionada === item.value }"
-                            >
+
+                        <v-chip-group v-model="categoriaFiltroSeleccionada"
+                            class="category-chip-group filters-bar__chips" column>
+                            <v-chip v-for="item in categoriaFilterItems" :key="item.value" :value="item.value"
+                                variant="outlined" size="small" class="category-chip"
+                                :class="{ 'category-chip--active': categoriaFiltroSeleccionada === item.value }">
                                 <span v-if="item.emoji" class="category-chip__emoji">{{ item.emoji }}</span>
                                 <span class="category-chip__label">{{ item.title }}</span>
                             </v-chip>
                         </v-chip-group>
                     </div>
                 </div>
-                <v-progress-linear
-                    v-if="productosLoading"
-                    indeterminate
-                    color="success"
-                    height="6"
-                    rounded
-                    class="mb-4"
-                ></v-progress-linear>
-                <v-alert
-                    v-if="productosError"
-                    type="error"
-                    density="comfortable"
-                    variant="tonal"
-                    class="mb-4"
-                >
+                <v-progress-linear v-if="productosLoading" indeterminate color="success" height="6" rounded
+                    class="mb-4"></v-progress-linear>
+                <v-alert v-if="productosError" type="error" density="comfortable" variant="tonal" class="mb-4">
                     {{ productosError }}
                 </v-alert>
                 <template v-if="filteredProductGroups.length">
@@ -179,61 +125,48 @@
 
                         <div class="category-group__content" v-if="group.items.length">
                             <v-row>
-                            <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
-                                <v-card class="product-card" rounded="lg" border>
-                                    <v-card-text>
-                                        <div class="d-flex align-center justify-space-between">
-                                            <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
-                                            <v-chip
-                                                :color="product.stockColor"
-                                                size="small"
-                                                variant="tonal"
-                                                :class="{ 'stock-chip--success': product.stockColor === 'success' }"
-                                            >
-                                                {{ product.stock }}
-                                            </v-chip>
-                                        </div>
+                                <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
+                                    <v-card class="product-card" rounded="lg" border>
+                                        <v-card-text>
+                                            <div class="d-flex align-center justify-space-between">
+                                                <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
+                                                <v-chip :color="product.stockColor" size="small" variant="tonal"
+                                                    :class="{ 'stock-chip--success': product.stockColor === 'success' }">
+                                                    {{ product.stock }}
+                                                </v-chip>
+                                            </div>
 
-                                        <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                            <span> Venta: {{ formatCurrency(product.price) }}</span>
-                                        </div>
-                                        <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                            <span> {{ product.source }}</span>
-                                        </div>
+                                            <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                                <span> Venta: {{ formatCurrency(product.price) }}</span>
+                                            </div>
+                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                                <span> {{ product.source }}</span>
+                                            </div>
 
-                                        <v-divider class="my-3"></v-divider>
+                                            <v-divider class="my-3"></v-divider>
 
-                                        <div class="d-flex align-center justify-space-between text-body-2">
-                                            <span class="text-medium-emphasis">Disponibilidad</span>
-                                            <span
-                                                class="font-weight-semibold"
-                                                :class="{ 'availability--low': product.progressColor === 'error' }"
-                                            >
-                                                {{ product.availability }}
-                                            </span>
-                                        </div>
-                                        <v-progress-linear
-                                            class="mt-2"
-                                            :model-value="product.progress"
-                                            :color="product.progressColor"
-                                            height="6"
-                                            rounded
-                                            :class="{ 'progress--low': product.progressColor === 'error' }"
-                                        ></v-progress-linear>
-                                    </v-card-text>
-                                </v-card>
-                            </v-col>
-                        </v-row>
+                                            <div class="d-flex align-center justify-space-between text-body-2">
+                                                <span class="text-medium-emphasis">Disponibilidad</span>
+                                                <span class="font-weight-semibold"
+                                                    :class="{ 'availability--low': product.progressColor === 'error' }">
+                                                    {{ product.availability }}
+                                                </span>
+                                            </div>
+                                            <v-progress-linear class="mt-2" :model-value="product.progress"
+                                                :color="product.progressColor" height="6" rounded
+                                                :class="{ 'progress--low': product.progressColor === 'error' }"></v-progress-linear>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
                         </div>
                         <div v-else class="text-body-2 text-medium-emphasis py-4 px-3 bg-grey-lighten-5 rounded-lg">
                             Esta categoría aún no tiene productos registrados.
                         </div>
                     </div>
                 </template>
-                <div
-                    v-else-if="productGroups.length && !productosLoading"
-                    class="text-body-2 text-medium-emphasis py-6 text-center"
-                >
+                <div v-else-if="productGroups.length && !productosLoading"
+                    class="text-body-2 text-medium-emphasis py-6 text-center">
                     No hay productos que coincidan con los filtros aplicados.
                 </div>
                 <div v-else-if="!productosLoading" class="text-body-2 text-medium-emphasis py-6 text-center">
@@ -256,104 +189,57 @@
                             }}
                         </p>
                     </div>
-                    <v-btn
-                        icon="mdi-close"
-                        variant="text"
-                        color="grey-darken-1"
-                        class="modal-shell__dismiss"
-                        @click="cancelCreateDialog"
-                    ></v-btn>
+                    <v-btn icon="mdi-close" variant="text" color="grey-darken-1" class="modal-shell__dismiss"
+                        @click="cancelCreateDialog"></v-btn>
                 </div>
                 <div class="modal-shell__divider"></div>
                 <div class="modal-shell__body">
                     <v-form ref="categoryForm" class="modal-shell__form" @submit.prevent="submitCategory">
                         <div class="modal-shell__content">
-                            <v-alert
-                                v-if="formError"
-                                type="warning"
-                                density="comfortable"
-                                variant="tonal"
-                                color="warning"
-                                class="modal-shell__alert"
-                            >
+                            <v-alert v-if="formError" type="warning" density="comfortable" variant="tonal"
+                                color="warning" class="modal-shell__alert">
                                 {{ formError }}
                             </v-alert>
                             <div class="name-input-block">
-                            <v-menu
-                                v-model="showEmojiPicker"
-                                :close-on-content-click="false"
-                                location="bottom"
-                                offset="8"
-                            >
-                                <template #activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        class="emoji-selector emoji-selector--floating"
-                                        variant="flat"
-                                        color="grey-lighten-4"
-                                        elevation="0"
-                                        size="large"
-                                        rounded="circle"
-                                        height="55px"
-                                        location="top"
-                                    >
-                                        <span v-if="formulario.emoji" class="emoji-selector__value">
-                                            {{ formulario.emoji }}
-                                        </span>
-                                        <v-icon v-else icon="mdi-plus" class="emoji-selector__icon"></v-icon>
-                                    </v-btn>
-                                </template>
-                                <ClientOnly>
-                                    <div class="emoji-picker-surface">
-                                        <EmojiPicker
-                                            :native="true"
-                                            :hide-search="false"
-                                            theme="light"
-                                            :disabled-groups="emojiDisabledGroups"
-                                            :disable-skin-tones="true"
-                                            @select="handleEmojiSelect"
-                                        />
-                                    </div>
-                                </ClientOnly>
-                            </v-menu>
-                            <div class="name-input-block__inputs">
-                                <v-text-field
-                                    v-model="formulario.nombre"
-                                    label="Nombre"
-                                    placeholder="Ej. Vegetales hoja verde"
-                                    variant="outlined"
-                                    density="comfortable"
-                                    class="name-field"
-                                    :rules="[requiredRule]"
-                                    color="success"
-                                    base-color="success"
-                                ></v-text-field>
-                                <v-textarea
-                                    v-model="formulario.detalle"
-                                    label="Descripción"
-                                    placeholder="Describe cómo usarás esta categoría"
-                                    variant="outlined"
-                                    density="comfortable"
-                                    rows="3"
-                                    class="description-field"
-                                    :counter="160"
-                                    :maxlength="160"
-                                ></v-textarea>
+                                <v-menu v-model="showEmojiPicker" :close-on-content-click="false" location="bottom"
+                                    offset="8">
+                                    <template #activator="{ props }">
+                                        <v-btn v-bind="props" class="emoji-selector emoji-selector--floating"
+                                            variant="flat" color="grey-lighten-4" elevation="0" size="large"
+                                            rounded="circle" height="55px" location="top">
+                                            <span v-if="formulario.emoji" class="emoji-selector__value">
+                                                {{ formulario.emoji }}
+                                            </span>
+                                            <v-icon v-else icon="mdi-plus" class="emoji-selector__icon"></v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <ClientOnly>
+                                        <div class="emoji-picker-surface">
+                                            <EmojiPicker :native="true" :hide-search="false" theme="light"
+                                                :disabled-groups="emojiDisabledGroups" :disable-skin-tones="true"
+                                                @select="handleEmojiSelect" />
+                                        </div>
+                                    </ClientOnly>
+                                </v-menu>
+                                <div class="name-input-block__inputs">
+                                    <v-text-field v-model="formulario.nombre" label="Nombre"
+                                        placeholder="Ej. Vegetales hoja verde" variant="outlined" density="comfortable"
+                                        class="name-field" :rules="[requiredRule]" color="success"
+                                        base-color="success"></v-text-field>
+                                    <v-textarea v-model="formulario.detalle" label="Descripción"
+                                        placeholder="Describe cómo usarás esta categoría" variant="outlined"
+                                        density="comfortable" rows="3" class="description-field" :counter="160"
+                                        :maxlength="160"></v-textarea>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-shell__actions">
-                            <v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost" @click="cancelCreateDialog">
+                        <div class="modal-shell__actions">
+                            <v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost"
+                                @click="cancelCreateDialog">
                                 Cancelar
                             </v-btn>
-                            <v-btn
-                                type="submit"
-                                color="success"
-                                class="action-btn new-category-btn modal-shell__cta"
-                                :prepend-icon="submitIcon"
-                                :loading="cargando"
-                                :disabled="cargando"
-                            >
+                            <v-btn type="submit" color="success" class="action-btn new-category-btn modal-shell__cta"
+                                :prepend-icon="submitIcon" :loading="cargando" :disabled="cargando">
                                 {{ submitLabel }}
                             </v-btn>
                         </div>
@@ -362,37 +248,20 @@
             </v-card>
         </v-dialog>
 
-        <v-dialog
-            v-model="showListDialog"
-            max-width="720"
-            location="center"
-            class="categoria-dialog"
-            content-class="categoria-dialog-content"
-        >
+        <v-dialog v-model="showListDialog" max-width="720" location="center" class="categoria-dialog"
+            content-class="categoria-dialog-content">
             <v-card class="modal-card list-modal" rounded="xl" border>
                 <v-card-title class="d-flex align-center justify-space-between">
                     <span class="text-subtitle-1 font-weight-bold">Categorías registradas</span>
                     <v-btn icon="mdi-close" variant="text" color="grey" @click="closeListDialog"></v-btn>
                 </v-card-title>
                 <v-card-text>
-                    <v-alert
-                        v-if="categoriasError"
-                        type="error"
-                        density="comfortable"
-                        variant="tonal"
-                        class="mb-4"
-                    >
+                    <v-alert v-if="categoriasError" type="error" density="comfortable" variant="tonal" class="mb-4">
                         {{ categoriasError }}
                     </v-alert>
 
-                    <v-progress-linear
-                        v-if="categoriasLoading"
-                        indeterminate
-                        color="success"
-                        height="6"
-                        rounded
-                        class="mb-4"
-                    ></v-progress-linear>
+                    <v-progress-linear v-if="categoriasLoading" indeterminate color="success" height="6" rounded
+                        class="mb-4"></v-progress-linear>
 
                     <v-table v-else-if="categoriasRegistradas.length" class="categoria-table" density="comfortable">
                         <thead>
@@ -404,11 +273,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="(categoria, index) in categoriasRegistradas"
-                                :key="categoria.id"
-                                class="categoria-table-row"
-                            >
+                            <tr v-for="(categoria, index) in categoriasRegistradas" :key="categoria.id"
+                                class="categoria-table-row">
                                 <td class="emoji-cell">
                                     <span class="emoji-avatar__emoji">{{ getCategoriaEmoji(categoria, index) }}</span>
                                 </td>
@@ -416,24 +282,12 @@
                                 <td>{{ categoria.detalle || 'Sin detalle' }}</td>
                                 <td class="text-right">
                                     <div class="d-flex justify-end ga-1">
-                                        <v-btn
-                                            size="x-small"
-                                            color="success"
-                                            variant="tonal"
-                                            icon="mdi-pencil"
-                                            class="action-icon-btn"
-                                            @click="startUpdate(categoria)"
-                                        ></v-btn>
-                                        <v-btn
-                                            size="x-small"
-                                            color="error"
-                                            variant="tonal"
-                                            icon="mdi-delete"
+                                        <v-btn size="x-small" color="success" variant="tonal" icon="mdi-pencil"
+                                            class="action-icon-btn" @click="startUpdate(categoria)"></v-btn>
+                                        <v-btn size="x-small" color="error" variant="tonal" icon="mdi-delete"
                                             :loading="categoriaEliminando === categoria.id"
-                                            :disabled="categoriaEliminando === categoria.id"
-                                            class="action-icon-btn"
-                                            @click="deleteCategoria(categoria)"
-                                        ></v-btn>
+                                            :disabled="categoriaEliminando === categoria.id" class="action-icon-btn"
+                                            @click="deleteCategoria(categoria)"></v-btn>
                                     </div>
                                 </td>
                             </tr>
@@ -453,9 +307,20 @@
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
+import { navigateTo } from '#app'
 
-const { secureRequest } = useApi()
+// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+const API_URL = 'http://localhost:8000'
+const fetchConfig = {
+    credentials: 'include',
+    headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+    }
+}
 
+// --- FORMATEADORES ---
 const currencyFormatter = new Intl.NumberFormat('es-EC', {
     style: 'currency',
     currency: 'USD',
@@ -470,8 +335,8 @@ const weightFormatter = new Intl.NumberFormat('es-EC', {
 const formatCurrency = (value = 0) => currencyFormatter.format(Number(value) || 0)
 const formatWeight = (value = 0) => `${weightFormatter.format(Number(value) || 0)} kg`
 
-const MAX_CATEGORIAS_PER_PAGE = 100
-const MAX_PRODUCTOS_PER_PAGE = 200
+// --- CONSTANTES Y ESTADOS ---
+const MAX_PRODUCTOS_PER_PAGE = 500
 const visibleSlots = 2
 const HIGH_STOCK_THRESHOLD = 30
 const MEDIUM_STOCK_THRESHOLD = 10
@@ -479,15 +344,7 @@ const ALL_CATEGORIES_VALUE = '__all__'
 
 const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
 const emojiAllowedGroup = 'food_drink'
-const emojiDisabledGroups = [
-    'smileys_people',
-    'animals_nature',
-    'activities',
-    'travel_places',
-    'objects',
-    'symbols',
-    'flags',
-].filter((group) => group !== emojiAllowedGroup)
+const emojiDisabledGroups = ['smileys_people', 'animals_nature', 'activities', 'travel_places', 'objects', 'symbols', 'flags']
 
 const categoriasRegistradas = ref([])
 const productosRegistrados = ref([])
@@ -504,452 +361,42 @@ const categoriaFiltroSeleccionada = ref(ALL_CATEGORIES_VALUE)
 const showCreateDialog = ref(false)
 const showListDialog = ref(false)
 const categoryForm = ref(null)
-const formulario = ref({
-    nombre: '',
-    detalle: '',
-    emoji: '',
-})
+const formulario = ref({ nombre: '', detalle: '', emoji: '' })
 const cargando = ref(false)
 const categoriaEditando = ref(null)
 const showEmojiPicker = ref(false)
 const categoryCursor = ref(0)
 
+// --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
 const submitLabel = computed(() => (categoriaEditando.value ? 'Actualizar' : 'Guardar'))
 const submitIcon = computed(() => (categoriaEditando.value ? 'mdi-content-save-edit' : 'mdi-content-save'))
-
 const requiredRule = (value) => !!value?.trim() || 'Este campo es obligatorio'
 
-const toNumber = (value) => {
-    const num = Number(value)
-    return Number.isFinite(num) ? num : 0
-}
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
-const extractKilos = (producto) =>
-    toNumber(
-        producto?.kilogramos ??
-            producto?.kilogramos_netos ??
-            producto?.kilo ??
-            producto?.kilo ??
-            producto?.cantidad ??
-            producto?.stock ??
-            0,
-    )
-
-const extractPrecioVenta = (producto) =>
-    toNumber(
-        producto?.precio_ventakg ??
-            producto?.precio_venta_kg ??
-            producto?.precio_venta ??
-            producto?.precio ??
-            0,
-    )
-
-const extractPrecioCompra = (producto) =>
-    toNumber(producto?.precio_compra ?? producto?.costo ?? producto?.precio ?? 0)
-
-const computeProductoProfit = (producto) => {
-    const kilos = extractKilos(producto)
-    const ventaKg = extractPrecioVenta(producto)
-    const compraKg = extractPrecioCompra(producto)
-    return kilos * (ventaKg - compraKg)
-}
-
-const extractCollection = (payload) => {
-    if (!payload) return []
-    if (Array.isArray(payload)) return payload
-    if (Array.isArray(payload?.data)) return payload.data
-    if (Array.isArray(payload?.data?.data)) return payload.data.data
-    return []
-}
-
-const resolvePaginationMeta = (payload) => {
-    if (!payload || typeof payload !== 'object') return null
-    if (payload?.data?.meta && typeof payload.data.meta === 'object') {
-        return payload.data.meta
-    }
-    if (payload?.meta && typeof payload.meta === 'object') {
-        return payload.meta
-    }
-    return null
-}
-
-const getCategoriaEmoji = (categoria, index) => {
-    return (
-        categoria?.emoji ??
-        categoria?.icono ??
-        emojiFallbacks[index % emojiFallbacks.length]
-    )
-}
-
-const proveedorNameFor = (producto) => {
-    const proveedorId =
-        producto?.proveedor_id ??
-        producto?.proveedorId ??
-        producto?.proveedor?.id
-
-    if (proveedorId && proveedoresLookup.value.has(proveedorId)) {
-        return proveedoresLookup.value.get(proveedorId)?.nombre ?? `Proveedor #${proveedorId}`
-    }
-
-    if (producto?.proveedor?.nombre) {
-        return producto.proveedor.nombre
-    }
-
-    return proveedorId ? `Proveedor #${proveedorId}` : 'Proveedor no asignado'
-}
-
-const computeStockMeta = (kilo) => {
-    const value = Math.max(0, toNumber(kilo))
-    if (value === 0) {
-        return {
-            stockColor: 'error',
-            availability: 'Sin stock',
-            progress: 10,
-        }
-    }
-
-    if (value >= HIGH_STOCK_THRESHOLD) {
-        return {
-            stockColor: 'success',
-            availability: 'Alta',
-            progress: clamp(Math.round((value / 50) * 100), 45, 100),
-        }
-    }
-
-    if (value >= MEDIUM_STOCK_THRESHOLD) {
-        return {
-            stockColor: 'warning',
-            availability: 'Media',
-            progress: clamp(Math.round((value / 40) * 100), 25, 75),
-        }
-    }
-
-    return {
-        stockColor: 'error',
-        availability: 'Baja',
-        progress: clamp(Math.round((value / 25) * 100), 10, 45),
-    }
-}
-
-const buildProductCard = (producto, fallbackKey = 'producto') => {
-    const kilo = extractKilos(producto)
-    const meta = computeStockMeta(kilo)
-    const price = extractPrecioVenta(producto)
-
-    const productId = producto?.id ?? producto?.uuid ?? `producto-${fallbackKey}`
-
-    return {
-        id: productId,
-        name: producto?.nombre ?? producto?.name ?? 'Producto sin nombre',
-        price,
-        source: proveedorNameFor(producto),
-        stock: kilo ? `${weightFormatter.format(kilo)} kg` : 'Sin unidades registradas',
-        ...meta,
-        progressColor: meta.stockColor,
-    }
-}
-
-const productosPorCategoriaMap = computed(() => {
-    const map = new Map()
-    productosRegistrados.value.forEach((producto) => {
-        const categoriaId =
-            producto?.categoria_id ??
-            producto?.categoriaId ??
-            producto?.categoria?.id ??
-            null
-        const key = categoriaId ?? 'sin-categoria'
-        if (!map.has(key)) {
-            map.set(key, [])
-        }
-        map.get(key).push(producto)
-    })
-    return map
-})
-
-const mappedCategories = computed(() => {
-    if (!categoriasRegistradas.value.length) return []
-    return categoriasRegistradas.value.map((categoria, index) => {
-        const productos = productosPorCategoriaMap.value.get(categoria.id) ?? []
-        const totalQtyNumber = productos.reduce((sum, producto) => sum + extractKilos(producto), 0)
-        const totalValue = productos.reduce((sum, producto) => {
-            const kilos = extractKilos(producto)
-            return sum + kilos * extractPrecioVenta(producto)
-        }, 0)
-        const profit = productos.reduce((sum, producto) => sum + computeProductoProfit(producto), 0)
-
-        return {
-            id: categoria?.id ?? index,
-            name: categoria?.nombre ?? `Categoría ${index + 1}`,
-            products: productos.length,
-            totalQty: formatWeight(totalQtyNumber),
-            totalValue,
-            profit,
-            emoji: getCategoriaEmoji(categoria, index),
-            tag: categoria?.estado ?? 'Activa',
-        }
-    })
-})
-
-const visibleCategories = computed(() => {
-    const all = mappedCategories.value
-    if (!all.length) return []
-    if (all.length <= visibleSlots) return all
-    return all.slice(categoryCursor.value, categoryCursor.value + visibleSlots)
-})
-
-const canGoPrev = computed(() => categoryCursor.value > 0)
-const canGoNext = computed(() => categoryCursor.value + visibleSlots < mappedCategories.value.length)
-
-const prevCategory = () => {
-    if (!canGoPrev.value) return
-    categoryCursor.value -= 1
-}
-
-const nextCategory = () => {
-    if (!canGoNext.value) return
-    categoryCursor.value += 1
-}
-
-const productGroups = computed(() => {
-    if (!categoriasRegistradas.value.length && !productosRegistrados.value.length) {
-        return []
-    }
-
-    const groups = categoriasRegistradas.value.map((categoria, index) => {
-        const productos = productosPorCategoriaMap.value.get(categoria.id) ?? []
-        return {
-            id: categoria?.id ?? `categoria-${index}`,
-            name: categoria?.nombre ?? `Categoría ${index + 1}`,
-            emoji: getCategoriaEmoji(categoria, index),
-            items: productos.map((producto, productoIndex) =>
-                buildProductCard(producto, `${categoria?.id ?? 'categoria'}-${productoIndex}`),
-            ),
-        }
-    })
-
-    const knownCategoryIds = new Set(categoriasRegistradas.value.map((categoria) => categoria?.id))
-    productosPorCategoriaMap.value.forEach((productos, categoriaId) => {
-        if (categoriaId === 'sin-categoria') return
-        if (!categoriaId || knownCategoryIds.has(categoriaId)) return
-        groups.push({
-            id: categoriaId,
-            name: `Categoría ${categoriaId}`,
-            emoji: '📦',
-            items: productos.map((producto, productoIndex) =>
-                buildProductCard(producto, `${categoriaId}-${productoIndex}`),
-            ),
-        })
-    })
-
-    const uncategorized = productosPorCategoriaMap.value.get('sin-categoria')
-    if (uncategorized?.length) {
-        groups.push({
-            id: 'sin-categoria',
-            name: 'Sin categoría',
-            emoji: '❔',
-            items: uncategorized.map((producto, productoIndex) =>
-                buildProductCard(producto, `sin-${productoIndex}`),
-            ),
-        })
-    }
-
-    return groups
-})
-
-const categoriaFilterItems = computed(() => {
-    if (!productGroups.value.length) {
-        return [{ title: 'Todas las categorías', value: ALL_CATEGORIES_VALUE, emoji: '⭐' }]
-    }
-
-    const map = new Map()
-    productGroups.value.forEach((group) => {
-        const id = group?.id ?? 'sin-categoria'
-        const value = id != null ? String(id) : 'sin-categoria'
-        map.set(value, {
-            title: group?.name ?? `Categoría ${value}`,
-            emoji: group?.emoji ?? null,
-        })
-    })
-
-    return [
-        { title: 'Todas las categorías', value: ALL_CATEGORIES_VALUE, emoji: '⭐' },
-        ...Array.from(map.entries()).map(([value, meta]) => ({ value, ...meta })),
-    ]
-})
-
-const filteredProductGroups = computed(() => {
-    if (!productGroups.value.length) {
-        return []
-    }
-
-    const term = normalizeText(productSearchQuery.value)
-    const selectedValue = categoriaFiltroSeleccionada.value
-    const selected = selectedValue && selectedValue !== ALL_CATEGORIES_VALUE ? String(selectedValue) : null
-
-    return productGroups.value
-        .map((group) => {
-            const groupId = group?.id != null ? String(group.id) : 'sin-categoria'
-            if (selected && groupId !== selected) {
-                return null
-            }
-
-            const items = term
-                ? group.items.filter((item) => {
-                      const name = normalizeText(item?.name)
-                      const source = normalizeText(item?.source)
-                      return name.includes(term) || source.includes(term)
-                  })
-                : group.items
-
-            if (!items.length) {
-                return null
-            }
-
-            return { ...group, items }
-        })
-        .filter(Boolean)
-})
-
-const normalizeText = (value = '') => value?.toString?.().trim().toLowerCase() ?? ''
-
-const hasDuplicateName = (name, ignoreId = null) => {
-    if (!name) return false
-    const normalized = normalizeText(name)
-    return categoriasRegistradas.value.some((categoria) => {
-        if (ignoreId && categoria.id === ignoreId) return false
-        return normalizeText(categoria?.nombre) === normalized
-    })
-}
-
-const resetForm = () => {
-    formulario.value = {
-        nombre: '',
-        detalle: '',
-        emoji: '',
-    }
-    categoryForm.value?.resetValidation?.()
-    categoriaEditando.value = null
-    formError.value = ''
-    showEmojiPicker.value = false
-}
-
-const openCreateDialog = () => {
-    resetForm()
-    showCreateDialog.value = true
-}
-
-const closeCreateDialog = () => {
-    showCreateDialog.value = false
-}
-
-const cancelCreateDialog = () => {
-    resetForm()
-    closeCreateDialog()
-}
-
+// --- MANEJO DE EMOJIS (CORREGIDO) ---
 const handleEmojiSelect = (emoji) => {
-    const symbol = emoji?.i ?? emoji?.native ?? emoji?.u ?? ''
-    if (!symbol) return
-    formulario.value.emoji = symbol
-    showEmojiPicker.value = false
-    if (formError.value) {
-        formError.value = ''
+    // vue3-emoji-picker devuelve el caracter en la propiedad .i o .native
+    const symbol = emoji.i || emoji.native;
+    if (symbol) {
+        formulario.value.emoji = symbol;
+        showEmojiPicker.value = false;
     }
 }
 
-const submitCategory = async () => {
-    formError.value = ''
-    const nombreActual = formulario.value.nombre?.trim()
-
-    if (!nombreActual) {
-        formError.value = 'El nombre es obligatorio.'
-        return
-    }
-
-    const duplicate = hasDuplicateName(nombreActual, categoriaEditando.value?.id)
-    if (duplicate) {
-        formError.value = 'Ya existe una categoría con ese nombre. Usa uno diferente.'
-        return
-    }
-
-    const detalleActual = formulario.value.detalle?.trim?.() || ''
-
-    const payload = {
-        nombre: nombreActual,
-        detalle: detalleActual || null,
-        emoji: formulario.value.emoji || null,
-    }
-
-    cargando.value = true
-    try {
-        if (categoriaEditando.value) {
-            await secureRequest(`/categorias/${categoriaEditando.value.id}`, {
-                method: 'PUT',
-                body: payload,
-            })
-        } else {
-            await secureRequest('/categorias', {
-                method: 'POST',
-                body: payload,
-            })
-        }
-
-        await fetchCategorias()
-        resetForm()
-        closeCreateDialog()
-    } catch (error) {
-        formError.value = error?.data?.message || 'No se pudo guardar la categoría.'
-        console.error(error?.data || error)
-    } finally {
-        cargando.value = false
-    }
-}
-
-const openListDialog = () => {
-    showListDialog.value = true
-    categoriasError.value = ''
-    fetchCategorias()
-}
-
-const closeListDialog = () => {
-    showListDialog.value = false
-}
+// --- FUNCIONES DE LLAMADA A RUTA (AJUSTADAS) ---
 
 const fetchCategorias = async () => {
     categoriasLoading.value = true
     categoriasError.value = ''
     try {
-        const todas = []
-        let currentPage = 1
-        let lastPage = 1
-
-        do {
-            const params = new URLSearchParams({
-                page: String(currentPage),
-                per_page: String(MAX_CATEGORIAS_PER_PAGE),
-            })
-            const response = await secureRequest(`/categorias?${params.toString()}`)
-            let lista = extractCollection(response?.data)
-            if (!lista.length) {
-                lista = extractCollection(response)
-            }
-            todas.push(...lista)
-
-            const meta =
-                resolvePaginationMeta(response) || resolvePaginationMeta(response?.data) || {}
-            lastPage = meta?.last_page ?? meta?.lastPage ?? currentPage
-            if (!lastPage || lastPage < currentPage) {
-                lastPage = currentPage
-            }
-            currentPage += 1
-        } while (currentPage <= lastPage)
-
-        categoriasRegistradas.value = todas
+        const response = await $fetch(`${API_URL}/categorias`, {
+            method: 'GET',
+            ...fetchConfig
+        })
+        categoriasRegistradas.value = response?.data || response || []
     } catch (error) {
-        categoriasError.value = error?.data?.message || 'No se pudieron cargar las categorías.'
+        if (error.status === 401) await navigateTo('/login')
+        categoriasError.value = 'No se pudieron cargar las categorías.'
     } finally {
         categoriasLoading.value = false
     }
@@ -959,34 +406,14 @@ const fetchProductos = async () => {
     productosLoading.value = true
     productosError.value = ''
     try {
-        const todos = []
-        let currentPage = 1
-        let lastPage = 1
-
-        do {
-            const params = new URLSearchParams({
-                page: String(currentPage),
-                per_page: String(MAX_PRODUCTOS_PER_PAGE),
-            })
-            const response = await secureRequest(`/productos?${params.toString()}`)
-            let lista = extractCollection(response?.data)
-            if (!lista.length) {
-                lista = extractCollection(response)
-            }
-            todos.push(...lista)
-
-            const meta =
-                resolvePaginationMeta(response) || resolvePaginationMeta(response?.data) || {}
-            lastPage = meta?.last_page ?? meta?.lastPage ?? currentPage
-            if (!lastPage || lastPage < currentPage) {
-                lastPage = currentPage
-            }
-            currentPage += 1
-        } while (currentPage <= lastPage)
-
-        productosRegistrados.value = todos
+        const response = await $fetch(`${API_URL}/productos`, {
+            method: 'GET',
+            params: { per_page: MAX_PRODUCTOS_PER_PAGE },
+            ...fetchConfig
+        })
+        productosRegistrados.value = response?.data || response || []
     } catch (error) {
-        productosError.value = error?.data?.message || 'No se pudieron cargar los productos.'
+        console.error('Error al cargar productos:', error)
     } finally {
         productosLoading.value = false
     }
@@ -994,96 +421,193 @@ const fetchProductos = async () => {
 
 const fetchProveedores = async () => {
     try {
-        const response = await secureRequest('/proveedores')
-        let lista = extractCollection(response?.data)
-        if (!lista.length) {
-            lista = extractCollection(response)
-        }
-        const map = new Map()
-        lista.forEach((proveedor) => {
-            if (!proveedor?.id) return
-            map.set(proveedor.id, proveedor)
+        const response = await $fetch(`${API_URL}/proveedores`, {
+            method: 'GET',
+            ...fetchConfig
         })
+        const lista = response?.data || response || []
+        const map = new Map()
+        lista.forEach((p) => { if (p.id) map.set(p.id, p) })
         proveedoresLookup.value = map
     } catch (error) {
         console.warn('No se pudieron cargar los proveedores.', error)
     }
 }
 
-const startUpdate = async (categoria) => {
-    formulario.value = {
-        nombre: categoria?.nombre ?? '',
-        detalle: categoria?.detalle ?? '',
-        emoji: categoria?.emoji ?? categoria?.icono ?? '',
+const submitCategory = async () => {
+    formError.value = ''
+    const nombreActual = formulario.value.nombre?.trim()
+    if (!nombreActual) return
+
+    const payload = {
+        nombre: nombreActual,
+        detalle: formulario.value.detalle?.trim() || null,
+        emoji: formulario.value.emoji || null,
     }
-    categoriaEditando.value = categoria
-    showCreateDialog.value = true
-    await nextTick()
-    categoryForm.value?.resetValidation?.()
+
+    cargando.value = true
+    try {
+        const url = categoriaEditando.value
+            ? `${API_URL}/categorias/${categoriaEditando.value.id}`
+            : `${API_URL}/categorias`
+
+        const method = categoriaEditando.value ? 'PUT' : 'POST'
+
+        await $fetch(url, {
+            method,
+            body: payload, // $fetch serializa automáticamente a JSON
+            ...fetchConfig
+        })
+
+        await fetchCategorias()
+        cancelCreateDialog()
+    } catch (error) {
+        formError.value = error.data?.message || 'No se pudo guardar la categoría.'
+    } finally {
+        cargando.value = false
+    }
 }
 
 const deleteCategoria = async (categoria) => {
-    const confirmado = window.confirm(`¿Eliminar la categoría "${categoria.nombre}"? Esta acción no se puede deshacer.`)
-    if (!confirmado) return
+    if (!window.confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) return
 
     categoriaEliminando.value = categoria.id
     try {
-        await secureRequest(`/categorias/${categoria.id}`, {
+        await $fetch(`${API_URL}/categorias/${categoria.id}`, {
             method: 'DELETE',
+            ...fetchConfig
         })
         await fetchCategorias()
-
-        if (categoriaEditando.value?.id === categoria.id) {
-            resetForm()
-            closeCreateDialog()
-        }
     } catch (error) {
-        categoriasError.value = error?.data?.message || 'No se pudo eliminar la categoría.'
-        console.error(error?.data || error)
+        alert('Error al eliminar: ' + (error.data?.message || 'Error desconocido'))
     } finally {
         categoriaEliminando.value = null
     }
 }
 
-const initializeCategoriaModulo = async () => {
-    await Promise.allSettled([fetchCategorias(), fetchProductos(), fetchProveedores()])
+// --- LÓGICA DE TRANSFORMACIÓN DE DATOS ---
+
+const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0 }
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
+
+const extractKilos = (p) => toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
+const extractPrecioVenta = (p) => toNumber(p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
+const extractPrecioCompra = (p) => toNumber(p?.precio_compra ?? p?.costo ?? 0)
+
+const computeProductoProfit = (p) => {
+    const kilos = extractKilos(p)
+    return kilos * (extractPrecioVenta(p) - extractPrecioCompra(p))
 }
 
-onMounted(() => {
-    initializeCategoriaModulo()
+const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
+
+const computeStockMeta = (kilo) => {
+    const val = Math.max(0, toNumber(kilo))
+    if (val === 0) return { stockColor: 'error', availability: 'Sin stock', progress: 10 }
+    if (val >= HIGH_STOCK_THRESHOLD) return { stockColor: 'success', availability: 'Alta', progress: clamp(Math.round((val / 50) * 100), 45, 100) }
+    if (val >= MEDIUM_STOCK_THRESHOLD) return { stockColor: 'warning', availability: 'Media', progress: clamp(Math.round((val / 40) * 100), 25, 75) }
+    return { stockColor: 'error', availability: 'Baja', progress: clamp(Math.round((val / 25) * 100), 10, 45) }
+}
+
+const buildProductCard = (p, key) => {
+    const kilo = extractKilos(p)
+    const meta = computeStockMeta(kilo)
+    return {
+        id: p?.id ?? key,
+        name: p?.nombre ?? 'Sin nombre',
+        price: extractPrecioVenta(p),
+        source: p?.proveedor?.nombre || proveedoresLookup.value.get(p?.proveedor_id)?.nombre || 'S/P',
+        stock: kilo ? `${weightFormatter.format(kilo)} kg` : '0 kg',
+        ...meta,
+        progressColor: meta.stockColor,
+    }
+}
+
+// --- COMPUTED MAPS ---
+
+const productosPorCategoriaMap = computed(() => {
+    const map = new Map()
+    productosRegistrados.value.forEach((p) => {
+        const key = p?.categoria_id || p?.categoriaId || 'sin-categoria'
+        if (!map.has(key)) map.set(key, [])
+        map.get(key).push(p)
+    })
+    return map
 })
 
-watch(
-    () => formulario.value.nombre,
-    () => {
-        if (formError.value) {
-            formError.value = ''
+const mappedCategories = computed(() => {
+    return categoriasRegistradas.value.map((cat, idx) => {
+        const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
+        const totalValue = prods.reduce((s, p) => s + (extractKilos(p) * extractPrecioVenta(p)), 0)
+        return {
+            id: cat.id,
+            name: cat.nombre,
+            products: prods.length,
+            totalQty: formatWeight(prods.reduce((s, p) => s + extractKilos(p), 0)),
+            totalValue,
+            profit: prods.reduce((s, p) => s + computeProductoProfit(p), 0),
+            emoji: getCategoriaEmoji(cat, idx),
+            tag: cat.estado ?? 'Activa',
         }
-    },
-)
+    })
+})
 
-watch(
-    () => mappedCategories.value.length,
-    (length) => {
-        if (length <= visibleSlots) {
-            categoryCursor.value = 0
-            return
-        }
-        const maxStart = length - visibleSlots
-        if (categoryCursor.value > maxStart) {
-            categoryCursor.value = maxStart
-        }
-    },
-)
+const visibleCategories = computed(() => mappedCategories.value.slice(categoryCursor.value, categoryCursor.value + visibleSlots))
+const canGoPrev = computed(() => categoryCursor.value > 0)
+const canGoNext = computed(() => categoryCursor.value + visibleSlots < mappedCategories.value.length)
 
-watch(
-    () => formulario.value.emoji,
-    () => {
-        if (formError.value) {
-            formError.value = ''
-        }
-    },
-)
+const prevCategory = () => { if (canGoPrev.value) categoryCursor.value-- }
+const nextCategory = () => { if (canGoNext.value) categoryCursor.value++ }
+
+const productGroups = computed(() => {
+    const groups = categoriasRegistradas.value.map((cat, idx) => ({
+        id: cat.id,
+        name: cat.nombre,
+        emoji: getCategoriaEmoji(cat, idx),
+        items: (productosPorCategoriaMap.value.get(cat.id) ?? []).map((p, pIdx) => buildProductCard(p, `p-${cat.id}-${pIdx}`))
+    }))
+    return groups
+})
+
+const categoriaFilterItems = computed(() => [
+    { title: 'Todas', value: ALL_CATEGORIES_VALUE, emoji: '⭐' },
+    ...productGroups.value.map(g => ({ title: g.name, value: String(g.id), emoji: g.emoji }))
+])
+
+const filteredProductGroups = computed(() => {
+    const term = productSearchQuery.value?.toLowerCase().trim()
+    const selected = categoriaFiltroSeleccionada.value !== ALL_CATEGORIES_VALUE ? String(categoriaFiltroSeleccionada.value) : null
+
+    return productGroups.value.map(g => {
+        if (selected && String(g.id) !== selected) return null
+        const items = term ? g.items.filter(i => i.name.toLowerCase().includes(term) || i.source.toLowerCase().includes(term)) : g.items
+        return items.length ? { ...g, items } : null
+    }).filter(Boolean)
+})
+
+// --- DIÁLOGOS ---
+const resetForm = () => { formulario.value = { nombre: '', detalle: '', emoji: '' }; categoriaEditando.value = null; formError.value = '' }
+const openCreateDialog = () => { resetForm(); showCreateDialog.value = true }
+const cancelCreateDialog = () => { resetForm(); showCreateDialog.value = false }
+const openListDialog = () => { showListDialog.value = true; fetchCategorias() }
+const closeListDialog = () => { showListDialog.value = false }
+
+const startUpdate = (cat) => {
+    formulario.value = {
+        nombre: cat.nombre,
+        detalle: cat.detalle || '',
+        emoji: cat.emoji || ''
+    }
+    categoriaEditando.value = cat
+    showCreateDialog.value = true
+}
+
+// --- LIFECYCLE ---
+onMounted(() => {
+    fetchProveedores()
+    fetchCategorias()
+    fetchProductos()
+})
 </script>
 
 <style scoped>
@@ -1263,14 +787,14 @@ watch(
 }
 
 .action-btn {
-	min-height: 34px;
+    min-height: 34px;
     width: 170px;
     min-width: 170px;
-	border-radius: 14px;
-	text-transform: none;
-	font-weight: 600;
-	font-family: inherit;
-	font-size: 15px;
+    border-radius: 14px;
+    text-transform: none;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 15px;
 }
 
 .new-category-btn {

@@ -3,15 +3,11 @@ export const useApi = () => {
 
     const api = $fetch.create({
         baseURL: config.public.apiBase as string,
-        // Descomentar la linea 9 si se necesitan cookies en las peticiones
-        //credentials: 'include',
+        credentials: 'include',
         headers: {
             'Accept': 'application/json',
         }
     })
-
-    // Simplificamos secureRequest: ahora es solo un alias de api 
-    // ya que no hay pasos previos de seguridad
     const secureRequest = async (endpoint: string, options: any = {}) => {
         return api(endpoint, options)
     }
