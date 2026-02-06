@@ -1090,7 +1090,6 @@ watch(
 .categoria-page {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
 }
 
 .section-card {
@@ -1100,11 +1099,11 @@ watch(
 }
 
 .section-card :deep(.v-card-title) {
-    padding: 18px 22px 6px;
+    padding: 18px 25px 6px;
 }
 
 .section-card :deep(.v-card-text) {
-    padding: 10px 22px 22px;
+    padding: 18px 25px 22px;
 }
 
 .stat-card,
@@ -1264,26 +1263,29 @@ watch(
 }
 
 .action-btn {
-    height: 44px;
-    min-height: 44px;
-    border-radius: 14px;
-    text-transform: none;
-    font-weight: 600;
-    font-family: inherit;
+	min-height: 34px;
+    width: 170px;
+    min-width: 170px;
+	border-radius: 14px;
+	text-transform: none;
+	font-weight: 600;
+	font-family: inherit;
+	font-size: 15px;
 }
 
 .new-category-btn {
     padding: 0 1.4rem;
-    min-width: 180px;
+    min-width: 100px;
     background: linear-gradient(135deg, #0cc665 0%, #06a453 100%) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(6, 164, 83, 0.14) !important;
 }
 
 .list-categories-btn {
-    width: 44px;
+    width: 20px;
     min-width: 44px;
-    padding: 0;
+    height: 40px;
+    min-height: 40px;
     border-radius: 16px;
     border: 1.5px dashed rgba(11, 155, 74, 0.45);
     background: linear-gradient(145deg, #f5fff7 0%, #e0f9e7 100%) !important;

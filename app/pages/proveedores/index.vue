@@ -284,11 +284,14 @@ watch(page, () => {
 }
 
 .new-category-btn {
-    text-transform: none;
-    font-weight: 600;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: #ffffff !important;
+	min-height: 34px;
+    width: 185px;
+    min-width: 185px;
+	border-radius: 14px;
+	text-transform: none;
+	font-weight: 600;
+	font-family: inherit;
+	font-size: 14px;
 }
 
 .search-input :deep(.v-field__outline) {

@@ -710,22 +710,20 @@ onMounted(() => {
 .usuarios-page {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0rem;
 }
 
 .section-card {
     border-color: rgba(34, 197, 94, 0.22);
     background: #ffffff;
+    padding: 1px 2px 15px;
     box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
 }
 
 .section-card :deep(.v-card-title) {
-    padding: 18px 22px 6px;
+    padding: 18px 30px 6px;
 }
 
-.section-card :deep(.v-card-text) {
-    padding: 10px 22px 22px;
-}
 
 .stat-card {
     background: #f2fff6;
@@ -734,12 +732,15 @@ onMounted(() => {
 }
 
 .new-user-btn {
-    text-transform: none;
-    font-weight: 600;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
+	min-height: 34px;
+    width: 185px;
+    min-width: 185px;
+	border-radius: 14px;
+	text-transform: none;
+	font-weight: 600;
+	font-family: inherit;
+	font-size: 14px;
+    align-items: center;
 }
 
 .active-chip {

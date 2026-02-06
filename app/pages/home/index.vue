@@ -1,12 +1,12 @@
 <template>
     <v-container fluid class="dashboard-page">
         <div class="dashboard-content">
-            <header class="hero-card">
+            <header class="hero-card app-card">
                 <div>
                     <p class="hero-eyebrow">Dashboard</p>
-                    <h1>Control general del inventario</h1>
+                    <h1 class="app-title">Control general del inventario</h1>
                 </div>
-                <v-btn color="success" class="export-btn" prepend-icon="mdi-upload">
+                <v-btn prepend-icon="mdi-upload">
                     Exportar
                 </v-btn>
             </header>
@@ -30,8 +30,8 @@
                 </v-alert>
             </div>
 
-            <section class="metrics-grid">
-                <article v-for="card in resumenTarjetas" :key="card.title" class="stat-card">
+            <section class="metrics-grid app-section">
+                <article v-for="card in resumenTarjetas" :key="card.title" class="stat-card app-card">
                     <div class="stat-icon">
                         <v-icon :icon="card.icon" color="success"></v-icon>
                     </div>
@@ -41,8 +41,8 @@
                 </article>
             </section>
 
-            <section class="chart-grid">
-                <article class="panel-card">
+            <section class="chart-grid app-section">
+                <article class="panel-card app-card">
                     <div class="panel-heading">
                         <v-icon icon="mdi-cube-outline" color="success"></v-icon>
                         <span>Distribución por Categoría</span>
@@ -51,7 +51,7 @@
                         <component :is="Apexchart" v-if="Apexchart" type="donut" height="260" :options="donutOptions" :series="donutSeries" />
                     </client-only>
                 </article>
-                <article class="panel-card">
+                <article class="panel-card app-card">
                     <div class="panel-heading">
                         <v-icon icon="mdi-chart-bar" color="success"></v-icon>
                         <span>Inversión por Proveedor</span>
@@ -62,8 +62,8 @@
                 </article>
             </section>
 
-            <section class="list-grid">
-                <article class="list-card danger">
+            <section class="list-grid app-section">
+                <article class="list-card app-card danger">
                     <div class="list-heading">
                         <v-icon icon="mdi-alert" color="error"></v-icon>
                         <span>Productos con Stock Bajo ({{ lowStockProducts.length }})</span>
@@ -85,7 +85,7 @@
                         <p v-else class="empty-state">Todo el stock cumple con el umbral mínimo.</p>
                     </div>
                 </article>
-                <article class="list-card warning">
+                <article class="list-card app-card warning">
                     <div class="list-heading">
                         <v-icon icon="mdi-timer-sand" color="orange"></v-icon>
                         <span>Productos por Vencer ({{ expiringProducts.length }})</span>
@@ -397,8 +397,8 @@ const resumenTarjetas = computed(() => [
 <style scoped>
 .dashboard-page {
     min-height: 100vh;
-    padding: 32px 16px 48px;
-    background: linear-gradient(180deg, #e8faf0 0%, #d4f6df 100%);
+    padding: 10px 16px 48px;
+    background: #f2f2f2;
 }
 
 .dashboard-content {
@@ -406,7 +406,7 @@ const resumenTarjetas = computed(() => [
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 1rem;
 }
 
 .hero-card {
@@ -414,12 +414,7 @@ const resumenTarjetas = computed(() => [
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
-    padding: 28px 32px;
-    border-radius: 28px;
-    background: #f8fffb;
-    border: 1px solid #c4f0d7;
-    box-shadow: 0 8px 18px rgba(6, 95, 70, 0.08);
+     gap: 1rem;
 }
 
 .hero-card h1 {
@@ -437,26 +432,15 @@ const resumenTarjetas = computed(() => [
     font-weight: 600;
 }
 
-.export-btn {
-    border-radius: 16px;
-    padding-inline: 28px;
-    font-weight: 600;
-}
-
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+   gap: 1rem;
 }
 
 .stat-card {
-    padding: 20px;
-    border-radius: 24px;
-    background: #ffffff;
-    border: 1px solid #c4f0d7;
-    box-shadow: 0 8px 16px rgba(4, 120, 87, 0.08);
     display: grid;
-    gap: 6px;
+    gap: 1rem;
 }
 
 .stat-icon {
@@ -490,15 +474,7 @@ const resumenTarjetas = computed(() => [
 .chart-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-}
-
-.panel-card {
-    padding: 24px;
-    border-radius: 28px;
-    background: #ffffff;
-    border: 1px solid #c4f0d7;
-    box-shadow: 0 12px 20px rgba(6, 95, 70, 0.08);
+    gap: 1rem;
 }
 
 .panel-heading {
@@ -513,18 +489,13 @@ const resumenTarjetas = computed(() => [
 .list-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
+   gap: 1rem;
 }
 
 .list-card {
-    padding: 24px;
-    border-radius: 28px;
-    background: #ffffff;
-    border: 1px solid #c4f0d7;
-    box-shadow: 0 12px 20px rgba(6, 95, 70, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 1rem;
 }
 
 .list-card.danger {
@@ -548,7 +519,7 @@ const resumenTarjetas = computed(() => [
 .list-body {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 1rem;
 }
 
 .scrollable-list {

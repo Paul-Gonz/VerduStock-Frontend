@@ -194,44 +194,43 @@ onMounted(async () => {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 18px 12px;
+    padding: 16px 17px;
 }
 
 .brand-block {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-bottom: 20px;
+    margin-bottom: 5.6px;
 }
 
 .brand-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: white;
+    width: 28px;
+    height: 28px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-left: 20px;
 }
 
 .brand-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
     color: #0b5b33;
     margin: 0;
 }
 
 .brand-subtitle {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     color: #4f7d63;
-    margin: 0;
+    margin-bottom: 3.5px;
     text-transform: uppercase;
 }
 
 .menu-item {
-    margin-bottom: 8px;
-    font-weight: 600;
+    margin-top: 9px;
+    margin-bottom: 9px;
+    font-weight: 650;
 }
 
 .menu-pill {
@@ -240,12 +239,37 @@ onMounted(async () => {
     gap: 12px;
 }
 
+.menu-text {
+    font-size: 0.95rem;
+    font-weight: 550;
+    color: #0b5b33;
+}
+
+.menu-icon {
+    background: transparent !important;
+    
+    background: rgba(2, 224, 106, 0.071) !important;
+    color: #178950;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.menu-icon--active {
+    background: rgba(4, 158, 75, 0.18) !important;
+    color: #ffffff !important;
+    border-color: transparent;
+}
+
 .menu-item--active {
     background: linear-gradient(135deg, #17c364 0%, #049e4b 100%) !important;
     color: white !important;
 }
 
-.menu-item--active .v-icon {
+.menu-item--active .v-icon,
+.menu-item--active .menu-text {
+    color: white !important;
+}
+
+.menu-item--active .v-text {
     color: white !important;
 }
 
@@ -259,6 +283,23 @@ onMounted(async () => {
 .verdus-app-bar {
     background: white !important;
     border-bottom: 1px solid #eee !important;
+    padding: 0 20px;
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+}
+
+.verdus-app-bar :deep(.v-app-bar-nav-icon) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.verdus-app-bar :deep(.v-toolbar-title) {
+    display: flex;
+    align-items: center;
+    margin: 0;
 }
 
 .text-red {
@@ -268,5 +309,42 @@ onMounted(async () => {
 .main-scroll {
     height: 100vh;
     overflow-y: auto;
+    background: #f2f2f2 !important;
+}
+
+:global(body, #__nuxt, .v-application) {
+    background: #f2f2f2 !important;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+:global(.app-card) {
+    border-radius: 24px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 10px 22px rgba(7, 56, 34, 0.08);
+}
+
+:global(.app-section) {
+    margin-bottom: 24px;
+}
+
+:global(.app-title) {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #053b2d;
+    margin: 0 0 12px;
+}
+
+:global(.v-btn:not(.v-btn--icon)) {
+    min-height: 44px;
+    border-radius: 14px;
+    padding-inline: 22px;
+    text-transform: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #0cc665 0%, #06a453 100%) !important;
+    box-shadow: 0 6px 16px rgba(6, 164, 83, 0.22);
 }
 </style>

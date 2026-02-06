@@ -1,17 +1,17 @@
 <template>
 	<section class="inventario-page">
 		<v-container class="inventory-shell" fluid>
-			<v-card class="inventory-board" rounded="lg" border>
+			<v-card class="inventory-board app-card" rounded="lg" border>
 				<header class="board-header">
 					<div class="board-heading">
-						<span class="board-icon">📋</span>
+						<v-icon icon="mdi-format-list-checks" size="30" color="success"></v-icon>
 						<div>
 							<p class="board-label">Lista de Productos</p>
 						</div>
 					</div>
 					<div class="board-actions">
 						<v-btn
-							class="action-btn primary-gradient-btn"
+							class="action-btn"
 							prepend-icon="mdi-plus"
 							@click="openCreateDialog"
 						>
@@ -19,7 +19,6 @@
 						</v-btn>
 						<v-btn
 							class="action-btn"
-							color="success"
 							prepend-icon="mdi-file-pdf-box"
 							:loading="exportLoading"
 							@click="exportInventario"
@@ -1160,7 +1159,7 @@ defineExpose({ refreshInventario })
 <style scoped>
 .inventario-page {
 	padding: 5px 16px 48px;
-	background: #f6fbf6;
+	background: #f2f2f2;
 	min-height: 100%;
 }
 
@@ -1190,20 +1189,9 @@ defineExpose({ refreshInventario })
 	gap: 12px;
 }
 
-.board-icon {
-	font-size: 1.4rem;
-	width: 48px;
-	height: 48px;
-	border-radius: 14px;
-	background: #e9f8ef;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
 .board-label {
 	margin: 0;
-	font-size: 1.15rem;
+	font-size: 1.rem;
 	font-weight: 700;
 	color: #0d3b25;
 }
@@ -1221,12 +1209,12 @@ defineExpose({ refreshInventario })
 }
 
 .action-btn {
-	height: 44px;
-	min-height: 44px;
+	min-height: 34px;
 	border-radius: 14px;
 	text-transform: none;
 	font-weight: 600;
 	font-family: inherit;
+	font-size: 14px;
 }
 
 .filters-bar {
