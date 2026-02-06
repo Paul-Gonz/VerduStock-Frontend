@@ -355,6 +355,33 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-snackbar
+    v-model="snackbar.show"
+    :color="snackbar.color"
+    :timeout="snackbar.timeout"
+    location="top right"
+    rounded="lg"
+    elevation="10"
+>
+    <div class="d-flex align-center ga-3">
+        <v-icon :icon="snackbar.icon" size="24"></v-icon>
+        <div>
+            <div class="text-subtitle-2 font-weight-bold">{{ snackbar.title }}</div>
+            <div class="text-body-2">{{ snackbar.message }}</div>
+        </div>
+    </div>
+    
+    <template v-slot:actions>
+        <v-btn
+            icon
+            variant="text"
+            :color="snackbar.color"
+            @click="snackbar.show = false"
+        >
+            <v-icon>mdi-close</v-icon>
+        </v-btn>
+    </template>
+</v-snackbar>
     </section>
 </template>
 
@@ -454,6 +481,52 @@ const formatDate = (dateString) => {
         })
     } catch (e) {
         return dateString
+    }
+}
+
+const snackbar = ref({
+    show: false,
+    title: '',
+    message: '',
+    color: 'success',
+    icon: 'mdi-check-circle',
+    timeout: 4000
+})
+
+// Función para mostrar notificaciones
+const showNotification = (title, message, type = 'success') => {
+    const types = {
+        success: {
+            color: 'success',
+            icon: 'mdi-check-circle',
+            timeout: 4000
+        },
+        error: {
+            color: 'error',
+            icon: 'mdi-alert-circle',
+            timeout: 5000
+        },
+        warning: {
+            color: 'warning',
+            icon: 'mdi-alert',
+            timeout: 4500
+        },
+        info: {
+            color: 'info',
+            icon: 'mdi-information',
+            timeout: 4000
+        }
+    }
+    
+    const config = types[type] || types.success
+    
+    snackbar.value = {
+        show: true,
+        title,
+        message,
+        color: config.color,
+        icon: config.icon,
+        timeout: config.timeout
     }
 }
 
@@ -631,7 +704,11 @@ const saveUser = async () => {
         if (response.success) {
             await fetchUsers()
             closeDialog()
-            alert(`${response.message || 'Operación exitosa'}`)
+            showNotification(
+    isEditing.value ? 'Usuario actualizado' : 'Usuario creado',
+    response.message || (isEditing.value ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente'),
+    'success'
+)
         } else {
             errorMessage.value = response.message || 'Error en la operación'
         }
@@ -652,7 +729,11 @@ const saveUser = async () => {
                 errorMessage.value = errors.join(', ')
             }
         } else {
-            errorMessage.value = error.message || 'Error al guardar usuario'
+            showNotification(
+    'Error',
+    errorMessage.value || 'Ocurrió un error al guardar el usuario',
+    'error'
+)
         }
     } finally {
         saving.value = false
@@ -682,7 +763,11 @@ const deleteUser = async () => {
         if (response && response.success) {
             await fetchUsers()
             deleteDialog.value = false
-            alert('Usuario eliminado exitosamente')
+            showNotification(
+    'Usuario eliminado',
+    'Usuario eliminado exitosamente',
+    'success'
+)
         } else {
             throw new Error(response?.message || 'Error al eliminar usuario')
         }
@@ -693,7 +778,11 @@ const deleteUser = async () => {
         if (error.data) {
             deleteError.value = error.data.message || 'Error al eliminar usuario'
         } else {
-            deleteError.value = error.message || 'Error al eliminar usuario'
+           showNotification(
+    'Error',
+    deleteError.value || 'Ocurrió un error al eliminar el usuario',
+    'error'
+)
         }
     } finally {
         deleting.value = false
@@ -710,20 +799,22 @@ onMounted(() => {
 .usuarios-page {
     display: flex;
     flex-direction: column;
-    gap: 0rem;
+    gap: 1.5rem;
 }
 
 .section-card {
     border-color: rgba(34, 197, 94, 0.22);
     background: #ffffff;
-    padding: 1px 2px 15px;
     box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
 }
 
 .section-card :deep(.v-card-title) {
-    padding: 18px 30px 6px;
+    padding: 18px 22px 6px;
 }
 
+.section-card :deep(.v-card-text) {
+    padding: 10px 22px 22px;
+}
 
 .stat-card {
     background: #f2fff6;
@@ -732,15 +823,12 @@ onMounted(() => {
 }
 
 .new-user-btn {
-	min-height: 34px;
-    width: 185px;
-    min-width: 185px;
-	border-radius: 14px;
-	text-transform: none;
-	font-weight: 600;
-	font-family: inherit;
-	font-size: 14px;
-    align-items: center;
+    text-transform: none;
+    font-weight: 600;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
 }
 
 .active-chip {

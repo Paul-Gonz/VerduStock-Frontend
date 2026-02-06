@@ -6,12 +6,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/api-test']
     
     if (publicRoutes.includes(to.path)) {
-        console.log(`✅ Ruta pública: ${to.path}`)
+        console.log(`Ruta pública: ${to.path}`)
         return
     }
     
     try {
-        console.log('🔐 Verificando autenticación...')
+        console.log('Verificando autenticación...')
         console.log('Cookies actuales:', document.cookie)
         
         // Hacer una prueba de sesión primero
@@ -25,7 +25,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             return null
         })
         
-        console.log('📊 Resultado session-test:', sessionTest)
+        console.log('Resultado session-test:', sessionTest)
         
         // Ahora verificar autenticación
         const response = await $fetch('http://localhost:8000/check-auth', {
@@ -35,18 +35,18 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             }
         })
         
-        console.log('📊 Respuesta check-auth:', response)
+        console.log('Respuesta check-auth:', response)
         
         if (!response.authenticated) {
-            console.log('❌ No autenticado, redirigiendo a login')
+            console.log('No autenticado, redirigiendo a login')
             return navigateTo('/login')
         }
         
-        console.log('✅ Autenticado, permitiendo acceso')
+        console.log('Autenticado, permitiendo acceso')
         return
         
     } catch (error) {
-        console.error('❌ Error en middleware:', error)
+        console.error('Error en middleware:', error)
         console.error('Detalles:', {
             status: error.status,
             message: error.message
