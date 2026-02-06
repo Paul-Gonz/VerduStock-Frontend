@@ -10,19 +10,11 @@
 						</div>
 					</div>
 					<div class="board-actions">
-						<v-btn
-							class="action-btn"
-							prepend-icon="mdi-plus"
-							@click="openCreateDialog"
-						>
+						<v-btn class="action-btn" prepend-icon="mdi-plus" @click="openCreateDialog">
 							Nuevo Producto
 						</v-btn>
-						<v-btn
-							class="action-btn"
-							prepend-icon="mdi-file-pdf-box"
-							:loading="exportLoading"
-							@click="exportInventario"
-						>
+						<v-btn class="action-btn" prepend-icon="mdi-file-pdf-box" :loading="exportLoading"
+							@click="exportInventario">
 							Exportar PDF
 						</v-btn>
 					</div>
@@ -30,43 +22,19 @@
 
 				<div class="filters-bar">
 					<div class="filters-bar__search">
-						<v-text-field
-							v-model="searchQuery"
-							density="comfortable"
-							variant="outlined"
-							color="success"
-							base-color="success"
-							prepend-inner-icon="mdi-magnify"
-							placeholder="Buscar por nombre o proveedor..."
-							hide-details
-							clearable
-						></v-text-field>
+						<v-text-field v-model="searchQuery" density="comfortable" variant="outlined" color="success"
+							base-color="success" prepend-inner-icon="mdi-magnify"
+							placeholder="Buscar por nombre o proveedor..." hide-details clearable></v-text-field>
 					</div>
 					<div class="filters-bar__control">
-						<v-select
-							v-model="categoriaFiltro"
-							:items="categoriaOptions"
-							item-title="title"
-							item-value="value"
-							density="comfortable"
-							variant="outlined"
-							color="success"
-							placeholder="Todas las categorías"
-							hide-details
-						></v-select>
+						<v-select v-model="categoriaFiltro" :items="categoriaOptions" item-title="title"
+							item-value="value" density="comfortable" variant="outlined" color="success"
+							placeholder="Todas las categorías" hide-details></v-select>
 					</div>
 					<div class="filters-bar__control">
-						<v-select
-							v-model="estadoFiltro"
-							:items="estadoOptions"
-							item-title="title"
-							item-value="value"
-							density="comfortable"
-							variant="outlined"
-							color="success"
-							placeholder="Todos los estados"
-							hide-details
-						></v-select>
+						<v-select v-model="estadoFiltro" :items="estadoOptions" item-title="title" item-value="value"
+							density="comfortable" variant="outlined" color="success" placeholder="Todos los estados"
+							hide-details></v-select>
 					</div>
 					<v-btn icon class="filters-refresh" color="success" variant="tonal" @click="refreshInventario">
 						<v-icon icon="mdi-refresh"></v-icon>
@@ -92,328 +60,211 @@
 						<div>
 							<p class="alert-card__title">Productos Próximos a Vencer</p>
 							<p class="alert-card__body">
-								{{ expiringProducts.length }} producto(s) vencen en los próximos {{ EXPIRY_WARNING_DAYS }} día(s).
+								{{ expiringProducts.length }} producto(s) vencen en los próximos {{ EXPIRY_WARNING_DAYS
+								}} día(s).
 							</p>
 						</div>
 					</div>
 				</div>
 
-				<v-progress-linear
-					v-if="productosLoading"
-					indeterminate
-					color="success"
-					height="6"
-					rounded
-					class="mb-4"
-				></v-progress-linear>
+				<v-progress-linear v-if="productosLoading" indeterminate color="success" height="6" rounded
+					class="mb-4"></v-progress-linear>
 
-				<v-alert
-					v-if="productosError"
-					type="error"
-					variant="tonal"
-					density="comfortable"
-					border="start"
-					border-color="error"
-					class="mb-4"
-				>
+				<v-alert v-if="productosError" type="error" variant="tonal" density="comfortable" border="start"
+					border-color="error" class="mb-4">
 					{{ productosError }}
 				</v-alert>
 
-							<section class="cards-wrapper">
-								<template v-if="filteredCards.length">
-									<v-row>
-										<v-col v-for="card in filteredCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
-											<v-card :class="['product-card', card.status.styleKey]" rounded="lg" border elevation="0">
-												<div class="status-banner" :class="card.status.styleKey">
-													<v-icon :icon="card.status.icon" size="18"></v-icon>
-													<span>{{ card.status.label }}</span>
-												</div>
-												<div class="product-card__header">
-													<div class="product-card__title">
-														<v-avatar class="category-avatar" size="42">
-															<span>{{ card.badge }}</span>
-														</v-avatar>
-														<div>
-															<p class="product-name">{{ card.name }}</p>
-															<p class="product-category">{{ card.category }}</p>
-														</div>
-													</div>
-													<div class="product-card__actions">
-														<v-btn
-															icon
-															variant="text"
-															color="grey-darken-1"
-															@click="openEditDialog(card.raw)"
-														>
-															<v-icon icon="mdi-pencil"></v-icon>
-														</v-btn>
-														<v-btn
-															icon
-															variant="text"
-															color="grey-darken-1"
-															@click="openDeleteDialog(card.raw)"
-														>
-															<v-icon icon="mdi-delete-outline"></v-icon>
-														</v-btn>
-													</div>
-												</div>
-
-												<div class="stock-block">
-													<div class="stock-metric">
-														<p class="metric-label">Cantidad disponible</p>
-														<p class="metric-value">{{ card.kilosLabel }}</p>
-													</div>
-													<div class="stock-metric text-right">
-														<p class="metric-label">Stock mínimo</p>
-														<p class="metric-value">{{ card.stockMinimumLabel }}</p>
-													</div>
-												</div>
-												<v-progress-linear
-													class="stock-progress"
-													:model-value="card.progress"
-													:color="card.status.progressColor"
-													height="8"
-													rounded
-												></v-progress-linear>
-
-												<div class="price-inline">
-													<div class="detail-pair">
-														<span class="detail-label">Compra</span>
-														<span class="detail-value">{{ card.purchaseLabel }}</span>
-													</div>
-													<div class="detail-pair">
-														<span class="detail-label">Venta</span>
-														<span class="detail-value">{{ card.saleLabel }}</span>
-													</div>
-													<div class="detail-pair">
-														<span class="detail-label">Ganancia</span>
-														<span class="detail-value highlight">{{ card.profitLabel }}</span>
-													</div>
-												</div>
-
-												<div class="details-list">
-													<div class="detail-row">
-														<v-icon icon="mdi-store-outline" size="18" color="success"></v-icon>
-														<div>
-															<p class="detail-value muted">{{ card.provider }}</p>
-														</div>
-													</div>
-													<div class="detail-row">
-														<v-icon icon="mdi-calendar-plus" size="18" color="success"></v-icon>
-														<div>
-															<p class="detail-value muted">{{"Ingreso: " + card.ingresoLabel }}</p>
-														</div>
-													</div>
-													<div class="detail-row">
-														<v-icon icon="mdi-calendar-alert" size="18" color="warning"></v-icon>
-														<div>
-															<p class="detail-value muted">{{"Vence: " + card.venceLabel }}</p>
-														</div>
-													</div>
-												</div>
-											</v-card>
-										</v-col>
-									</v-row>
-
-									<div class="pagination-block" v-if="pagination.lastPage > 1">
-										<v-pagination
-											v-model="pagination.page"
-											:length="pagination.lastPage"
-											:total-visible="5"
-											color="success"
-										></v-pagination>
+				<section class="cards-wrapper">
+					<template v-if="filteredCards.length">
+						<v-row>
+							<v-col v-for="card in filteredCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
+								<v-card :class="['product-card', card.status.styleKey]" rounded="lg" border
+									elevation="0">
+									<div class="status-banner" :class="card.status.styleKey">
+										<v-icon :icon="card.status.icon" size="18"></v-icon>
+										<span>{{ card.status.label }}</span>
 									</div>
-								</template>
-
-								<div v-else class="empty-state">
-									<v-icon icon="mdi-package-variant" color="success" size="48"></v-icon>
-									<p v-if="hasInventory || isFilteringActive">
-										No hay productos que coincidan con los filtros seleccionados.
-									</p>
-									<p v-else>Registra tu primer producto para visualizarlo aquí.</p>
-								</div>
-							</section>
-						</v-card>
-					</v-container>
-
-				<v-dialog v-model="formDialog" max-width="720" persistent>
-					<v-card rounded="xl" border class="modal-shell">
-						<div class="modal-shell__header">
-							<div>
-								<p class="modal-shell__eyebrow">{{ editingProducto ? 'Modo edición' : 'Nuevo registro' }}</p>
-								<h3 class="modal-shell__title">
-									{{ editingProducto ? 'Actualizar producto' : 'Registrar producto' }}
-								</h3>
-								<p class="modal-shell__subtitle">
-									{{
-										editingProducto
-											? 'Ajusta la información del inventario antes de guardar los cambios.'
-											: 'Completa el formulario para añadir un producto al inventario general.'
-									}}
-								</p>
-							</div>
-							<v-btn
-								icon="mdi-close"
-								variant="text"
-								color="grey-darken-1"
-								class="modal-shell__dismiss"
-								@click="closeFormDialog"
-							></v-btn>
-						</div>
-						<div class="modal-shell__divider"></div>
-						<div class="modal-shell__body">
-							<v-form ref="productFormRef" class="modal-shell__form" @submit.prevent="submitProducto">
-								<v-alert
-									v-if="formError"
-									type="error"
-									variant="tonal"
-									border="start"
-									border-color="error"
-									class="modal-shell__alert"
-								>
-									{{ formError }}
-								</v-alert>
-								<div class="modal-shell__content">
-									<div class="modal-form-grid">
-										<v-text-field
-										v-model="productForm.nombre"
-										label="Nombre del producto"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__item--top-gap"
-									></v-text-field>
-										<v-select
-										v-model="productForm.categoria_id"
-										:items="categorySelectItems"
-										item-title="title"
-										item-value="value"
-										label="Categoría"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item"
-									></v-select>
-										<v-select
-										v-model="productForm.proveedor_id"
-										:items="providerSelectItems"
-										item-title="title"
-										item-value="value"
-										label="Proveedor"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item"
-									></v-select>
-										<v-text-field
-										v-model="productForm.kilogramos"
-										type="number"
-										label="Cantidad (kg)"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										min="0"
-										step="0.001"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item"
-									></v-text-field>
-										<v-text-field
-										v-model="productForm.desperdicio"
-										type="number"
-										label="Desperdicio (kg)"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										min="0"
-										step="0.001"
-										class="modal-form-grid__item"
-									></v-text-field>
-										<v-text-field
-										v-model="productForm.precio_compra"
-										type="number"
-										label="Precio de compra ($)"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										min="0"
-										step="0.01"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item"
-									></v-text-field>
-										<v-text-field
-										v-model="productForm.precio_venta_kg"
-										type="number"
-										label="Precio de venta por kg ($)"
-										variant="outlined"
-										density="comfortable"
-										color="success"
-										min="0"
-										step="0.01"
-										:rules="[requiredRule]"
-										class="modal-form-grid__item"
-									></v-text-field>
-										<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
-											<v-text-field
-												v-model="productForm.usuario_id"
-												type="number"
-												label="ID responsable"
-												variant="outlined"
-												density="comfortable"
-												color="success"
-												min="1"
-												hint="Temporalmente se asigna el usuario {{ DEFAULT_USER_ID }} si no especificas otro."
-												persistent-hint
-												class="modal-form-grid__pair-field"
-											></v-text-field>
-											<div class="stock-slider-field">
-												<div class="stock-slider-field__header">
-													<span>Stock mínimo</span>
-													<strong>{{ formatKilograms(productForm.stock_minimo ?? STOCK_MIN_KG) }}</strong>
-												</div>
-												<v-slider
-													v-model.number="productForm.stock_minimo"
-													class="stock-slider-field__slider"
-													color="success"
-													:step="0.5"
-													:min="0"
-													:max="200"
-													hide-details
-												></v-slider>
-												<p class="stock-slider-field__hint">
-													Define el umbral que detonará las alertas de bajo stock para este producto.
-												</p>
+									<div class="product-card__header">
+										<div class="product-card__title">
+											<v-avatar class="category-avatar" size="42">
+												<span>{{ card.badge }}</span>
+											</v-avatar>
+											<div>
+												<p class="product-name">{{ card.name }}</p>
+												<p class="product-category">{{ card.category }}</p>
 											</div>
 										</div>
-										<v-textarea
-											v-model="productForm.detalle"
-											label="Detalle o notas"
-											variant="outlined"
-											density="comfortable"
-											rows="3"
-											class="modal-form-grid__item modal-form-grid__item--full"
-										></v-textarea>
+										<div class="product-card__actions">
+											<v-btn icon variant="text" color="grey-darken-1"
+												@click="openEditDialog(card.raw)">
+												<v-icon icon="mdi-pencil"></v-icon>
+											</v-btn>
+											<v-btn icon variant="text" color="grey-darken-1"
+												@click="openDeleteDialog(card.raw)">
+												<v-icon icon="mdi-delete-outline"></v-icon>
+											</v-btn>
 										</div>
 									</div>
-									<div class="modal-shell__actions">
-									<v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost" @click="closeFormDialog">
-										Cancelar
-									</v-btn>
-									<v-btn
-										type="submit"
-										class="modal-shell__cta primary-gradient-btn"
-										:loading="formLoading"
-										:prepend-icon="editingProducto ? 'mdi-content-save-edit' : 'mdi-content-save'"
-									>
-										{{ editingProducto ? 'Actualizar' : 'Guardar' }}
-									</v-btn>
-								</div>
-							</v-form>
+
+									<div class="stock-block">
+										<div class="stock-metric">
+											<p class="metric-label">Cantidad disponible</p>
+											<p class="metric-value">{{ card.kilosLabel }}</p>
+										</div>
+										<div class="stock-metric text-right">
+											<p class="metric-label">Stock mínimo</p>
+											<p class="metric-value">{{ card.stockMinimumLabel }}</p>
+										</div>
+									</div>
+									<v-progress-linear class="stock-progress" :model-value="card.progress"
+										:color="card.status.progressColor" height="8" rounded></v-progress-linear>
+
+									<div class="price-inline">
+										<div class="detail-pair">
+											<span class="detail-label">Compra</span>
+											<span class="detail-value">{{ card.purchaseLabel }}</span>
+										</div>
+										<div class="detail-pair">
+											<span class="detail-label">Venta</span>
+											<span class="detail-value">{{ card.saleLabel }}</span>
+										</div>
+										<div class="detail-pair">
+											<span class="detail-label">Ganancia</span>
+											<span class="detail-value highlight">{{ card.profitLabel }}</span>
+										</div>
+									</div>
+
+									<div class="details-list">
+										<div class="detail-row">
+											<v-icon icon="mdi-store-outline" size="18" color="success"></v-icon>
+											<div>
+												<p class="detail-value muted">{{ card.provider }}</p>
+											</div>
+										</div>
+										<div class="detail-row">
+											<v-icon icon="mdi-calendar-plus" size="18" color="success"></v-icon>
+											<div>
+												<p class="detail-value muted">{{ "Ingreso: " + card.ingresoLabel }}</p>
+											</div>
+										</div>
+										<div class="detail-row">
+											<v-icon icon="mdi-calendar-alert" size="18" color="warning"></v-icon>
+											<div>
+												<p class="detail-value muted">{{ "Vence: " + card.venceLabel }}</p>
+											</div>
+										</div>
+									</div>
+								</v-card>
+							</v-col>
+						</v-row>
+
+						<div class="pagination-block" v-if="pagination.lastPage > 1">
+							<v-pagination v-model="pagination.page" :length="pagination.lastPage" :total-visible="5"
+								color="success"></v-pagination>
 						</div>
-					</v-card>
-				</v-dialog>
+					</template>
+
+					<div v-else class="empty-state">
+						<v-icon icon="mdi-package-variant" color="success" size="48"></v-icon>
+						<p v-if="hasInventory || isFilteringActive">
+							No hay productos que coincidan con los filtros seleccionados.
+						</p>
+						<p v-else>Registra tu primer producto para visualizarlo aquí.</p>
+					</div>
+				</section>
+			</v-card>
+		</v-container>
+
+		<v-dialog v-model="formDialog" max-width="720" persistent>
+			<v-card rounded="xl" border class="modal-shell">
+				<div class="modal-shell__header">
+					<div>
+						<p class="modal-shell__eyebrow">{{ editingProducto ? 'Modo edición' : 'Nuevo registro' }}</p>
+						<h3 class="modal-shell__title">
+							{{ editingProducto ? 'Actualizar producto' : 'Registrar producto' }}
+						</h3>
+						<p class="modal-shell__subtitle">
+							{{
+								editingProducto
+									? 'Ajusta la información del inventario antes de guardar los cambios.'
+									: 'Completa el formulario para añadir un producto al inventario general.'
+							}}
+						</p>
+					</div>
+					<v-btn icon="mdi-close" variant="text" color="grey-darken-1" class="modal-shell__dismiss"
+						@click="closeFormDialog"></v-btn>
+				</div>
+				<div class="modal-shell__divider"></div>
+				<div class="modal-shell__body">
+					<v-form ref="productFormRef" class="modal-shell__form" @submit.prevent="submitProducto">
+						<v-alert v-if="formError" type="error" variant="tonal" border="start" border-color="error"
+							class="modal-shell__alert">
+							{{ formError }}
+						</v-alert>
+						<div class="modal-shell__content">
+							<div class="modal-form-grid">
+								<v-text-field v-model="productForm.nombre" label="Nombre del producto"
+									variant="outlined" density="comfortable" color="success" :rules="[requiredRule]"
+									class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__item--top-gap"></v-text-field>
+								<v-select v-model="productForm.categoria_id" :items="categorySelectItems"
+									item-title="title" item-value="value" label="Categoría" variant="outlined"
+									density="comfortable" color="success" :rules="[requiredRule]"></v-select>
+								<v-select v-model="productForm.proveedor_id" :items="providerSelectItems"
+									item-title="title" item-value="value" label="Proveedor" variant="outlined"
+									density="comfortable" color="success" :rules="[requiredRule]"></v-select>
+								<v-text-field v-model="productForm.kilogramos" type="number" label="Cantidad (kg)"
+									variant="outlined" density="comfortable" color="success" min="0" step="0.001"
+									:rules="[requiredRule]" class="modal-form-grid__item"></v-text-field>
+								<v-text-field v-model="productForm.desperdicio" type="number" label="Desperdicio (kg)"
+									variant="outlined" density="comfortable" color="success" min="0" step="0.001"
+									class="modal-form-grid__item"></v-text-field>
+								<v-text-field v-model="productForm.precio_compra" type="number"
+									label="Precio de compra ($)" variant="outlined" density="comfortable"
+									color="success" min="0" step="0.01" :rules="[requiredRule]"
+									class="modal-form-grid__item"></v-text-field>
+								<v-text-field v-model="productForm.precio_venta_kg" type="number"
+									label="Precio de venta por kg ($)" variant="outlined" density="comfortable"
+									color="success" min="0" step="0.01" :rules="[requiredRule]"
+									class="modal-form-grid__item"></v-text-field>
+								<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
+									<v-text-field v-model="productForm.usuario_id" type="number" label="ID responsable"
+										variant="outlined" density="comfortable" color="success" min="1"
+										hint="Temporalmente se asigna el usuario {{ DEFAULT_USER_ID }} si no especificas otro."
+										persistent-hint class="modal-form-grid__pair-field"></v-text-field>
+									<div class="stock-slider-field">
+										<div class="stock-slider-field__header">
+											<span>Stock mínimo</span>
+											<strong>{{ formatKilograms(productForm.stock_minimo ?? STOCK_MIN_KG)
+											}}</strong>
+										</div>
+										<v-slider v-model.number="productForm.stock_minimo"
+											class="stock-slider-field__slider" color="success" :step="0.5" :min="0"
+											:max="200" hide-details></v-slider>
+										<p class="stock-slider-field__hint">
+											Define el umbral que detonará las alertas de bajo stock para este producto.
+										</p>
+									</div>
+								</div>
+								<v-textarea v-model="productForm.detalle" label="Detalle o notas" variant="outlined"
+									density="comfortable" rows="3"
+									class="modal-form-grid__item modal-form-grid__item--full"></v-textarea>
+							</div>
+						</div>
+						<div class="modal-shell__actions">
+							<v-btn variant="text" color="grey-darken-1" class="modal-shell__ghost"
+								@click="closeFormDialog">
+								Cancelar
+							</v-btn>
+							<v-btn type="submit" class="modal-shell__cta primary-gradient-btn" :loading="formLoading"
+								:prepend-icon="editingProducto ? 'mdi-content-save-edit' : 'mdi-content-save'">
+								{{ editingProducto ? 'Actualizar' : 'Guardar' }}
+							</v-btn>
+						</div>
+					</v-form>
+				</div>
+			</v-card>
+		</v-dialog>
 
 		<v-dialog v-model="deleteDialog" max-width="420">
 			<v-card rounded="xl" border>
@@ -437,19 +288,29 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { navigateTo } from '#app'
 
-const { secureRequest } = useApi()
+// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+const API_URL = 'http://localhost:8000'
+const fetchConfig = {
+	credentials: 'include',
+	headers: {
+		'Accept': 'application/json',
+		'X-Requested-With': 'XMLHttpRequest',
+		'Content-Type': 'application/json'
+	}
+}
 
+const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es obligatorio'
 const INVENTORY_PAGE_SIZE = 12
 const STOCK_MIN_KG = 10
 const EXPIRY_WARNING_DAYS = 3
 const DEFAULT_SHELF_LIFE_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const DEFAULT_USER_ID = 1
-const FALLBACK_FETCH_SIZE = 100
-const MAX_FALLBACK_PAGES = 10
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
 
+// --- ESTADOS ---
 const productosRaw = ref([])
 const productosLoading = ref(false)
 const productosError = ref('')
@@ -467,11 +328,9 @@ const productoSeleccionado = ref(null)
 const formError = ref('')
 const formLoading = ref(false)
 const deleteLoading = ref(false)
-const productFormRef = ref(null)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 let searchDebounce = null
-let skipRemoteSearch = false
 
 const getDefaultForm = () => ({
 	nombre: '',
@@ -488,338 +347,192 @@ const getDefaultForm = () => ({
 
 const productForm = ref(getDefaultForm())
 
-const currencyFormatter = new Intl.NumberFormat('es-EC', {
-	style: 'currency',
-	currency: 'USD',
-	minimumFractionDigits: 2,
-})
+// --- FORMATEADORES ---
+const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
+const kilosFormatter = new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2 })
+const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
 
-const kilosFormatter = new Intl.NumberFormat('es-EC', {
-	minimumFractionDigits: 2,
-	maximumFractionDigits: 2,
-})
+const formatCurrency = (value) => currencyFormatter.format(Number(value) || 0)
+const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, Number(value) || 0))} kg`
+const formatDate = (value) => value ? dateFormatter.format(new Date(value)) : 'Sin fecha'
 
-const dateFormatter = new Intl.DateTimeFormat('es-EC', {
-	day: '2-digit',
-	month: 'short',
-	year: 'numeric',
-})
+// --- LLAMADAS A RUTAS (ESTILO PROVEEDORES) ---
 
-const estadoOptions = [
-	{ title: 'Todos los estados', value: 'all' },
-	{ title: 'Stock bajo', value: 'low' },
-	{ title: 'Próximos a vencer', value: 'expiring' },
-	{ title: 'Saludable', value: 'healthy' },
-]
-
-const categoriaOptions = computed(() => [
-	{ title: 'Todas las categorías', value: 'all' },
-	...categorias.value.map((categoria) => ({ title: categoria?.nombre ?? 'Sin nombre', value: categoria?.id })),
-])
-
-const categorySelectItems = computed(() =>
-	categorias.value.map((categoria) => ({ title: categoria?.nombre ?? 'Sin nombre', value: categoria?.id }))
-)
-
-const providerSelectItems = computed(() =>
-	proveedores.value.map((proveedor) => ({ title: proveedor?.nombre ?? 'Proveedor sin nombre', value: proveedor?.id }))
-)
-
-const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es obligatorio'
-
-const hasInventory = computed(() => productosRaw.value.length > 0)
-const isFilteringActive = computed(() => {
-	return (
-		Boolean(searchQuery.value.trim()) ||
-		categoriaFiltro.value !== 'all' ||
-		estadoFiltro.value !== 'all'
-	)
-})
-
-const normalizeCollection = (payload) => {
-	if (!payload) return []
-	if (Array.isArray(payload)) return payload
-	if (Array.isArray(payload?.data)) return payload.data
-	if (Array.isArray(payload?.data?.data)) return payload.data.data
-	return []
-}
-
-const resolvePaginationMeta = (payload) => {
-	if (!payload) return null
-	if (payload?.meta) return payload.meta
-	if (payload?.data?.meta) return payload.data.meta
-	return null
-}
-
-const toNumber = (value, fallback = 0) => {
-	const parsed = Number(value)
-	return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
-const persistLocalStockThresholds = () => {
-	if (typeof window === 'undefined') return
+const fetchProveedores = async () => {
 	try {
-		const payload = JSON.stringify({
-			thresholds: localStockThresholds.value,
+		const response = await $fetch(`${API_URL}/proveedores`, { method: 'GET', ...fetchConfig })
+		proveedores.value = response?.data || response || []
+	} catch (error) {
+		console.warn('Error proveedores:', error)
+	}
+}
+
+const categorySelectItems = computed(() => {
+	return categorias.value.map((cat) => ({
+		title: cat.nombre || 'Sin nombre', // Lo que el usuario ve
+		value: cat.id                      // Lo que se guarda en la base de datos
+	}))
+})
+
+const fetchProductos = async (page = pagination.page) => {
+	productosLoading.value = true
+	productosError.value = ''
+	try {
+		pagination.page = page
+		const queryParams = new URLSearchParams({
+			page: String(page),
+			por_pagina: String(pagination.perPage),
 		})
-		localStorage.setItem(STOCK_THRESHOLD_STORAGE_KEY, payload)
+
+		if (searchQuery.value.trim()) queryParams.set('busqueda', searchQuery.value.trim())
+		if (categoriaFiltro.value !== 'all') queryParams.set('categoria_id', String(categoriaFiltro.value))
+
+		const response = await $fetch(`${API_URL}/productos?${queryParams.toString()}`, {
+			method: 'GET',
+			...fetchConfig
+		})
+
+		productosRaw.value = response?.data || response || []
+
+		const meta = response?.meta || response?.data?.meta
+		if (meta) {
+			pagination.lastPage = meta.last_page || 1
+			pagination.total = meta.total || productosRaw.value.length
+		}
 	} catch (error) {
-		console.warn('No se pudieron guardar los límites locales de stock.', error)
+		if (error.status === 401) await navigateTo('/login')
+		productosRaw.value = []
+		productosError.value = 'No se pudo cargar el inventario.'
+	} finally {
+		productosLoading.value = false
 	}
 }
 
-const loadLocalStockThresholds = () => {
-	if (typeof window === 'undefined') return
+const fetchCategorias = async () => {
 	try {
-		const raw = localStorage.getItem(STOCK_THRESHOLD_STORAGE_KEY)
-		if (!raw) return
-		const parsed = JSON.parse(raw)
-		if (parsed?.thresholds) {
-			localStockThresholds.value = parsed.thresholds
-		} else if (typeof parsed === 'object' && parsed !== null) {
-			localStockThresholds.value = parsed
-		}
+		const response = await $fetch(`${API_URL}/categorias`, {
+			method: 'GET',
+			params: { per_page: 100 }, // Traer suficientes categorías
+			...fetchConfig
+		})
+
+		// Laravel suele enviar la lista en 'data' o directamente en el body
+		const lista = response?.data || response || []
+		categorias.value = Array.isArray(lista) ? lista : []
+
+		console.log("Categorías cargadas para el select:", categorias.value)
 	} catch (error) {
-		console.warn('No se pudieron cargar los límites locales de stock.', error)
+		console.warn('Error al cargar categorías en inventario:', error)
 	}
 }
 
-const setStockThresholdForProduct = (productId, value) => {
-	if (!productId) return
-	const sanitized = toNumber(value, STOCK_MIN_KG)
-	localStockThresholds.value = {
-		...localStockThresholds.value,
-		[productId]: sanitized,
-	}
-	persistLocalStockThresholds()
-}
-
-const removeStockThresholdForProduct = (productId) => {
-	if (!productId || localStockThresholds.value[productId] == null) return
-	const clone = { ...localStockThresholds.value }
-	delete clone[productId]
-	localStockThresholds.value = clone
-	persistLocalStockThresholds()
-}
-
-const resolveStockThreshold = (producto) => {
-	const productId = producto?.id
-	if (productId && localStockThresholds.value[productId] != null) {
-		return localStockThresholds.value[productId]
-	}
-	if (producto?.stock_minimo != null) {
-		return producto.stock_minimo
-	}
-	return STOCK_MIN_KG
-}
-
-const extractProductoId = (response, fallbackId = null) => {
-	return response?.data?.id ?? response?.id ?? fallbackId ?? null
-}
-
-const persistThresholdFromPayload = (response, payload, fallbackId = null) => {
-	const productId = extractProductoId(response, fallbackId)
-	if (productId) {
-		setStockThresholdForProduct(productId, payload.stock_minimo)
+const confirmDelete = async () => {
+	if (!productoSeleccionado.value?.id) return
+	deleteLoading.value = true
+	try {
+		await $fetch(`${API_URL}/productos/${productoSeleccionado.value.id}`, {
+			method: 'DELETE',
+			...fetchConfig
+		})
+		showSnackbar('Producto eliminado correctamente')
+		deleteDialog.value = false
+		await fetchProductos(pagination.page)
+	} catch (error) {
+		showSnackbar('No se pudo eliminar el producto', 'error')
+	} finally {
+		deleteLoading.value = false
 	}
 }
 
-const formatCurrency = (value) => currencyFormatter.format(toNumber(value))
-const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, toNumber(value)))} kg`
+// --- FUNCIONES DE DIÁLOGO (AÑADIR O REEMPLAZAR) ---
 
-const formatDate = (value) => {
-	if (!value) return 'Sin fecha'
-	const date = new Date(value)
-	return Number.isNaN(date.getTime()) ? 'Sin fecha' : dateFormatter.format(date)
+// Esta es la función que llama tu botón "Nuevo Producto"
+const openCreateDialog = () => {
+	editingProducto.value = null
+	productForm.value = getDefaultForm() // Reinicia el formulario
+	formError.value = ''
+	formDialog.value = true // Abre el v-dialog
 }
 
-const normalizeText = (value = '') => {
-	if (value == null) return ''
-	return String(value).trim().toLowerCase()
+// Función para cerrar el diálogo limpiando estados
+const closeFormDialog = () => {
+	formDialog.value = false
+	editingProducto.value = null
+	productForm.value = getDefaultForm()
 }
 
-const categoryEmojiMap = computed(() => {
-	return categorias.value.reduce((acc, categoria) => {
-		const emoji = categoria?.emoji ?? categoria?.icono ?? categoria?.icon ?? null
-		if (!emoji) return acc
-		if (categoria?.id != null) {
-			acc[String(categoria.id)] = emoji
-		}
-		const normalizedName = normalizeText(categoria?.nombre)
-		if (normalizedName) {
-			acc[`name:${normalizedName}`] = emoji
-		}
-		return acc
-	}, {})
-})
-
-const getCategoryName = (producto) =>
-	producto?.categoria_nombre ?? producto?.categoria?.nombre ?? 'Sin categoría'
-
-const getProviderName = (producto) =>
-	producto?.proveedor_nombre ?? producto?.proveedor?.nombre ?? 'Proveedor sin asignar'
-
-const matchesProductSearch = (producto, normalizedTerm) => {
-	if (!normalizedTerm) return true
-	const fields = [
-		producto?.nombre,
-		getCategoryName(producto),
-		getProviderName(producto),
-		producto?.detalle,
-	]
-	return fields.some((field) => normalizeText(field).includes(normalizedTerm))
-}
-
-const isDetalleColumnError = (error) => {
-	const message = error?.data?.message ?? error?.message ?? ''
-	return typeof message === 'string' && message.toLowerCase().includes('detalle')
-}
-
-const resolveCategoryEmojiFromMap = (producto) => {
-	const categoryId = producto?.categoria_id ?? producto?.categoria?.id
-	if (categoryId != null) {
-		const emoji = categoryEmojiMap.value[String(categoryId)]
-		if (emoji) return emoji
+// Función corregida para editar
+const openEditDialog = (producto) => {
+	editingProducto.value = producto
+	// Mapeamos los datos del producto al formulario
+	productForm.value = {
+		nombre: producto.nombre,
+		categoria_id: producto.categoria_id,
+		proveedor_id: producto.proveedor_id,
+		kilogramos: producto.kilogramos,
+		desperdicio: producto.desperdicio || 0,
+		precio_compra: producto.precio_compra,
+		precio_venta_kg: producto.precio_venta_kg,
+		usuario_id: producto.usuario_id || DEFAULT_USER_ID,
+		detalle: producto.detalle || '',
+		stock_minimo: producto.stock_minimo || STOCK_MIN_KG,
 	}
-	const normalizedName = normalizeText(getCategoryName(producto))
-	if (normalizedName) {
-		const emoji = categoryEmojiMap.value[`name:${normalizedName}`]
-		if (emoji) return emoji
-	}
-	return null
+	formError.value = ''
+	formDialog.value = true
 }
 
-const getCategoryBadge = (producto) => {
-	const emoji =
-		producto?.categoria?.emoji ??
-		producto?.categoria_emoji ??
-		producto?.emoji ??
-		resolveCategoryEmojiFromMap(producto)
-	if (emoji) return emoji
-	const categoryName = getCategoryName(producto)
-	return categoryName ? categoryName.trim().charAt(0).toUpperCase() : '❖'
-}
 
-const getKilos = (producto) =>
-	toNumber(
-		producto?.kilogramos ??
-			producto?.kilogramos_netos ??
-			producto?.kilo ??
-			producto?.cantidad ??
-			0,
-	)
-
-const getNetKilos = (producto) => {
-	const bruto = getKilos(producto)
-	const desperdicio = toNumber(producto?.desperdicio)
-	return Math.max(bruto - desperdicio, 0)
-}
-
-const deriveExpiryDate = (producto) => {
-	if (!producto?.created_at) return null
-	const date = new Date(producto.created_at)
-	if (Number.isNaN(date.getTime())) return null
-	date.setDate(date.getDate() + DEFAULT_SHELF_LIFE_DAYS)
-	return date
-}
-
-const buildStatus = (flags) => {
-	if (flags.isLowStock) {
-		return {
-			label: 'Stock bajo - Reabastecer urgente',
-			tone: 'error',
-			icon: 'mdi-alert',
-			weight: 0,
-			progressColor: 'error',
-			styleKey: 'is-low',
-		}
-	}
-	if (flags.isExpiring) {
-		return {
-			label: `Vence en ${flags.daysToExpire} día(s)`,
-			tone: 'warning',
-			icon: 'mdi-timer-sand',
-			weight: 1,
-			progressColor: 'warning',
-			styleKey: 'is-expiring',
-		}
-	}
-	return {
-		label: 'Stock saludable',
-		tone: 'success',
-		icon: 'mdi-leaf',
-		weight: 2,
-		progressColor: 'success',
-		styleKey: 'is-healthy',
-	}
-}
+// --- LÓGICA DE INTERFAZ ---
 
 const productCards = computed(() =>
-	productosRaw.value
-		.map((producto, index) => {
-			const kilos = getNetKilos(producto)
-			const stockMinimumRaw = toNumber(resolveStockThreshold(producto), STOCK_MIN_KG)
-			const stockMinimum = stockMinimumRaw > 0 ? stockMinimumRaw : STOCK_MIN_KG
-			const expiryDate = deriveExpiryDate(producto)
-			const daysToExpire = expiryDate
-				? Math.ceil((expiryDate.getTime() - Date.now()) / ONE_DAY_MS)
-				: null
-			const isLowStock = kilos <= stockMinimum
-			const isExpiring = typeof daysToExpire === 'number' && daysToExpire <= EXPIRY_WARNING_DAYS && daysToExpire >= 0
-			const status = buildStatus({ isLowStock, isExpiring, daysToExpire })
-			const saleTotal = kilos * toNumber(producto?.precio_venta_kg)
-			const profit = saleTotal - toNumber(producto?.precio_compra)
+	productosRaw.value.map((p, index) => {
+		const kilosBrutos = Number(p.kilogramos || p.kilo || 0)
+		const desperdicio = Number(p.desperdicio || 0)
+		const kilos = Math.max(kilosBrutos - desperdicio, 0)
+		const stockMin = Number(p.stock_minimo || STOCK_MIN_KG)
 
-			return {
-				id: producto?.id ?? `producto-${index}`,
-				raw: producto,
-				name: producto?.nombre ?? 'Producto sin nombre',
-				category: getCategoryName(producto),
-				provider: getProviderName(producto),
-				badge: getCategoryBadge(producto),
-				kilosLabel: formatKilograms(kilos),
-				stockMinimumLabel: formatKilograms(stockMinimum),
-				purchaseLabel: formatCurrency(producto?.precio_compra),
-				saleLabel: formatCurrency(producto?.precio_venta_kg),
-				profitLabel: formatCurrency(profit),
-				ingresoLabel: formatDate(producto?.created_at),
-				venceLabel: expiryDate ? formatDate(expiryDate) : 'Pendiente',
-				status,
-				progress: clamp(
-					Math.round((kilos / (Math.max(stockMinimum, 1) * 3)) * 100),
-					6,
-					100,
-				),
-			}
-		})
-		.sort((a, b) => a.status.weight - b.status.weight || a.name.localeCompare(b.name))
+		const isLowStock = kilos <= stockMin
+		const saleTotal = kilos * Number(p.precio_venta_kg || 0)
+		const profit = saleTotal - Number(p.precio_compra || 0)
+
+		return {
+			id: p.id || index,
+			raw: p,
+			name: p.nombre || 'Sin nombre',
+			category: p.categoria?.nombre || 'General',
+			provider: p.proveedor?.nombre || 'S/P',
+			badge: p.categoria?.emoji || p.categoria?.nombre?.charAt(0) || '📦',
+			kilosLabel: formatKilograms(kilos),
+			stockMinimumLabel: formatKilograms(stockMin),
+			purchaseLabel: formatCurrency(p.precio_compra),
+			saleLabel: formatCurrency(p.precio_venta_kg),
+			profitLabel: formatCurrency(profit),
+			ingresoLabel: formatDate(p.created_at),
+			venceLabel: 'Revisar stock',
+			status: isLowStock ?
+				{ label: 'Stock bajo', styleKey: 'is-low', icon: 'mdi-alert', progressColor: 'error', weight: 0 } :
+				{ label: 'Saludable', styleKey: 'is-healthy', icon: 'mdi-leaf', progressColor: 'success', weight: 2 },
+			progress: Math.min((kilos / (stockMin * 2)) * 100, 100)
+		}
+	})
 )
 
 const filteredCards = computed(() => {
-	const stateFilter = estadoFiltro.value
-	const categoryFilter = categoriaFiltro.value
-	const searchTerm = normalizeText(searchQuery.value)
-
-	return productCards.value.filter((card) => {
-		if (stateFilter === 'low' && card.status.weight !== 0) return false
-		if (stateFilter === 'expiring' && card.status.weight !== 1) return false
-		if (stateFilter === 'healthy' && card.status.weight !== 2) return false
-		if (categoryFilter !== 'all' && String(card.raw?.categoria_id ?? '') !== String(categoryFilter)) {
-			return false
-		}
-		if (searchTerm && !matchesProductSearch(card.raw, searchTerm)) {
-			return false
-		}
-		return true
-	})
+	let cards = productCards.value
+	if (estadoFiltro.value === 'low') cards = cards.filter(c => c.status.weight === 0)
+	if (categoriaFiltro.value !== 'all') cards = cards.filter(c => String(c.raw.categoria_id) === String(categoriaFiltro.value))
+	return cards
 })
 
-const lowStockProducts = computed(() => productCards.value.filter((card) => card.status.weight === 0))
-const expiringProducts = computed(() => productCards.value.filter((card) => card.status.weight === 1))
+const providerSelectItems = computed(() => {
+	return proveedores.value.map((prov) => ({
+		title: prov.nombre || 'Proveedor sin nombre', // Lo que el usuario lee
+		value: prov.id                                // El ID que se envía al backend
+	}))
+})
+
+const lowStockProducts = computed(() => productCards.value.filter(c => c.status.weight === 0))
 const hasLowStockAlerts = computed(() => lowStockProducts.value.length > 0)
-const hasExpiringAlerts = computed(() => expiringProducts.value.length > 0)
 
 const showSnackbar = (message, color = 'success') => {
 	snackbar.message = message
@@ -827,333 +540,65 @@ const showSnackbar = (message, color = 'success') => {
 	snackbar.show = true
 }
 
-const fetchCategorias = async () => {
-	try {
-		const params = new URLSearchParams({ per_page: '100' })
-		const response = await secureRequest(`/categorias?${params.toString()}`)
-		categorias.value = normalizeCollection(response?.data ?? response)
-	} catch (error) {
-		console.warn('No se pudieron cargar las categorías.', error)
-	}
-}
-
-const fetchProveedores = async () => {
-	try {
-		const response = await secureRequest('/proveedores')
-		proveedores.value = normalizeCollection(response?.data ?? response)
-	} catch (error) {
-		console.warn('No se pudieron cargar los proveedores.', error)
-	}
-}
-
-const handleSearchFallback = async (searchValue) => {
-	const normalizedTerm = normalizeText(searchValue)
-	if (!normalizedTerm) return
-
-	const aggregated = []
-	let currentPage = 1
-	let lastPage = 1
-	let totalItems = null
-
-	try {
-		do {
-			const params = new URLSearchParams({
-				page: String(currentPage),
-				por_pagina: String(FALLBACK_FETCH_SIZE),
-			})
-			if (categoriaFiltro.value !== 'all') {
-				params.set('categoria_id', String(categoriaFiltro.value))
-			}
-
-			const response = await secureRequest(`/productos?${params.toString()}`)
-			aggregated.push(...normalizeCollection(response?.data ?? response))
-
-			const meta = resolvePaginationMeta(response) || resolvePaginationMeta(response?.data) || {}
-			totalItems = meta?.total ?? totalItems
-			lastPage = meta?.last_page ?? meta?.lastPage ?? lastPage ?? currentPage
-			if (!lastPage || lastPage < currentPage) {
-				lastPage = currentPage
-			}
-			currentPage += 1
-		} while (
-			currentPage <= lastPage &&
-			currentPage <= MAX_FALLBACK_PAGES &&
-			(totalItems == null || aggregated.length < totalItems)
-		)
-
-		const filtered = aggregated.filter((producto) => matchesProductSearch(producto, normalizedTerm))
-		productosRaw.value = filtered
-		pagination.page = 1
-		pagination.lastPage = 1
-		pagination.total = filtered.length
-		productosError.value = ''
-	} catch (error) {
-		productosRaw.value = []
-		productosError.value =
-			error?.data?.message ?? error?.message ?? 'No se pudo completar la búsqueda local.'
-	}
-}
-
-const fetchProductos = async (page = pagination.page) => {
-	productosLoading.value = true
-	productosError.value = ''
-	try {
-		pagination.page = page
-		const params = new URLSearchParams({
-			page: String(page),
-			por_pagina: String(pagination.perPage),
-		})
-
-		const searchValue = searchQuery.value.trim()
-		if (searchValue && skipRemoteSearch) {
-			await handleSearchFallback(searchValue)
-			return
-		}
-		if (searchValue) params.set('busqueda', searchValue)
-		if (categoriaFiltro.value !== 'all') params.set('categoria_id', String(categoriaFiltro.value))
-
-		const response = await secureRequest(`/productos?${params.toString()}`)
-		productosRaw.value = normalizeCollection(response?.data ?? response)
-
-		const meta = resolvePaginationMeta(response) || resolvePaginationMeta(response?.data)
-		if (meta) {
-			pagination.lastPage = meta.last_page ?? meta.lastPage ?? 1
-			pagination.total = meta.total ?? productosRaw.value.length
-			if (pagination.page > pagination.lastPage) {
-				pagination.page = pagination.lastPage
-			}
-		} else {
-			pagination.lastPage = 1
-			pagination.total = productosRaw.value.length
-		}
-	} catch (error) {
-		const searchValue = searchQuery.value.trim()
-		if (searchValue && isDetalleColumnError(error)) {
-			skipRemoteSearch = true
-			await handleSearchFallback(searchValue)
-			return
-		}
-		productosRaw.value = []
-		productosError.value = error?.data?.message ?? error?.message ?? 'No se pudo cargar el inventario.'
-	} finally {
-		productosLoading.value = false
-	}
-}
-
-const refreshInventario = () => {
-	fetchProductos(1)
-}
-
-const openCreateDialog = () => {
-	editingProducto.value = null
-	productForm.value = getDefaultForm()
-	formError.value = ''
-	formDialog.value = true
-}
-
-const closeFormDialog = () => {
-	formDialog.value = false
-}
-
-const openEditDialog = (producto) => {
-	editingProducto.value = producto
-	productForm.value = {
-		nombre: producto?.nombre ?? '',
-		categoria_id: producto?.categoria_id ?? null,
-		proveedor_id: producto?.proveedor_id ?? null,
-		kilogramos: getKilos(producto).toString(),
-		desperdicio: toNumber(producto?.desperdicio).toString(),
-		precio_compra: toNumber(producto?.precio_compra).toString(),
-		precio_venta_kg: toNumber(producto?.precio_venta_kg).toString(),
-		usuario_id: producto?.usuario_id ?? DEFAULT_USER_ID,
-		detalle: producto?.detalle ?? '',
-		stock_minimo: toNumber(resolveStockThreshold(producto), STOCK_MIN_KG),
-	}
-	formDialog.value = true
-}
-
-const closeDeleteDialog = () => {
-	deleteDialog.value = false
-	productoSeleccionado.value = null
-}
-
-const openDeleteDialog = (producto) => {
-	productoSeleccionado.value = producto
-	deleteDialog.value = true
-}
-
-const validateForm = () => {
-	const requiredFields = ['nombre', 'categoria_id', 'proveedor_id', 'kilogramos', 'precio_compra', 'precio_venta_kg']
-	for (const field of requiredFields) {
-		if (!String(productForm.value[field] ?? '').trim()) {
-			formError.value = 'Por favor completa todos los campos obligatorios.'
-			return false
-		}
-	}
-
-	const kilos = toNumber(productForm.value.kilogramos)
-	const desperdicio = toNumber(productForm.value.desperdicio)
-	if (desperdicio >= kilos) {
-		formError.value = 'El desperdicio debe ser menor que los kilogramos disponibles.'
-		return false
-	}
-
-	formError.value = ''
-	return true
-}
-
 const submitProducto = async () => {
-	if (!validateForm()) return
-
+	formError.value = ''
 	formLoading.value = true
-
-	const kilosValue = toNumber(productForm.value.kilogramos)
-	const stockMinValue = toNumber(productForm.value.stock_minimo, STOCK_MIN_KG)
 
 	const payload = {
 		nombre: productForm.value.nombre.trim(),
 		categoria_id: Number(productForm.value.categoria_id),
 		proveedor_id: Number(productForm.value.proveedor_id),
-		kilogramos: kilosValue,
-		kilo: kilosValue,
-		desperdicio: productForm.value.desperdicio ? toNumber(productForm.value.desperdicio) : 0,
-		precio_compra: toNumber(productForm.value.precio_compra),
-		precio_venta_kg: toNumber(productForm.value.precio_venta_kg),
-		usuario_id: Number(productForm.value.usuario_id) || DEFAULT_USER_ID,
-		stock_minimo: stockMinValue > 0 ? stockMinValue : STOCK_MIN_KG,
+		kilogramos: Number(productForm.value.kilogramos),
+		precio_compra: Number(productForm.value.precio_compra),
+		precio_venta_kg: Number(productForm.value.precio_venta_kg),
+		desperdicio: Number(productForm.value.desperdicio) || 0,
+		usuario_id: Number(productForm.value.usuario_id) || 1,
+		detalle: productForm.value.detalle || null
 	}
 
 	try {
-		if (editingProducto.value?.id) {
-			const response = await secureRequest(`/productos/${editingProducto.value.id}`, {
-				method: 'PUT',
-				body: payload,
-			})
-			persistThresholdFromPayload(response, payload, editingProducto.value.id)
-			showSnackbar('Producto actualizado correctamente.')
-		} else {
-			const response = await secureRequest('/productos', {
-				method: 'POST',
-				body: payload,
-			})
-			persistThresholdFromPayload(response, payload)
-			showSnackbar('Producto registrado correctamente.')
-		}
+		const isEdit = !!editingProducto.value?.id
+		const url = isEdit ? `${API_URL}/productos/${editingProducto.value.id}` : `${API_URL}/productos`
 
+		await $fetch(url, {
+			method: isEdit ? 'PUT' : 'POST',
+			body: payload,
+			...fetchConfig
+		})
+
+		showSnackbar(isEdit ? 'Producto actualizado' : 'Producto registrado')
 		formDialog.value = false
-		editingProducto.value = null
-		await fetchProductos(pagination.page)
+		await fetchProductos(1)
 	} catch (error) {
-		formError.value = error?.data?.message ?? 'No se pudo guardar el producto.'
-		console.error(error?.data || error)
+		// Esto te mostrará en pantalla exactamente qué campo falló
+		if (error.status === 422) {
+			const firstError = Object.values(error.data.errors)[0][0]
+			formError.value = firstError
+		} else {
+			formError.value = 'Error al guardar el producto.'
+		}
 	} finally {
 		formLoading.value = false
 	}
 }
 
-const confirmDelete = async () => {
-	if (!productoSeleccionado.value?.id) {
-		closeDeleteDialog()
-		return
-	}
+const openDeleteDialog = (p) => { productoSeleccionado.value = p; deleteDialog.value = true }
+const closeDeleteDialog = () => deleteDialog.value = false
+const refreshInventario = () => fetchProductos(1)
 
-	deleteLoading.value = true
-	try {
-		await secureRequest(`/productos/${productoSeleccionado.value.id}`, {
-			method: 'DELETE',
-		})
-		showSnackbar('Producto eliminado correctamente.')
-		removeStockThresholdForProduct(productoSeleccionado.value.id)
-		closeDeleteDialog()
-		await fetchProductos(pagination.page)
-	} catch (error) {
-		showSnackbar(error?.data?.message ?? 'No se pudo eliminar el producto.', 'error')
-		console.error(error?.data || error)
-	} finally {
-		deleteLoading.value = false
-	}
-}
+// --- WATCHERS Y LIFECYCLE ---
+watch(searchQuery, () => {
+	if (searchDebounce) clearTimeout(searchDebounce)
+	searchDebounce = setTimeout(() => fetchProductos(1), 500)
+})
 
-const exportInventario = async () => {
-	exportLoading.value = true
-	try {
-		const params = new URLSearchParams({ page: '1', por_pagina: '200' })
-		const response = await secureRequest(`/productos?${params.toString()}`)
-		const rows = normalizeCollection(response?.data ?? response)
-		if (!rows.length) {
-			throw new Error('No hay datos para exportar.')
-		}
+watch(categoriaFiltro, () => fetchProductos(1))
 
-		const headers = ['Nombre', 'Categoría', 'Proveedor', 'Kg disponibles', 'Precio compra', 'Precio venta/kg']
-		const csv = [
-			headers.join(';'),
-			...rows.map((producto) =>
-				[
-					producto?.nombre ?? '',
-					getCategoryName(producto),
-					getProviderName(producto),
-					getNetKilos(producto),
-					toNumber(producto?.precio_compra),
-					toNumber(producto?.precio_venta_kg),
-				].join(';'),
-			),
-		].join('\n')
-
-		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-		const url = URL.createObjectURL(blob)
-		const link = document.createElement('a')
-		link.href = url
-		link.download = `inventario-${new Date().toISOString().slice(0, 10)}.csv`
-		link.click()
-		URL.revokeObjectURL(url)
-		showSnackbar('Exportación generada en CSV. Puedes abrirla en Excel o Google Sheets.')
-	} catch (error) {
-		showSnackbar(error?.message ?? 'No se pudo exportar el inventario.', 'error')
-	} finally {
-		exportLoading.value = false
-	}
-}
-
-watch(
-	() => categoriaFiltro.value,
-	() => {
-		pagination.page = 1
-		fetchProductos(1)
-	},
-)
-
-watch(
-	() => pagination.page,
-	(page, previous) => {
-		if (page !== previous) {
-			fetchProductos(page)
-		}
-	},
-)
-
-watch(
-	() => searchQuery.value,
-	() => {
-		if (searchDebounce) clearTimeout(searchDebounce)
-		searchDebounce = setTimeout(() => {
-			pagination.page = 1
-			fetchProductos(1)
-		}, 450)
-	},
-)
-
-onMounted(async () => {
-	loadLocalStockThresholds()
-	await Promise.all([fetchCategorias(), fetchProveedores()])
+onMounted(() => {
+	fetchCategorias()
+	fetchProveedores()
 	fetchProductos()
 })
-
-onBeforeUnmount(() => {
-	if (searchDebounce) clearTimeout(searchDebounce)
-})
-
-defineExpose({ refreshInventario })
-
 </script>
 
 <style scoped>
@@ -1371,7 +816,7 @@ defineExpose({ refreshInventario })
 	color: #0f5132;
 }
 
-.status-banner + .product-card__header {
+.status-banner+.product-card__header {
 	margin-top: 4px;
 }
 
