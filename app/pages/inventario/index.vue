@@ -111,7 +111,7 @@
 										<div class="stock-metric">
 											<p class="metric-label">Cantidad disponible</p>
 											<div class="metric-inline">
-												<p class="metric-value">{{ card.kilosLabel }}</p>
+												<p class="metric-value metric-value--wide">{{ card.kilosLabel }}</p>
 												<div class="stock-adjust">
 													<v-btn icon size="x-small" variant="tonal" color="success"
 														:loading="inlineStockLoading[card.id]"
@@ -237,9 +237,13 @@
 								<v-text-field v-model="productForm.desperdicio" type="number" label="Desperdicio (kg)"
 									variant="outlined" density="comfortable" color="success" min="0" step="0.001"
 									class="modal-form-grid__item"></v-text-field>
-								<v-text-field v-model="productForm.precio_compra" type="number"
-									label="Precio de compra ($)" variant="outlined" density="comfortable"
+								<v-text-field v-model="productForm.precio_compra_total" type="number"
+									label="Precio total de compra ($)" variant="outlined" density="comfortable"
 									color="success" min="0" step="0.01" :rules="[requiredRule]"
+									class="modal-form-grid__item"></v-text-field>
+								<v-text-field :model-value="purchasePricePerKg" type="number"
+									label="Precio de compra por kg ($)" variant="outlined" density="comfortable"
+									color="success" min="0" step="0.0001" readonly
 									class="modal-form-grid__item"></v-text-field>
 								<v-text-field v-model="productForm.precio_venta_kg" type="number"
 									label="Precio de venta por kg ($)" variant="outlined" density="comfortable"
@@ -390,7 +394,7 @@ const getDefaultForm = () => ({
 	proveedor_id: null,
 	kilogramos: '',
 	desperdicio: 0,
-	precio_compra: '',
+	precio_compra_total: '',
 	precio_venta_kg: '',
 	frescura_modo: 'dias',
 	frescura_dias: DEFAULT_SHELF_LIFE_DAYS,
@@ -409,6 +413,13 @@ const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 
 const formatCurrency = (value) => currencyFormatter.format(Number(value) || 0)
 const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, Number(value) || 0))} kg`
 const formatDate = (value) => value ? dateFormatter.format(new Date(value)) : 'Sin fecha'
+
+const purchasePricePerKg = computed(() => {
+	const kilos = Number(productForm.value.kilogramos) || 0
+	const total = Number(productForm.value.precio_compra_total) || 0
+	if (kilos <= 0) return 0
+	return Number((total / kilos).toFixed(2))
+})
 
 const parseDetalle = (detalle) => {
 	if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
@@ -610,7 +621,7 @@ const openEditDialog = (producto) => {
 		proveedor_id: producto.proveedor_id,
 		kilogramos: producto.kilogramos,
 		desperdicio: producto.desperdicio || 0,
-		precio_compra: producto.precio_compra,
+		precio_compra_total: Number(producto.precio_compra || 0) * Number(producto.kilogramos || 0),
 		precio_venta_kg: producto.precio_venta_kg,
 		frescura_modo: parsedDetalle.frescura?.modo || 'dias',
 		frescura_dias: parsedDetalle.frescura?.modo === 'dias'
@@ -760,7 +771,7 @@ const submitProducto = async () => {
 		categoria_id: Number(productForm.value.categoria_id),
 		proveedor_id: Number(productForm.value.proveedor_id),
 		kilogramos: Number(productForm.value.kilogramos),
-		precio_compra: Number(productForm.value.precio_compra),
+		precio_compra: Number(purchasePricePerKg.value.toFixed(2)),
 		precio_venta_kg: Number(productForm.value.precio_venta_kg),
 		desperdicio: Number(productForm.value.desperdicio) || 0,
 		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload())
@@ -1115,6 +1126,10 @@ onBeforeUnmount(() => {
 	font-size: 0.96rem;
 	font-weight: 700;
 	color: #0b2f1f;
+}
+
+.metric-value--wide {
+	min-width: 90px;
 }
 
 .metric-inline {
