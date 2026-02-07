@@ -210,7 +210,14 @@ const getStockThreshold = (p) => {
 }
 
 const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
-const gananciaPotencial = computed(() => Number(estadisticas.value?.total_ganancia_potencial) || 0)
+const gananciaPotencial = computed(() => {
+    return productos.value.reduce((acc, p) => {
+        const kilos = getNetKilograms(p)
+        const venta = Number(p?.precio_venta_kg || 0)
+        const compra = Number(p?.precio_compra || 0)
+        return acc + (venta - compra) * kilos
+    }, 0)
+})
 
 const categoryDistribution = computed(() => {
     const map = new Map()

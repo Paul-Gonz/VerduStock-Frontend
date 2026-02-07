@@ -893,13 +893,11 @@ onBeforeUnmount(() => {
 	flex-wrap: wrap;
 }
 
-.action-btn {
-	min-height: 34px;
-	border-radius: 14px;
-	text-transform: none;
-	font-weight: 600;
-	font-family: inherit;
-	font-size: 14px;
+:deep(.action-btn.v-btn) {
+	min-height: 35px;
+	height: 35px;
+	width: 190px;
+	min-width: 190px;
 }
 
 .filters-bar {

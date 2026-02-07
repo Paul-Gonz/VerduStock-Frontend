@@ -7,8 +7,8 @@
                         <v-icon icon="mdi-cube-outline" color="success"></v-icon>
                     </div>
                     <div>
-                        <p class="brand-title">Verdulería</p>
-                        <p class="brand-subtitle">Control total</p>
+                        <p class="brand-title">Disfruver</p>
+                        <p class="brand-subtitle">Del campo a tu casa</p>
                     </div>
                 </div>
 
@@ -331,7 +331,7 @@ onMounted(async () => {
 
 :global(.app-title) {
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 400;
     color: #053b2d;
     margin: 0 0 12px;
 }

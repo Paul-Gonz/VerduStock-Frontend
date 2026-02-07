@@ -809,7 +809,7 @@ onMounted(() => {
 }
 
 .section-card :deep(.v-card-title) {
-    padding: 18px 22px 6px;
+    padding: 18px 22px 20px;
 }
 
 .section-card :deep(.v-card-text) {
@@ -823,12 +823,14 @@ onMounted(() => {
 }
 
 .new-user-btn {
+    min-height: 34px;
+    width: 170px;
+    min-width: 180px;
+    border-radius: 14px;
     text-transform: none;
     font-weight: 600;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
+    font-family: inherit;
+    font-size: 15px;
 }
 
 .active-chip {
