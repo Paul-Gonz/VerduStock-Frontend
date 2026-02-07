@@ -4,7 +4,7 @@
             <div class="nav-inner">
                 <div class="brand-block">
                     <div class="brand-icon">
-                        <v-icon icon="mdi-cube-outline" color="success"></v-icon>
+                        <v-img src="/logo.png" alt="Logo" class="brand-logo" contain></v-img>
                     </div>
                     <div>
                         <p class="brand-title">Disfruver</p>
@@ -200,22 +200,22 @@ onMounted(async () => {
 .brand-block {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     margin-bottom: 5.6px;
 }
 
 .brand-icon {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    margin-left: 20px;
+    align-items: center;
+    justify-content: center;
+    margin-left: 15px;
 }
 
 .brand-title {
     font-size: 1.05rem;
-    font-weight: 800;
+    font-weight: 600;
     color: #0b5b33;
     margin: 0;
 }
