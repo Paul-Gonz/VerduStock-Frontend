@@ -12,20 +12,9 @@
             </header>
 
             <div v-if="loadingDashboard || dashboardError" class="feedback-stack">
-                <v-progress-linear
-                    v-if="loadingDashboard"
-                    color="success"
-                    indeterminate
-                    height="4"
-                />
-                <v-alert
-                    v-if="dashboardError"
-                    type="error"
-                    variant="tonal"
-                    density="comfortable"
-                    border="start"
-                    border-color="error"
-                >
+                <v-progress-linear v-if="loadingDashboard" color="success" indeterminate height="4" />
+                <v-alert v-if="dashboardError" type="error" variant="tonal" density="comfortable" border="start"
+                    border-color="error">
                     {{ dashboardError }}
                 </v-alert>
             </div>
@@ -48,7 +37,8 @@
                         <span>Distribución por Categoría</span>
                     </div>
                     <client-only>
-                        <component :is="Apexchart" v-if="Apexchart" type="donut" height="260" :options="donutOptions" :series="donutSeries" />
+                        <component :is="Apexchart" v-if="Apexchart" type="donut" height="260" :options="donutOptions"
+                            :series="donutSeries" />
                     </client-only>
                 </article>
                 <article class="panel-card app-card">
@@ -57,7 +47,8 @@
                         <span>Inversión por Proveedor</span>
                     </div>
                     <client-only>
-                        <component :is="Apexchart" v-if="Apexchart" type="bar" height="260" :options="barOptions" :series="barSeries" />
+                        <component :is="Apexchart" v-if="Apexchart" type="bar" height="260" :options="barOptions"
+                            :series="barSeries" />
                     </client-only>
                 </article>
             </section>
@@ -114,8 +105,17 @@
 
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { navigateTo } from '#app'
 
-const { secureRequest } = useApi()
+// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+const API_URL = 'http://localhost:8000'
+const fetchConfig = {
+    credentials: 'include',
+    headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
+}
 
 const Apexchart = import.meta.client
     ? defineAsyncComponent(() => import('vue3-apexcharts'))
@@ -128,65 +128,43 @@ const EXPIRY_WARNING_DAYS = 3
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const donutColors = ['#0ece78', '#6ee7b7', '#34d399', '#10b981', '#059669', '#65a30d']
 
-const currencyFormatter = new Intl.NumberFormat('es-EC', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-})
+// --- FORMATEADORES ---
+const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
+const kilosFormatter = new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const integerFormatter = new Intl.NumberFormat('es-EC', { maximumFractionDigits: 0 })
 
-const kilosFormatter = new Intl.NumberFormat('es-EC', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-})
+const formatCurrency = (val = 0) => currencyFormatter.format(Number(val) || 0)
+const formatKilograms = (val = 0) => `${kilosFormatter.format(Number(val) || 0)} kg`
 
-const integerFormatter = new Intl.NumberFormat('es-EC', {
-    maximumFractionDigits: 0,
-})
-
+// --- ESTADOS ---
 const productos = ref([])
 const estadisticas = ref({})
 const loadingDashboard = ref(false)
 const dashboardError = ref('')
 
-const toNumber = (value, fallback = 0) => {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : fallback
-}
-
-const formatCurrency = (value = 0) => currencyFormatter.format(toNumber(value))
-const formatKilograms = (value = 0) => `${kilosFormatter.format(toNumber(value))} kg`
-
-const getNetKilograms = (producto) => {
-    if (producto?.kilogramos_netos != null) return toNumber(producto.kilogramos_netos)
-    if (producto?.kilogramos != null) return toNumber(producto.kilogramos)
-    if (producto?.kilo != null) return toNumber(producto.kilo)
-    if (producto?.cantidad != null) return toNumber(producto.cantidad)
-    return 0
-}
-
-const normalizeCollection = (payload) => {
-    const data = payload?.data ?? payload
-    if (Array.isArray(data)) return data
-    if (Array.isArray(data?.data)) return data.data
-    return []
-}
-
+// --- LLAMADA A RUTA (AJUSTADA) ---
 const loadDashboardData = async () => {
     loadingDashboard.value = true
     dashboardError.value = ''
 
     try {
-        const params = new URLSearchParams({ por_pagina: String(MAX_PRODUCTS_FOR_DASHBOARD) })
+        // Ejecutamos ambas peticiones con la configuración estable
         const [productosResponse, statsResponse] = await Promise.all([
-            secureRequest(`/productos?${params.toString()}`),
-            secureRequest('/productos/reporte/estadisticas'),
+            $fetch(`${API_URL}/productos?por_pagina=${MAX_PRODUCTS_FOR_DASHBOARD}`, fetchConfig),
+            $fetch(`${API_URL}/productos/reporte/estadisticas`, fetchConfig),
         ])
 
-        productos.value = normalizeCollection(productosResponse?.data ?? productosResponse)
-        estadisticas.value = statsResponse?.estadisticas ?? {}
+        // Normalización de datos
+        productos.value = productosResponse?.data || productosResponse || []
+        estadisticas.value = statsResponse?.estadisticas || {}
+
     } catch (error) {
         console.error('Dashboard error', error)
-        dashboardError.value = error?.data?.message ?? error?.message ?? 'No se pudo cargar el dashboard.'
+        if (error.status === 401) {
+            await navigateTo('/login')
+        } else {
+            dashboardError.value = error.data?.message || 'No se pudo conectar con el servidor.'
+        }
     } finally {
         loadingDashboard.value = false
     }
@@ -194,203 +172,115 @@ const loadDashboardData = async () => {
 
 onMounted(loadDashboardData)
 
-const totalProductos = computed(() => {
-    const total = toNumber(estadisticas.value?.total_productos)
-    return total || productos.value.length
-})
+// --- LÓGICA DE NEGOCIO Y CÁLCULOS ---
 
-const gananciaPotencial = computed(() => toNumber(estadisticas.value?.total_ganancia_potencial))
+const getNetKilograms = (p) => {
+    const bruto = Number(p?.kilogramos || p?.kilogramos_netos || p?.kilo || 0)
+    const desperdicio = Number(p?.desperdicio || 0)
+    return Math.max(bruto - desperdicio, 0)
+}
+
+const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
+const gananciaPotencial = computed(() => Number(estadisticas.value?.total_ganancia_potencial) || 0)
 
 const categoryDistribution = computed(() => {
     const map = new Map()
-    productos.value.forEach((producto) => {
-        const name = producto?.categoria_nombre ?? 'Sin categoría'
-        const kilos = getNetKilograms(producto)
+    productos.value.forEach((p) => {
+        const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
+        const kilos = getNetKilograms(p)
         map.set(name, (map.get(name) ?? 0) + kilos)
     })
     return Array.from(map, ([name, value]) => ({ name, value }))
 })
 
-const totalCategoryKilos = computed(() =>
-    categoryDistribution.value.reduce((sum, item) => sum + item.value, 0)
-)
+const totalCategoryKilos = computed(() => categoryDistribution.value.reduce((sum, item) => sum + item.value, 0))
+
+// --- CONFIGURACIÓN DE GRÁFICOS (APEX CHARTS) ---
 
 const donutSeries = computed(() =>
-    categoryDistribution.value.length
-        ? categoryDistribution.value.map((item) => Number(item.value.toFixed(2)))
-        : [1]
+    categoryDistribution.value.length ? categoryDistribution.value.map(i => Number(i.value.toFixed(2))) : [1]
 )
 
-const donutLabels = computed(() => {
-    if (!categoryDistribution.value.length) {
-        return ['Sin datos']
-    }
-
-    return categoryDistribution.value.map((item) => {
-        const percent = totalCategoryKilos.value
-            ? Math.round((item.value / totalCategoryKilos.value) * 100)
-            : 0
-        return `${item.name} ${percent}%`
-    })
-})
-
-const donutOptions = computed(() => {
-    const hasCategoryData = categoryDistribution.value.length > 0
-
-    return {
-        chart: { type: 'donut', toolbar: { show: false } },
-        labels: donutLabels.value,
-        colors: donutColors,
-        legend: { position: 'bottom', fontSize: '14px', labels: { colors: '#065f46' } },
-        dataLabels: { enabled: false },
-        stroke: { colors: ['#eafbf0'] },
-        plotOptions: {
-            pie: {
-                donut: {
-                    size: '70%',
-                    labels: {
+const donutOptions = computed(() => ({
+    chart: { type: 'donut' },
+    labels: categoryDistribution.value.map(i => i.name),
+    colors: donutColors,
+    legend: { position: 'bottom' },
+    plotOptions: {
+        pie: {
+            donut: {
+                labels: {
+                    show: true,
+                    total: {
                         show: true,
-                        value: {
-                            color: '#065f46',
-                            fontSize: '28px',
-                            fontWeight: 600,
-                            formatter: (val) =>
-                                hasCategoryData ? `${Number(val).toFixed(1)} kg` : formatKilograms(0),
-                        },
-                        total: {
-                            show: true,
-                            label: 'Kg netos',
-                            color: '#0f5132',
-                            fontSize: '14px',
-                            formatter: () => formatKilograms(totalCategoryKilos.value),
-                        },
-                    },
-                },
-            },
-        },
+                        label: 'Total Kg',
+                        formatter: () => kilosFormatter.format(totalCategoryKilos.value)
+                    }
+                }
+            }
+        }
     }
-})
+}))
 
 const providerInvestments = computed(() => {
     const map = new Map()
-    productos.value.forEach((producto) => {
-        const name = producto?.proveedor_nombre ?? 'Sin proveedor'
-        const inversion = toNumber(producto?.precio_compra)
+    productos.value.forEach((p) => {
+        const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
+        const inversion = Number(p?.precio_compra || 0)
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
-    return Array.from(map, ([name, value]) => ({ name, value }))
+    return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
 })
 
-const barSeries = computed(() => [
-    {
-        name: 'Inversión ($)',
-        data: providerInvestments.value.length
-            ? providerInvestments.value.map((item) => Number(item.value.toFixed(2)))
-            : [0],
-    },
-])
-
+const barSeries = computed(() => [{ name: 'Inversión', data: providerInvestments.value.map(i => i.value) }])
 const barOptions = computed(() => ({
     chart: { type: 'bar', toolbar: { show: false } },
-    colors: ['#1dd07c'],
-    plotOptions: { bar: { borderRadius: 8, columnWidth: '45%' } },
-    dataLabels: { enabled: false },
-    xaxis: {
-        categories: providerInvestments.value.length
-            ? providerInvestments.value.map((item) => item.name)
-            : ['Sin datos'],
-        labels: {
-            style: {
-                colors: providerInvestments.value.length
-                    ? providerInvestments.value.map(() => '#065f46')
-                    : ['#9ca3af'],
-                fontSize: '12px',
-            },
-        },
-        axisBorder: { show: false },
-        axisTicks: { show: false },
-    },
-    yaxis: {
-        labels: { style: { colors: ['#047857'], fontSize: '12px' } },
-    },
-    grid: {
-        borderColor: '#d1fae5',
-        strokeDashArray: 4,
-    },
-    tooltip: {
-        theme: 'light',
-        y: {
-            formatter: (val) => formatCurrency(val),
-        },
-    },
+    plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+    xaxis: { categories: providerInvestments.value.map(i => i.name) },
+    colors: ['#1dd07c']
 }))
+
+// --- LISTAS DE ALERTAS ---
 
 const lowStockProducts = computed(() =>
     productos.value
-        .map((producto) => {
-            const stockValue = getNetKilograms(producto)
-            return {
-                id: producto.id,
-                name: producto.nombre,
-                category: producto?.categoria_nombre ?? 'Sin categoría',
-                stockValue,
-            }
-        })
-        .filter((item) => item.stockValue > 0 && item.stockValue <= LOW_STOCK_THRESHOLD_KG)
-        .sort((a, b) => a.stockValue - b.stockValue)
-        .slice(0, 5)
-        .map((item) => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            stock: formatKilograms(item.stockValue),
-            minimum: formatKilograms(LOW_STOCK_THRESHOLD_KG),
+        .map(p => ({
+            id: p.id,
+            name: p.nombre,
+            category: p?.categoria?.nombre || p?.categoria_nombre || 'General',
+            stockValue: getNetKilograms(p)
         }))
+        .filter(i => i.stockValue > 0 && i.stockValue <= LOW_STOCK_THRESHOLD_KG)
+        .sort((a, b) => a.stockValue - b.stockValue)
+        .slice(0, 6)
+        .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(LOW_STOCK_THRESHOLD_KG) }))
 )
 
 const expiringProducts = computed(() =>
     productos.value
-        .map((producto) => {
-            if (!producto?.created_at) return null
-            const createdAt = new Date(producto.created_at)
-            if (Number.isNaN(createdAt.getTime())) return null
-            const expirationDate = new Date(createdAt)
-            expirationDate.setDate(expirationDate.getDate() + DEFAULT_SHELF_LIFE_DAYS)
-            const daysLeft = Math.ceil((expirationDate.getTime() - Date.now()) / ONE_DAY_MS)
+        .map(p => {
+            if (!p?.created_at) return null
+            const date = new Date(p.created_at)
+            date.setDate(date.getDate() + DEFAULT_SHELF_LIFE_DAYS)
+            const days = Math.ceil((date.getTime() - Date.now()) / ONE_DAY_MS)
             return {
-                id: producto.id,
-                name: producto.nombre,
-                category: producto?.categoria_nombre ?? 'Sin categoría',
-                expiresIn: Math.max(daysLeft, 0),
-                date: expirationDate.toLocaleDateString('es-EC'),
+                id: p.id,
+                name: p.nombre,
+                category: p?.categoria?.nombre || 'General',
+                expiresIn: Math.max(days, 0),
+                date: date.toLocaleDateString('es-EC')
             }
         })
-        .filter(Boolean)
-        .filter((item) => item.expiresIn <= EXPIRY_WARNING_DAYS)
+        .filter(i => i && i.expiresIn <= EXPIRY_WARNING_DAYS)
         .sort((a, b) => a.expiresIn - b.expiresIn)
-        .slice(0, 5)
+        .slice(0, 6)
 )
 
 const resumenTarjetas = computed(() => [
-    { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'Inventario activo', icon: 'mdi-leaf' },
-    {
-        title: 'Ganancia Potencial',
-        value: formatCurrency(gananciaPotencial.value),
-        detail: 'Basado en stock actual',
-        icon: 'mdi-trending-up',
-    },
-    {
-        title: `Por vencer (${EXPIRY_WARNING_DAYS} días)`,
-        value: integerFormatter.format(expiringProducts.value.length),
-        detail: 'Revisar próximos días',
-        icon: 'mdi-alert-decagram',
-    },
-    {
-        title: 'Stock Bajo',
-        value: integerFormatter.format(lowStockProducts.value.length),
-        detail: `Menos de ${formatKilograms(LOW_STOCK_THRESHOLD_KG)}`,
-        icon: 'mdi-package-variant',
-    },
+    { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: 'mdi-leaf' },
+    { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: 'mdi-trending-up' },
+    { title: 'Por Vencer', value: expiringProducts.value.length, detail: `${EXPIRY_WARNING_DAYS} días límite`, icon: 'mdi-alert-decagram' },
+    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: `Bajo ${LOW_STOCK_THRESHOLD_KG}kg`, icon: 'mdi-package-variant' },
 ])
 </script>
 
@@ -414,7 +304,7 @@ const resumenTarjetas = computed(() => [
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-     gap: 1rem;
+    gap: 1rem;
 }
 
 .hero-card h1 {
@@ -435,7 +325,7 @@ const resumenTarjetas = computed(() => [
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-   gap: 1rem;
+    gap: 1rem;
 }
 
 .stat-card {
@@ -489,7 +379,7 @@ const resumenTarjetas = computed(() => [
 .list-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-   gap: 1rem;
+    gap: 1rem;
 }
 
 .list-card {
