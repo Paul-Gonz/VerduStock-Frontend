@@ -158,5 +158,7 @@ export class TasaDolarService {
     }
 }
 
-// Crear instancia global
-window.TasaDolar = new TasaDolarService();
+// Crear instancia global solo en cliente
+if (typeof window !== 'undefined') {
+    window.TasaDolar = new TasaDolarService();
+}

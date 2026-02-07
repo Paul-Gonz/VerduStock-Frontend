@@ -43,6 +43,34 @@
             </v-toolbar-title>
             <v-spacer></v-spacer>
 
+            <v-menu v-model="tasaMenu" location="bottom end" :close-on-content-click="false">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" variant="text" class="rate-chip"
+                        :class="{ 'rate-chip--muted': tasaLoading || tasaError }" :ripple="false">
+                        <v-icon icon="mdi-currency-usd" size="18" class="rate-icon"></v-icon>
+                        <div>
+                            <p class="rate-label">TASA BCV DEL DIA</p>
+                            <p class="rate-value">{{ tasaTexto }}</p>
+                        </div>
+                    </v-btn>
+                </template>
+                <v-card class="rate-menu" rounded="lg">
+                    <v-card-title class="rate-menu__title">Tasa BCV</v-card-title>
+                    <v-card-text class="rate-menu__body">
+                        <div class="rate-meta">
+                            <div class="rate-meta__row">
+                                <v-icon icon="mdi-calendar-clock" size="16"></v-icon>
+                                <span>Actualizado: {{ tasaFechaTexto }}</span>
+                            </div>
+                            <div class="rate-meta__row" v-if="tasaDolar?.fuente">
+                                <v-icon icon="mdi-database" size="16"></v-icon>
+                                <span>Fuente: {{ tasaDolar.fuente }}</span>
+                            </div>
+                        </div>
+                    </v-card-text>
+                </v-card>
+            </v-menu>
+
             <v-menu>
                 <template v-slot:activator="{ props }">
                     <v-btn v-bind="props" icon class="mr-2">
@@ -98,9 +126,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import menuConfig from './menu.json'
+import { TasaDolarService } from '../utils/tasaDolar.js'
 
 // Router y Route
 const route = useRoute()
@@ -111,6 +140,12 @@ const drawer = ref(true)
 const logoutDialog = ref(false)
 const loggingOut = ref(false)
 const menuItems = ref(menuConfig)
+const tasaDolar = ref(null)
+const tasaTimer = ref(null)
+const tasaService = ref(null)
+const tasaLoading = ref(true)
+const tasaError = ref(false)
+const tasaMenu = ref(false)
 
 const snackbar = ref({
     show: false,
@@ -123,6 +158,39 @@ const pageTitle = computed(() => {
     const currentItem = menuItems.value.find(item => item.route === route.path)
     return currentItem ? currentItem.title : 'VerduStock'
 })
+
+const tasaFormatter = new Intl.NumberFormat('es-VE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+})
+
+const tasaDisplay = computed(() => {
+    if (!tasaDolar.value) return ''
+    const candidates = [
+        tasaDolar.value.venta,
+        tasaDolar.value.promedio,
+        tasaDolar.value.compra
+    ]
+    const tasa = candidates
+        .map((value) => Number(value))
+        .find((value) => Number.isFinite(value) && value > 0)
+    if (!Number.isFinite(tasa) || tasa <= 0) return ''
+    return `Bs ${tasaFormatter.format(tasa)}`
+})
+
+const tasaTexto = computed(() => {
+    if (tasaDisplay.value) return tasaDisplay.value
+    if (tasaLoading.value) return 'Cargando...'
+    return 'Sin datos'
+})
+
+const tasaFechaTexto = computed(() => {
+    if (!tasaDolar.value?.fechaActualizacion) return 'Sin fecha'
+    const date = new Date(tasaDolar.value.fechaActualizacion)
+    if (Number.isNaN(date.getTime())) return 'Sin fecha'
+    return date.toLocaleString('es-VE')
+})
+
 
 // Métodos
 const isActive = (targetRoute) => route.path.startsWith(targetRoute)
@@ -177,6 +245,28 @@ onMounted(async () => {
     } catch (e) {
         router.push('/login')
     }
+})
+
+onMounted(async () => {
+    if (!import.meta.client) return
+    tasaService.value = window?.TasaDolar || new TasaDolarService()
+    const cargarTasa = async () => {
+        try {
+            const data = await tasaService.value.obtenerTasa('oficial')
+            tasaDolar.value = data
+            tasaError.value = false
+        } catch (error) {
+            tasaError.value = true
+        } finally {
+            tasaLoading.value = false
+        }
+    }
+    await cargarTasa()
+    tasaTimer.value = setInterval(cargarTasa, 5 * 60 * 1000)
+})
+
+onBeforeUnmount(() => {
+    if (tasaTimer.value) clearInterval(tasaTimer.value)
 })
 </script>
 
@@ -247,7 +337,6 @@ onMounted(async () => {
 
 .menu-icon {
     background: transparent !important;
-    
     background: rgba(2, 224, 106, 0.071) !important;
     color: #178950;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -300,6 +389,88 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     margin: 0;
+}
+
+.rate-chip {
+    display: flex;
+    align-items: left;
+    gap: 8px;
+    padding: 8px 2px;
+    border-radius: 14px;
+    margin-right: 19px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+:deep(.rate-chip.v-btn) {
+    background: linear-gradient(135deg, #f8fffb 0%, #eefaf3 100%) !important;
+    border: 1px solid rgba(80, 202, 137, 0.5) !important;
+    box-shadow: 0 6px 16px rgba(9, 94, 57, 0.1) !important;
+}
+
+:deep(.rate-chip.v-btn:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(9, 94, 57, 0.14) !important;
+}
+
+.rate-chip--muted {
+    opacity: 0.8;
+}
+
+.rate-icon {
+    color: #0b5b33;
+}
+
+.rate-label {
+    margin: 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2e6f4a;
+}
+
+.rate-value {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0b5b33;
+}
+
+.rate-menu {
+    min-width: 260px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 18px 40px rgba(7, 56, 34, 0.18);
+    background: #ffffff;
+}
+
+.rate-menu__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0b5b33;
+    padding-bottom: 0;
+}
+
+.rate-menu__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 6px;
+}
+
+.rate-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #f5fbf7;
+    border-radius: 12px;
+    padding: 10px 12px;
+    color: #2e6f4a;
+    font-size: 0.78rem;
+}
+
+.rate-meta__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .text-red {
