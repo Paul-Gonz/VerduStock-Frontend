@@ -360,7 +360,29 @@ const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
+const suppressPageWatch = ref(false)
 let searchDebounce = null
+
+const categoriaOptions = computed(() => [
+	{ title: 'Todas las categorias', value: 'all' },
+	...categorias.value.map((cat) => ({
+		title: cat.nombre || 'Sin nombre',
+		value: cat.id
+	}))
+])
+
+const estadoOptions = [
+	{ title: 'Todos los estados', value: 'all' },
+	{ title: 'Stock bajo', value: 'low' },
+	{ title: 'Por vencer', value: 'expiring' },
+	{ title: 'Vencido', value: 'expired' },
+	{ title: 'Saludable', value: 'healthy' },
+]
+
+const hasInventory = computed(() => productosRaw.value.length > 0)
+const isFilteringActive = computed(() =>
+	!!searchQuery.value.trim() || categoriaFiltro.value !== 'all' || estadoFiltro.value !== 'all'
+)
 
 const getDefaultForm = () => ({
 	nombre: '',
@@ -491,6 +513,7 @@ const fetchProductos = async (page = pagination.page) => {
 	productosLoading.value = true
 	productosError.value = ''
 	try {
+		suppressPageWatch.value = true
 		pagination.page = page
 		const queryParams = new URLSearchParams({
 			page: String(page),
@@ -517,6 +540,7 @@ const fetchProductos = async (page = pagination.page) => {
 		productosRaw.value = []
 		productosError.value = 'No se pudo cargar el inventario.'
 	} finally {
+		suppressPageWatch.value = false
 		productosLoading.value = false
 	}
 }
@@ -615,7 +639,6 @@ const productCards = computed(() =>
 		const daysToExpire = expiryDate ? Math.ceil((expiryDate.getTime() - now) / ONE_DAY_MS) : null
 		const isExpired = daysToExpire !== null && daysToExpire < 0
 		const isExpiringSoon = daysToExpire !== null && daysToExpire <= EXPIRY_WARNING_DAYS && daysToExpire >= 0
-
 		const isLowStock = kilos <= stockMin
 		const saleUnit = Number(p.precio_venta_kg || 0)
 		const saleTotal = Number(p.precio_venta_total ?? (kilos * saleUnit))
@@ -654,6 +677,8 @@ const productCards = computed(() =>
 			venceLabel: expiryDate ? formatDate(expiryDate) : 'Revisar stock',
 			status,
 			isExpiring: isExpiringSoon,
+			isExpired,
+			isLowStock,
 			progress: Math.min((kilos / (stockMin * 2)) * 100, 100)
 		}
 	})
@@ -661,7 +686,25 @@ const productCards = computed(() =>
 
 const filteredCards = computed(() => {
 	let cards = productCards.value
-	if (estadoFiltro.value === 'low') cards = cards.filter(c => c.status.weight === 0)
+	const query = searchQuery.value.trim().toLowerCase()
+	if (query) {
+		cards = cards.filter((c) => {
+			const name = String(c.name || '').toLowerCase()
+			const provider = String(c.provider || '').toLowerCase()
+			return name.includes(query) || provider.includes(query)
+		})
+	}
+
+	if (estadoFiltro.value === 'low') {
+		cards = cards.filter(c => c.isLowStock)
+	} else if (estadoFiltro.value === 'expiring') {
+		cards = cards.filter(c => c.isExpiring && !c.isExpired)
+	} else if (estadoFiltro.value === 'expired') {
+		cards = cards.filter(c => c.isExpired)
+	} else if (estadoFiltro.value === 'healthy') {
+		cards = cards.filter(c => !c.isLowStock && !c.isExpiring && !c.isExpired)
+	}
+
 	if (categoriaFiltro.value !== 'all') cards = cards.filter(c => String(c.raw.categoria_id) === String(categoriaFiltro.value))
 	return cards
 })
@@ -768,11 +811,22 @@ watch(searchQuery, () => {
 
 watch(categoriaFiltro, () => fetchProductos(1))
 
+watch(estadoFiltro, () => fetchProductos(1))
+
+watch(() => pagination.page, (page) => {
+	if (suppressPageWatch.value) return
+	fetchProductos(page)
+})
+
 onMounted(() => {
 	loadLocalStockThresholds()
 	fetchCategorias()
 	fetchProveedores()
 	fetchProductos()
+})
+
+onBeforeUnmount(() => {
+	if (searchDebounce) clearTimeout(searchDebounce)
 })
 </script>
 

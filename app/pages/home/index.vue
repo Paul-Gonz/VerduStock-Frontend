@@ -127,6 +127,7 @@ const DEFAULT_SHELF_LIFE_DAYS = 7
 const EXPIRY_WARNING_DAYS = 3
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const donutColors = ['#0ece78', '#6ee7b7', '#34d399', '#10b981', '#059669', '#65a30d']
+const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
 
 // --- FORMATEADORES ---
 const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
@@ -141,6 +142,25 @@ const productos = ref([])
 const estadisticas = ref({})
 const loadingDashboard = ref(false)
 const dashboardError = ref('')
+const localStockThresholds = ref({})
+
+const loadLocalStockThresholds = () => {
+    if (!import.meta.client) return
+    try {
+        const raw = localStorage.getItem(STOCK_THRESHOLD_STORAGE_KEY)
+        const parsed = raw ? JSON.parse(raw) : {}
+        localStockThresholds.value = parsed && typeof parsed === 'object' ? parsed : {}
+    } catch (error) {
+        localStockThresholds.value = {}
+    }
+}
+
+const getLocalStockThreshold = (productoId) => {
+    if (!productoId) return LOW_STOCK_THRESHOLD_KG
+    const stored = localStockThresholds.value[String(productoId)]
+    const value = Number(stored)
+    return Number.isFinite(value) && value >= 0 ? value : LOW_STOCK_THRESHOLD_KG
+}
 
 // --- LLAMADA A RUTA (AJUSTADA) ---
 const loadDashboardData = async () => {
@@ -170,7 +190,10 @@ const loadDashboardData = async () => {
     }
 }
 
-onMounted(loadDashboardData)
+onMounted(() => {
+    loadLocalStockThresholds()
+    loadDashboardData()
+})
 
 // --- LÓGICA DE NEGOCIO Y CÁLCULOS ---
 
@@ -178,6 +201,12 @@ const getNetKilograms = (p) => {
     const bruto = Number(p?.kilogramos || p?.kilogramos_netos || p?.kilo || 0)
     const desperdicio = Number(p?.desperdicio || 0)
     return Math.max(bruto - desperdicio, 0)
+}
+
+const getStockThreshold = (p) => {
+    const apiThreshold = Number(p?.stock_minimo || p?.stock_minimo_kg || NaN)
+    if (Number.isFinite(apiThreshold) && apiThreshold >= 0) return apiThreshold
+    return getLocalStockThreshold(p?.id)
 }
 
 const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
@@ -248,12 +277,13 @@ const lowStockProducts = computed(() =>
             id: p.id,
             name: p.nombre,
             category: p?.categoria?.nombre || p?.categoria_nombre || 'General',
-            stockValue: getNetKilograms(p)
+            stockValue: getNetKilograms(p),
+            threshold: getStockThreshold(p)
         }))
-        .filter(i => i.stockValue > 0 && i.stockValue <= LOW_STOCK_THRESHOLD_KG)
+        .filter(i => i.stockValue <= i.threshold)
         .sort((a, b) => a.stockValue - b.stockValue)
         .slice(0, 6)
-        .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(LOW_STOCK_THRESHOLD_KG) }))
+        .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(i.threshold) }))
 )
 
 const expiringProducts = computed(() =>
@@ -280,7 +310,7 @@ const resumenTarjetas = computed(() => [
     { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: 'mdi-leaf' },
     { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: 'mdi-trending-up' },
     { title: 'Por Vencer', value: expiringProducts.value.length, detail: `${EXPIRY_WARNING_DAYS} días límite`, icon: 'mdi-alert-decagram' },
-    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: `Bajo ${LOW_STOCK_THRESHOLD_KG}kg`, icon: 'mdi-package-variant' },
+    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: 'Bajo minimo', icon: 'mdi-package-variant' },
 ])
 </script>
 
