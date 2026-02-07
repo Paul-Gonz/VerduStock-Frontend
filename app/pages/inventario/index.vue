@@ -110,7 +110,21 @@
 									<div class="stock-block">
 										<div class="stock-metric">
 											<p class="metric-label">Cantidad disponible</p>
-											<p class="metric-value">{{ card.kilosLabel }}</p>
+											<div class="metric-inline">
+												<p class="metric-value">{{ card.kilosLabel }}</p>
+												<div class="stock-adjust">
+													<v-btn icon size="x-small" variant="tonal" color="success"
+														:loading="inlineStockLoading[card.id]"
+														@click="adjustStock(card.raw, -STOCK_STEP_KG)">
+														<v-icon icon="mdi-minus"></v-icon>
+													</v-btn>
+													<v-btn icon size="x-small" variant="tonal" color="success"
+														:loading="inlineStockLoading[card.id]"
+														@click="adjustStock(card.raw, STOCK_STEP_KG)">
+														<v-icon icon="mdi-plus"></v-icon>
+													</v-btn>
+												</div>
+											</div>
 										</div>
 										<div class="stock-metric text-right">
 											<p class="metric-label">Stock mínimo</p>
@@ -130,8 +144,12 @@
 											<span class="detail-value">{{ card.saleLabel }}</span>
 										</div>
 										<div class="detail-pair">
-											<span class="detail-label">Ganancia</span>
-											<span class="detail-value highlight">{{ card.profitLabel }}</span>
+											<span class="detail-label">Ganancia por kg</span>
+											<span class="detail-value highlight">{{ card.profitPerKgLabel }}</span>
+										</div>
+										<div class="detail-pair">
+											<span class="detail-label">Ganancia total</span>
+											<span class="detail-value highlight">{{ card.profitTotalLabel }}</span>
 										</div>
 									</div>
 
@@ -228,19 +246,30 @@
 									color="success" min="0" step="0.01" :rules="[requiredRule]"
 									class="modal-form-grid__item"></v-text-field>
 								<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
-									<v-text-field v-model="productForm.usuario_id" type="number" label="ID responsable"
-										variant="outlined" density="comfortable" color="success" min="1"
-										hint="Temporalmente se asigna el usuario {{ DEFAULT_USER_ID }} si no especificas otro."
-										persistent-hint class="modal-form-grid__pair-field"></v-text-field>
+									<div class="frescura-field">
+										<p class="frescura-field__label">Vida útil</p>
+										<v-radio-group v-model="productForm.frescura_modo" inline color="success"
+											class="frescura-field__options">
+											<v-radio label="Días" value="dias"></v-radio>
+											<v-radio label="Fecha exacta" value="fecha"></v-radio>
+										</v-radio-group>
+										<v-text-field v-if="productForm.frescura_modo === 'dias'"
+											v-model="productForm.frescura_dias" type="number" min="1" step="1"
+											label="Días de frescura" variant="outlined" density="comfortable" color="success"
+											class="frescura-field__input"></v-text-field>
+										<v-text-field v-else v-model="productForm.frescura_fecha" type="date"
+											label="Fecha  de vida útil" variant="outlined" density="comfortable" color="success"
+											class="frescura-field__input"></v-text-field>
+									</div>
 									<div class="stock-slider-field">
 										<div class="stock-slider-field__header">
 											<span>Stock mínimo</span>
 											<strong>{{ formatKilograms(productForm.stock_minimo ?? STOCK_MIN_KG)
 											}}</strong>
 										</div>
-										<v-slider v-model.number="productForm.stock_minimo"
-											class="stock-slider-field__slider" color="success" :step="0.5" :min="0"
-											:max="200" hide-details></v-slider>
+										<v-text-field v-model.number="productForm.stock_minimo" type="number"
+											label="Stock mínimo (kg)" variant="outlined" density="comfortable" color="success"
+											min="0" step="0.1" hide-details></v-text-field>
 										<p class="stock-slider-field__hint">
 											Define el umbral que detonará las alertas de bajo stock para este producto.
 										</p>
@@ -304,10 +333,10 @@ const fetchConfig = {
 const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es obligatorio'
 const INVENTORY_PAGE_SIZE = 12
 const STOCK_MIN_KG = 10
+const STOCK_STEP_KG = 1
 const EXPIRY_WARNING_DAYS = 3
 const DEFAULT_SHELF_LIFE_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
-const DEFAULT_USER_ID = 1
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
 
 // --- ESTADOS ---
@@ -330,6 +359,7 @@ const formLoading = ref(false)
 const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
+const inlineStockLoading = ref({})
 let searchDebounce = null
 
 const getDefaultForm = () => ({
@@ -340,7 +370,9 @@ const getDefaultForm = () => ({
 	desperdicio: 0,
 	precio_compra: '',
 	precio_venta_kg: '',
-	usuario_id: DEFAULT_USER_ID,
+	frescura_modo: 'dias',
+	frescura_dias: DEFAULT_SHELF_LIFE_DAYS,
+	frescura_fecha: '',
 	detalle: '',
 	stock_minimo: STOCK_MIN_KG,
 })
@@ -355,6 +387,87 @@ const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 
 const formatCurrency = (value) => currencyFormatter.format(Number(value) || 0)
 const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, Number(value) || 0))} kg`
 const formatDate = (value) => value ? dateFormatter.format(new Date(value)) : 'Sin fecha'
+
+const parseDetalle = (detalle) => {
+	if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
+	const trimmed = detalle.trim()
+	if (!trimmed) return { nota: '', frescura: null }
+	if (trimmed.startsWith('{')) {
+		try {
+			const parsed = JSON.parse(trimmed)
+			if (parsed && typeof parsed === 'object') {
+				return {
+					nota: typeof parsed.nota === 'string' ? parsed.nota : '',
+					frescura: parsed.frescura || null
+				}
+			}
+		} catch (error) {
+			return { nota: trimmed, frescura: null }
+		}
+	}
+	return { nota: trimmed, frescura: null }
+}
+
+const buildDetallePayload = (nota, frescura) => {
+	const cleanNota = String(nota ?? '').trim()
+	if (frescura) {
+		return JSON.stringify({ nota: cleanNota || '', frescura })
+	}
+	return cleanNota || null
+}
+
+const buildFrescuraPayload = () => {
+	if (productForm.value.frescura_modo === 'fecha') {
+		const fecha = String(productForm.value.frescura_fecha || '').trim()
+		return fecha ? { modo: 'fecha', fecha } : null
+	}
+	const dias = Number(productForm.value.frescura_dias)
+	return dias > 0 ? { modo: 'dias', dias } : null
+}
+
+const computeExpiryDate = (producto) => {
+	const { frescura } = parseDetalle(producto?.detalle)
+	if (!frescura) return null
+	if (frescura.modo === 'fecha' && frescura.fecha) {
+		const fecha = new Date(frescura.fecha)
+		return Number.isNaN(fecha.getTime()) ? null : fecha
+	}
+	if (frescura.modo === 'dias' && frescura.dias) {
+		const base = producto?.created_at ? new Date(producto.created_at) : null
+		if (!base || Number.isNaN(base.getTime())) return null
+		return new Date(base.getTime() + Number(frescura.dias) * ONE_DAY_MS)
+	}
+	return null
+}
+
+const loadLocalStockThresholds = () => {
+	try {
+		const raw = localStorage.getItem(STOCK_THRESHOLD_STORAGE_KEY)
+		const parsed = raw ? JSON.parse(raw) : {}
+		localStockThresholds.value = parsed && typeof parsed === 'object' ? parsed : {}
+	} catch (error) {
+		localStockThresholds.value = {}
+	}
+}
+
+const persistLocalStockThresholds = () => {
+	localStorage.setItem(STOCK_THRESHOLD_STORAGE_KEY, JSON.stringify(localStockThresholds.value))
+}
+
+const setLocalStockThreshold = (productoId, value) => {
+	if (!productoId) return
+	localStockThresholds.value = {
+		...localStockThresholds.value,
+		[String(productoId)]: Number(value) || STOCK_MIN_KG
+	}
+	persistLocalStockThresholds()
+}
+
+const getLocalStockThreshold = (productoId) => {
+	if (!productoId) return STOCK_MIN_KG
+	const stored = localStockThresholds.value[String(productoId)]
+	return Number.isFinite(Number(stored)) ? Number(stored) : STOCK_MIN_KG
+}
 
 // --- LLAMADAS A RUTAS (ESTILO PROVEEDORES) ---
 
@@ -464,6 +577,8 @@ const closeFormDialog = () => {
 // Función corregida para editar
 const openEditDialog = (producto) => {
 	editingProducto.value = producto
+	const parsedDetalle = parseDetalle(producto?.detalle)
+	const stockMinimo = getLocalStockThreshold(producto?.id)
 	// Mapeamos los datos del producto al formulario
 	productForm.value = {
 		nombre: producto.nombre,
@@ -473,9 +588,15 @@ const openEditDialog = (producto) => {
 		desperdicio: producto.desperdicio || 0,
 		precio_compra: producto.precio_compra,
 		precio_venta_kg: producto.precio_venta_kg,
-		usuario_id: producto.usuario_id || DEFAULT_USER_ID,
-		detalle: producto.detalle || '',
-		stock_minimo: producto.stock_minimo || STOCK_MIN_KG,
+		frescura_modo: parsedDetalle.frescura?.modo || 'dias',
+		frescura_dias: parsedDetalle.frescura?.modo === 'dias'
+			? Number(parsedDetalle.frescura?.dias || DEFAULT_SHELF_LIFE_DAYS)
+			: DEFAULT_SHELF_LIFE_DAYS,
+		frescura_fecha: parsedDetalle.frescura?.modo === 'fecha'
+			? String(parsedDetalle.frescura?.fecha || '')
+			: '',
+		detalle: parsedDetalle.nota || '',
+		stock_minimo: stockMinimo,
 	}
 	formError.value = ''
 	formDialog.value = true
@@ -486,32 +607,53 @@ const openEditDialog = (producto) => {
 
 const productCards = computed(() =>
 	productosRaw.value.map((p, index) => {
-		const kilosBrutos = Number(p.kilogramos || p.kilo || 0)
-		const desperdicio = Number(p.desperdicio || 0)
-		const kilos = Math.max(kilosBrutos - desperdicio, 0)
-		const stockMin = Number(p.stock_minimo || STOCK_MIN_KG)
+		const kilosNetos = Number(p.kilogramos_netos ?? p.kilogramos ?? p.kilo ?? 0)
+		const kilos = Math.max(kilosNetos, 0)
+		const stockMin = getLocalStockThreshold(p.id)
+		const expiryDate = computeExpiryDate(p)
+		const now = Date.now()
+		const daysToExpire = expiryDate ? Math.ceil((expiryDate.getTime() - now) / ONE_DAY_MS) : null
+		const isExpired = daysToExpire !== null && daysToExpire < 0
+		const isExpiringSoon = daysToExpire !== null && daysToExpire <= EXPIRY_WARNING_DAYS && daysToExpire >= 0
 
 		const isLowStock = kilos <= stockMin
-		const saleTotal = kilos * Number(p.precio_venta_kg || 0)
-		const profit = saleTotal - Number(p.precio_compra || 0)
+		const saleUnit = Number(p.precio_venta_kg || 0)
+		const saleTotal = Number(p.precio_venta_total ?? (kilos * saleUnit))
+		const basePrice = Number(p.precio_compra || 0)
+		const profitPerKg = saleUnit - basePrice
+		const profitTotal = profitPerKg * kilos
+		let status = {
+			label: 'Saludable',
+			styleKey: 'is-healthy',
+			icon: 'mdi-leaf',
+			progressColor: 'success',
+			weight: 2
+		}
+		if (isLowStock) {
+			status = { label: 'Stock bajo', styleKey: 'is-low', icon: 'mdi-alert', progressColor: 'error', weight: 0 }
+		} else if (isExpired) {
+			status = { label: 'Vencido', styleKey: 'is-expiring', icon: 'mdi-alert-circle', progressColor: 'error', weight: 1 }
+		} else if (isExpiringSoon) {
+			status = { label: 'Por vencer', styleKey: 'is-expiring', icon: 'mdi-alarm', progressColor: 'warning', weight: 1 }
+		}
 
 		return {
 			id: p.id || index,
 			raw: p,
 			name: p.nombre || 'Sin nombre',
-			category: p.categoria?.nombre || 'General',
-			provider: p.proveedor?.nombre || 'S/P',
-			badge: p.categoria?.emoji || p.categoria?.nombre?.charAt(0) || '📦',
+			category: p.categoria_nombre || p.categoria?.nombre || 'General',
+			provider: p.proveedor_nombre || p.proveedor?.nombre || 'S/P',
+			badge: p.categoria?.emoji || p.categoria_emoji || (p.categoria_nombre || p.categoria?.nombre || '').charAt(0) || '📦',
 			kilosLabel: formatKilograms(kilos),
 			stockMinimumLabel: formatKilograms(stockMin),
-			purchaseLabel: formatCurrency(p.precio_compra),
-			saleLabel: formatCurrency(p.precio_venta_kg),
-			profitLabel: formatCurrency(profit),
+			purchaseLabel: formatCurrency(basePrice),
+			saleLabel: formatCurrency(saleUnit),
+			profitPerKgLabel: formatCurrency(profitPerKg),
+			profitTotalLabel: formatCurrency(profitTotal),
 			ingresoLabel: formatDate(p.created_at),
-			venceLabel: 'Revisar stock',
-			status: isLowStock ?
-				{ label: 'Stock bajo', styleKey: 'is-low', icon: 'mdi-alert', progressColor: 'error', weight: 0 } :
-				{ label: 'Saludable', styleKey: 'is-healthy', icon: 'mdi-leaf', progressColor: 'success', weight: 2 },
+			venceLabel: expiryDate ? formatDate(expiryDate) : 'Revisar stock',
+			status,
+			isExpiring: isExpiringSoon,
 			progress: Math.min((kilos / (stockMin * 2)) * 100, 100)
 		}
 	})
@@ -533,11 +675,37 @@ const providerSelectItems = computed(() => {
 
 const lowStockProducts = computed(() => productCards.value.filter(c => c.status.weight === 0))
 const hasLowStockAlerts = computed(() => lowStockProducts.value.length > 0)
+const expiringProducts = computed(() => productCards.value.filter(c => c.isExpiring))
+const hasExpiringAlerts = computed(() => expiringProducts.value.length > 0)
 
 const showSnackbar = (message, color = 'success') => {
 	snackbar.message = message
 	snackbar.color = color
 	snackbar.show = true
+}
+
+const adjustStock = async (producto, delta) => {
+	if (!producto?.id) return
+	const current = Number(producto.kilogramos || 0)
+	const next = Math.max(0, current + Number(delta || 0))
+	if (next === current) return
+
+	inlineStockLoading.value = { ...inlineStockLoading.value, [producto.id]: true }
+	try {
+		await $fetch(`${API_URL}/productos/${producto.id}`, {
+			method: 'PUT',
+			body: { kilogramos: next },
+			...fetchConfig
+		})
+		producto.kilogramos = next
+		const desperdicio = Number(producto.desperdicio || 0)
+		producto.kilogramos_netos = Math.max(next - desperdicio, 0)
+		showSnackbar('Cantidad actualizada')
+	} catch (error) {
+		showSnackbar('No se pudo actualizar la cantidad', 'error')
+	} finally {
+		inlineStockLoading.value = { ...inlineStockLoading.value, [producto.id]: false }
+	}
 }
 
 const submitProducto = async () => {
@@ -552,19 +720,25 @@ const submitProducto = async () => {
 		precio_compra: Number(productForm.value.precio_compra),
 		precio_venta_kg: Number(productForm.value.precio_venta_kg),
 		desperdicio: Number(productForm.value.desperdicio) || 0,
-		usuario_id: Number(productForm.value.usuario_id) || 1,
-		detalle: productForm.value.detalle || null
+		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload())
 	}
 
 	try {
 		const isEdit = !!editingProducto.value?.id
 		const url = isEdit ? `${API_URL}/productos/${editingProducto.value.id}` : `${API_URL}/productos`
 
-		await $fetch(url, {
+		const response = await $fetch(url, {
 			method: isEdit ? 'PUT' : 'POST',
 			body: payload,
 			...fetchConfig
 		})
+
+		const persistedId = isEdit
+			? editingProducto.value?.id
+			: response?.data?.id
+		if (persistedId) {
+			setLocalStockThreshold(persistedId, productForm.value.stock_minimo)
+		}
 
 		showSnackbar(isEdit ? 'Producto actualizado' : 'Producto registrado')
 		formDialog.value = false
@@ -595,6 +769,7 @@ watch(searchQuery, () => {
 watch(categoriaFiltro, () => fetchProductos(1))
 
 onMounted(() => {
+	loadLocalStockThresholds()
 	fetchCategorias()
 	fetchProveedores()
 	fetchProductos()
@@ -888,6 +1063,18 @@ onMounted(() => {
 	color: #0b2f1f;
 }
 
+.metric-inline {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.stock-adjust {
+	display: inline-flex;
+	gap: 6px;
+}
+
 .metric-value.emphasis {
 	color: #0f5132;
 	font-size: 1.2rem;
@@ -1094,6 +1281,32 @@ onMounted(() => {
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 16px;
 	align-items: stretch;
+}
+
+.frescura-field {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1.5px solid rgba(15, 138, 78, 0.16);
+	border-radius: 16px;
+	background: linear-gradient(180deg, #f9fefb 0%, #f2fbf6 100%);
+	padding: 14px 16px 10px;
+}
+
+.frescura-field__label {
+	margin: 0;
+	font-size: 0.78rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #55685f;
+}
+
+.frescura-field__options :deep(.v-selection-control) {
+	margin-right: 16px;
+}
+
+.frescura-field__input {
+	margin-top: -4px;
 }
 
 .stock-slider-field {

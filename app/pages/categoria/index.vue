@@ -137,7 +137,16 @@
                                             </div>
 
                                             <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> Venta: {{ formatCurrency(product.price) }}</span>
+                                                <span> Compra: {{ product.purchaseLabel }}</span>
+                                            </div>
+                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                                <span> Venta: {{ product.saleLabel }}</span>
+                                            </div>
+                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                                <span> Ganancia por kg: {{ product.profitPerKgLabel }}</span>
+                                            </div>
+                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                                <span> Ganancia total: {{ product.profitTotalLabel }}</span>
                                             </div>
                                             <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
                                                 <span> {{ product.source }}</span>
@@ -491,7 +500,7 @@ const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 
 const extractKilos = (p) => toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
-const extractPrecioVenta = (p) => toNumber(p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
+const extractPrecioVenta = (p) => toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
 const extractPrecioCompra = (p) => toNumber(p?.precio_compra ?? p?.costo ?? 0)
 
 const computeProductoProfit = (p) => {
@@ -511,12 +520,21 @@ const computeStockMeta = (kilo) => {
 
 const buildProductCard = (p, key) => {
     const kilo = extractKilos(p)
+    const compra = extractPrecioCompra(p)
+    const ventaKg = extractPrecioVenta(p)
+    const ventaTotal = toNumber(p?.precio_venta_total ?? (kilo * ventaKg))
+    const gananciaPorKg = ventaKg - compra
+    const gananciaTotal = gananciaPorKg * kilo
     const meta = computeStockMeta(kilo)
     return {
         id: p?.id ?? key,
         name: p?.nombre ?? 'Sin nombre',
-        price: extractPrecioVenta(p),
-        source: p?.proveedor?.nombre || proveedoresLookup.value.get(p?.proveedor_id)?.nombre || 'S/P',
+        price: ventaKg,
+        purchaseLabel: formatCurrency(compra),
+        saleLabel: formatCurrency(ventaKg),
+        profitPerKgLabel: formatCurrency(gananciaPorKg),
+        profitTotalLabel: formatCurrency(gananciaTotal),
+        source: p?.proveedor_nombre || p?.proveedor?.nombre || proveedoresLookup.value.get(p?.proveedor_id)?.nombre || 'S/P',
         stock: kilo ? `${weightFormatter.format(kilo)} kg` : '0 kg',
         ...meta,
         progressColor: meta.stockColor,
