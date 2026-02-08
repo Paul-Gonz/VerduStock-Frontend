@@ -30,8 +30,8 @@
                 </v-list>
 
                 <div class="nav-footer">
-                    <p class="nav-version">Sistema de Gestión v1.0</p>
-                    <p class="nav-copy">© 2026 Verdulería</p>
+                    <p class="nav-version">Sistema de Gestión de Inventario v1.0</p>
+                    <p class="nav-copy">© 2026 LoopInf Venezuela</p>
                 </div>
             </div>
         </v-navigation-drawer>
@@ -247,7 +247,7 @@ onMounted(async () => {
 
 .menu-icon {
     background: transparent !important;
-    
+
     background: rgba(2, 224, 106, 0.071) !important;
     color: #178950;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
