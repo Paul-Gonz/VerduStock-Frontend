@@ -13,10 +13,14 @@
 						<v-btn class="action-btn" prepend-icon="mdi-plus" @click="openCreateDialog">
 							Nuevo Producto
 						</v-btn>
-						<v-btn class="action-btn" prepend-icon="mdi-file-pdf-box" :loading="exportLoading"
-							@click="exportInventario">
-							Exportar PDF
-						</v-btn>
+						<!-- Reemplaza el botón simple con este menú -->
+						 <v-btn 
+        class="action-btn" 
+        prepend-icon="mdi-file-pdf-box"
+        @click="$router.push('/reportes')"
+    >
+        Reportes
+    </v-btn>
 					</div>
 				</header>
 
@@ -24,8 +28,7 @@
 					<div class="filters-bar__search">
 						<v-text-field v-model="searchQuery" density="comfortable" variant="outlined" color="success"
 							base-color="success" prepend-inner-icon="mdi-magnify"
-							placeholder="Buscar por nombre o proveedor..." hide-details clearable
-							class="search-input"></v-text-field>
+							placeholder="Buscar por nombre o proveedor..." hide-details clearable></v-text-field>
 					</div>
 					<div class="filters-bar__control">
 						<v-select v-model="categoriaFiltro" :items="categoriaOptions" item-title="title"
@@ -77,9 +80,9 @@
 				</v-alert>
 
 				<section class="cards-wrapper">
-					<template v-if="paginatedCards.length">
+					<template v-if="filteredCards.length">
 						<v-row>
-							<v-col v-for="card in paginatedCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
+							<v-col v-for="card in filteredCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
 								<v-card :class="['product-card', card.status.styleKey]" rounded="lg" border
 									elevation="0">
 									<div class="status-banner" :class="card.status.styleKey">
@@ -178,11 +181,9 @@
 							</v-col>
 						</v-row>
 
-						<div class="pagination-block" v-if="filteredCards.length">
-							<v-pagination v-model="page" :length="totalPaginas" :total-visible="5" color="success"
-								variant="flat" rounded="lg" density="comfortable" class="app-pagination"
-								prev-icon="mdi-chevron-left" next-icon="mdi-chevron-right"
-								show-first-last></v-pagination>
+						<div class="pagination-block" v-if="pagination.lastPage > 1">
+							<v-pagination v-model="pagination.page" :length="pagination.lastPage" :total-visible="5"
+								color="success"></v-pagination>
 						</div>
 					</template>
 
@@ -341,7 +342,7 @@ const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es o
 const INVENTORY_PAGE_SIZE = 12
 const STOCK_MIN_KG = 10
 const STOCK_STEP_KG = 1
-const EXPIRY_WARNING_DAYS = 3
+const EXPIRY_WARNING_DAYS = 7
 const DEFAULT_SHELF_LIFE_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
@@ -356,8 +357,7 @@ const searchQuery = ref('')
 const categoriaFiltro = ref('all')
 const estadoFiltro = ref('all')
 const exportLoading = ref(false)
-const page = ref(1)
-const itemsPerPage = INVENTORY_PAGE_SIZE
+const pagination = reactive({ page: 1, perPage: INVENTORY_PAGE_SIZE, lastPage: 1, total: 0 })
 const formDialog = ref(false)
 const deleteDialog = ref(false)
 const editingProducto = ref(null)
@@ -368,6 +368,7 @@ const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
+const suppressPageWatch = ref(false)
 let searchDebounce = null
 
 const categoriaOptions = computed(() => [
@@ -462,18 +463,21 @@ const buildFrescuraPayload = () => {
 }
 
 const computeExpiryDate = (producto) => {
+	// Primero intenta extraer frescura del campo detalle
 	const { frescura } = parseDetalle(producto?.detalle)
-	if (!frescura) return null
-	if (frescura.modo === 'fecha' && frescura.fecha) {
-		const fecha = new Date(frescura.fecha)
-		return Number.isNaN(fecha.getTime()) ? null : fecha
+	let modo = frescura?.modo || producto?.frescura_modo;
+	let fecha = frescura?.fecha || producto?.frescura_fecha;
+	let dias = frescura?.dias || producto?.frescura_dias;
+	if (modo === 'fecha' && fecha) {
+		const f = new Date(fecha);
+		return Number.isNaN(f.getTime()) ? null : f;
 	}
-	if (frescura.modo === 'dias' && frescura.dias) {
-		const base = producto?.created_at ? new Date(producto.created_at) : null
-		if (!base || Number.isNaN(base.getTime())) return null
-		return new Date(base.getTime() + Number(frescura.dias) * ONE_DAY_MS)
+	if (modo === 'dias' && dias) {
+		const base = producto?.created_at ? new Date(producto.created_at) : null;
+		if (!base || Number.isNaN(base.getTime())) return null;
+		return new Date(base.getTime() + Number(dias) * ONE_DAY_MS);
 	}
-	return null
+	return null;
 }
 
 const loadLocalStockThresholds = () => {
@@ -523,13 +527,15 @@ const categorySelectItems = computed(() => {
 	}))
 })
 
-const fetchProductos = async () => {
+const fetchProductos = async (page = pagination.page) => {
 	productosLoading.value = true
 	productosError.value = ''
 	try {
+		suppressPageWatch.value = true
+		pagination.page = page
 		const queryParams = new URLSearchParams({
-			page: '1',
-			por_pagina: '500'
+			page: String(page),
+			por_pagina: String(pagination.perPage),
 		})
 
 		if (searchQuery.value.trim()) queryParams.set('busqueda', searchQuery.value.trim())
@@ -540,13 +546,19 @@ const fetchProductos = async () => {
 			...fetchConfig
 		})
 
-		const list = response?.data?.data || response?.data || response || []
-		productosRaw.value = Array.isArray(list) ? list : []
+		productosRaw.value = response?.data || response || []
+
+		const meta = response?.meta || response?.data?.meta
+		if (meta) {
+			pagination.lastPage = meta.last_page || 1
+			pagination.total = meta.total || productosRaw.value.length
+		}
 	} catch (error) {
 		if (error.status === 401) await navigateTo('/login')
 		productosRaw.value = []
 		productosError.value = 'No se pudo cargar el inventario.'
 	} finally {
+		suppressPageWatch.value = false
 		productosLoading.value = false
 	}
 }
@@ -579,7 +591,7 @@ const confirmDelete = async () => {
 		})
 		showSnackbar('Producto eliminado correctamente')
 		deleteDialog.value = false
-		await fetchProductos()
+		await fetchProductos(pagination.page)
 	} catch (error) {
 		showSnackbar('No se pudo eliminar el producto', 'error')
 	} finally {
@@ -715,13 +727,6 @@ const filteredCards = computed(() => {
 	return cards
 })
 
-const paginatedCards = computed(() => {
-	const start = (page.value - 1) * itemsPerPage
-	return filteredCards.value.slice(start, start + itemsPerPage)
-})
-
-const totalPaginas = computed(() => Math.max(1, Math.ceil(filteredCards.value.length / itemsPerPage)))
-
 const providerSelectItems = computed(() => {
 	return proveedores.value.map((prov) => ({
 		title: prov.nombre || 'Proveedor sin nombre', // Lo que el usuario lee
@@ -731,7 +736,10 @@ const providerSelectItems = computed(() => {
 
 const lowStockProducts = computed(() => productCards.value.filter(c => c.status.weight === 0))
 const hasLowStockAlerts = computed(() => lowStockProducts.value.length > 0)
-const expiringProducts = computed(() => productCards.value.filter(c => c.isExpiring))
+const expiringProducts = computed(() => productCards.value.filter(c => {
+	// Solo productos con fecha de vencimiento válida calculada
+	return c.isExpiring;
+}))
 const hasExpiringAlerts = computed(() => expiringProducts.value.length > 0)
 
 const showSnackbar = (message, color = 'success') => {
@@ -762,6 +770,56 @@ const adjustStock = async (producto, delta) => {
 	} finally {
 		inlineStockLoading.value = { ...inlineStockLoading.value, [producto.id]: false }
 	}
+}
+
+const formatErrorMessages = (errorResponse) => {
+	const fieldMap = {
+		'nombre': 'nombre',
+		'categoria_id': 'categoría',
+		'proveedor_id': 'proveedor',
+		'kilogramos': 'cantidad',
+		'precio_compra': 'precio de compra',
+		'precio_venta_kg': 'precio de venta',
+		'desperdicio': 'desperdicio',
+		'stock_minimo': 'stock mínimo',
+		'password': 'contraseña',
+		'telefono': 'teléfono',
+		'direccion': 'dirección'
+	}
+
+	const msgMap = {
+		'is required': 'es obligatorio',
+		'has already been taken': 'ya está registrado',
+		'must be a number': 'debe ser un número',
+		'must be at least': 'debe tener al menos'
+	}
+
+	if (errorResponse?.errors) {
+		const firstError = Object.values(errorResponse.errors)[0][0]
+		let translated = firstError
+
+		// Reemplazar nombres de campos
+		Object.keys(fieldMap).forEach(key => {
+			const regex = new RegExp(`\\b${key}\\b`, 'yi')
+			if (translated.includes(key)) {
+				translated = translated.replace(key, fieldMap[key])
+			}
+		})
+
+		// Reemplazar mensajes comunes
+		if (translated.includes('The') && translated.includes('field is required')) {
+			translated = translated.replace('The', 'El campo').replace('field is required', 'es obligatorio')
+		} else {
+			Object.keys(msgMap).forEach(key => {
+				if (translated.includes(key)) {
+					translated = translated.replace(key, msgMap[key])
+				}
+			})
+		}
+		
+		return translated.charAt(0).toUpperCase() + translated.slice(1)
+	}
+	return 'Error al procesar la solicitud.'
 }
 
 const submitProducto = async () => {
@@ -800,10 +858,8 @@ const submitProducto = async () => {
 		formDialog.value = false
 		await fetchProductos(1)
 	} catch (error) {
-		// Esto te mostrará en pantalla exactamente qué campo falló
 		if (error.status === 422) {
-			const firstError = Object.values(error.data.errors)[0][0]
-			formError.value = firstError
+			formError.value = formatErrorMessages(error.data)
 		} else {
 			formError.value = 'Error al guardar el producto.'
 		}
@@ -814,31 +870,22 @@ const submitProducto = async () => {
 
 const openDeleteDialog = (p) => { productoSeleccionado.value = p; deleteDialog.value = true }
 const closeDeleteDialog = () => deleteDialog.value = false
-const refreshInventario = () => fetchProductos()
+const refreshInventario = () => fetchProductos(1)
 
 // --- WATCHERS Y LIFECYCLE ---
-
 watch(searchQuery, () => {
 	if (searchDebounce) clearTimeout(searchDebounce)
-	searchDebounce = setTimeout(() => {
-		page.value = 1
-		fetchProductos()
-	}, 500)
+	searchDebounce = setTimeout(() => fetchProductos(1), 500)
 })
 
-watch(categoriaFiltro, () => {
-	page.value = 1
-	fetchProductos()
-})
+watch(categoriaFiltro, () => fetchProductos(1))
 
-watch(estadoFiltro, () => {
-	page.value = 1
-})
+watch(estadoFiltro, () => fetchProductos(1))
 
-watch(filteredCards, () => {
-	if (page.value > totalPaginas.value) page.value = totalPaginas.value
+watch(() => pagination.page, (page) => {
+	if (suppressPageWatch.value) return
+	fetchProductos(page)
 })
-
 
 onMounted(() => {
 	loadLocalStockThresholds()
@@ -850,23 +897,79 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	if (searchDebounce) clearTimeout(searchDebounce)
 })
+
+const generarReporteRapido = async (tipo) => {
+  try {
+    const params = new URLSearchParams()
+    
+    // Aplicar filtros actuales
+    if (categoriaFiltro.value !== 'all') {
+      params.append('categoria_id', categoriaFiltro.value)
+    }
+    
+    // Usar ruta sin /api/
+    const url = `${API_URL}/reportes/${tipo}?${params.toString()}`
+    console.log('Generando reporte rápido:', url)
+    
+    window.open(url, '_blank')
+    
+  } catch (error) {
+    console.error('Error generando reporte rápido:', error)
+    showSnackbar('Error al generar reporte', 'error')
+  }
+}
+
 </script>
 
 <style scoped>
 .inventario-page {
-	padding: 1px 6px 8px;
+	padding: 5px 16px 48px;
+	background: #f2f2f2;
 	min-height: 100%;
 }
 
 .inventory-shell {
 	width: 100%;
 	padding-inline: 0;
-	max-width: 100%;
 }
 
 .inventory-board {
+	background: #ffffff;
+	border: 1px solid rgba(34, 197, 94, 0.22);
+	box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
 	padding: 18px 22px 22px;
-	width: 100%;
+}
+
+/* Fondo del menú (v-menu, v-list, etc.) */
+:deep(.v-menu__content),
+:deep(.v-list),
+:deep(.v-navigation-drawer) {
+	background: #f6fff8 !important; /* verde muy claro casi blanco */
+}
+
+/* Alertas más suaves en modo claro */
+:deep(.alert-card--danger) {
+	background: #ffeaea !important;
+	border-color: #ffb3b3 !important;
+	color: #b71c1c !important;
+}
+:deep(.alert-card--warning) {
+	background: #fffbe6 !important;
+	border-color: #ffe9a7 !important;
+	color: #b26a00 !important;
+}
+/* Alertas modo oscuro: bordes aún más oscuros */
+:deep(.v-theme--dark .alert-card--danger),
+:deep(.v-theme--dark .v-alert[type="error"]) {
+  background: #330c0c7a !important;
+  border-color: #810808 !important;
+  color: #ffd8d8 !important;
+}
+:deep(.v-theme--dark .alert-card--warning),
+:deep(.v-theme--dark .v-alert[type="warning"]) {
+  background: #412d00c1 !important;
+  border-color: #865e08 !important;
+  color: #ffe9a7 !important;
 }
 
 .board-header {
@@ -887,12 +990,12 @@ onBeforeUnmount(() => {
 	margin: 0;
 	font-size: 1.rem;
 	font-weight: 700;
-	color: var(--app-text);
+	color: #0d3b25;
 }
 
 .board-subtitle {
 	margin: 0;
-	color: var(--app-text-muted);
+	color: #5a7064;
 	font-size: 0.88rem;
 }
 
@@ -916,10 +1019,10 @@ onBeforeUnmount(() => {
 	gap: 12px;
 	margin: 20px 0 28px;
 	padding: 14px 18px;
-	background: var(--app-surface);
+	background: #ffffff;
 	border-radius: 18px;
-	border: 1px solid var(--app-border);
-	box-shadow: 0 4px 16px color-mix(in srgb, var(--app-text) 8%, transparent);
+	border: 1px solid #e5e9f0;
+	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 .filters-bar__search {
@@ -934,7 +1037,7 @@ onBeforeUnmount(() => {
 .filters-refresh {
 	min-width: 48px;
 	border-radius: 16px;
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--app-accent) 35%, transparent);
+	box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
 }
 
 .alert-stack {
@@ -950,50 +1053,55 @@ onBeforeUnmount(() => {
 	gap: 12px;
 	padding: 14px 18px;
 	border-radius: 14px;
-	border: 1.5px solid color-mix(in srgb, rgb(var(--v-theme-error)) 30%, var(--app-border));
-	background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%);
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 65%, transparent);
+	border: 1.5px solid #f0b4b4;
+	background: #fff8f8;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.alert-card--danger {
+	border-color: #fdecec;
+	background: #ffeaea;
 }
 
 .alert-card--warning {
-	border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 30%, var(--app-border));
-	background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%);
+	border-color: #f6c48b;
+	background: #fff9f1;
 }
 
 .alert-card__icon {
 	width: 34px;
 	height: 34px;
 	border-radius: 12px;
-	background: color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
+	background: rgba(244, 63, 94, 0.12);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgb(var(--v-theme-error));
+	color: #c53030;
 }
 
 .alert-card--warning .alert-card__icon {
-	background: color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
-	color: rgb(var(--v-theme-warning));
+	background: rgba(251, 191, 36, 0.16);
+	color: #c05621;
 }
 
 .alert-card__title {
 	margin: 0;
 	font-weight: 700;
-	color: rgb(var(--v-theme-error));
+	color: #b42828;
 }
 
 .alert-card--warning .alert-card__title {
-	color: rgb(var(--v-theme-warning));
+	color: #c05621;
 }
 
 .alert-card__body {
 	margin: 0;
-	color: var(--app-text-muted);
+	color: #5f4b4b;
 	font-size: 0.92rem;
 }
 
 .alert-card--warning .alert-card__body {
-	color: var(--app-text-muted);
+	color: #785327;
 }
 
 .cards-wrapper {
@@ -1005,35 +1113,35 @@ onBeforeUnmount(() => {
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
-	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) 100%);
-	border: 2px solid color-mix(in srgb, var(--app-accent) 28%, var(--app-border));
+	background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+	border: 2px solid rgba(4, 158, 75, 0.18);
 	border-radius: 22px;
-	box-shadow: 0 14px 30px color-mix(in srgb, var(--app-text) 10%, transparent);
+	box-shadow: 0 14px 30px rgba(9, 94, 57, 0.08);
 	min-height: 100%;
 	transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
-	border-color: color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
+	border-color: rgba(4, 158, 75, 0.4);
 	transform: translateY(-4px);
-	box-shadow: 0 18px 36px color-mix(in srgb, var(--app-text) 14%, transparent);
+	box-shadow: 0 18px 36px rgba(9, 94, 57, 0.12);
 }
 
 .product-card.is-healthy {
-	border-color: color-mix(in srgb, var(--app-accent) 65%, var(--app-border));
-	box-shadow: 0 16px 34px color-mix(in srgb, var(--app-accent) 22%, transparent);
+	border-color: rgba(15, 182, 122, 0.7);
+	box-shadow: 0 16px 34px rgba(15, 182, 122, 0.18);
 }
 
 .product-card.is-low {
-	border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 55%, var(--app-border));
-	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%) 100%);
-	box-shadow: 0 16px 34px color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
+	border-color: rgba(234, 67, 53, 0.55);
+	background: linear-gradient(180deg, #fffefe 0%, #fff5f5 100%);
+	box-shadow: 0 16px 34px rgba(234, 67, 53, 0.16);
 }
 
 .product-card.is-expiring {
-	border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 60%, var(--app-border));
-	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%) 100%);
-	box-shadow: 0 16px 34px color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
+	border-color: rgba(245, 158, 11, 0.6);
+	background: linear-gradient(180deg, #fffdf7 0%, #fff5e7 100%);
+	box-shadow: 0 16px 34px rgba(245, 158, 11, 0.16);
 }
 
 .status-banner {
@@ -1044,23 +1152,23 @@ onBeforeUnmount(() => {
 	font-weight: 600;
 	padding: 8px 14px;
 	border-radius: 14px;
-	background: color-mix(in srgb, var(--app-accent) 18%, transparent);
-	color: var(--app-text);
+	background: #edf8f0;
+	color: #0f5132;
 }
 
 .status-banner.is-low {
-	background: color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
-	color: rgb(var(--v-theme-error));
+	background: #fdecec;
+	color: #b42318;
 }
 
 .status-banner.is-expiring {
-	background: color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
-	color: rgb(var(--v-theme-warning));
+	background: #fff1dc;
+	color: #c05621;
 }
 
 .status-banner.is-healthy {
-	background: color-mix(in srgb, var(--app-accent) 18%, transparent);
-	color: var(--app-text);
+	background: #e7f8ed;
+	color: #0f5132;
 }
 
 .status-banner+.product-card__header {
@@ -1081,23 +1189,23 @@ onBeforeUnmount(() => {
 }
 
 .category-avatar {
-	background: var(--app-surface-muted);
-	color: var(--app-text);
+	background: #f1fbf4;
+	color: #0d3b25;
 	font-size: 1.2rem;
-	border: 1px solid var(--app-border);
+	border: 1px solid rgba(4, 158, 75, 0.2);
 }
 
 .product-name {
 	font-size: 1rem;
 	font-weight: 700;
 	margin: 0;
-	color: var(--app-text);
+	color: #0b2f1f;
 	line-height: 1.2;
 }
 
 .product-category {
 	margin: 0;
-	color: var(--app-text-muted);
+	color: #66786f;
 	font-size: 0.82rem;
 }
 
@@ -1111,7 +1219,7 @@ onBeforeUnmount(() => {
 	justify-content: space-between;
 	gap: 16px;
 	flex-wrap: wrap;
-	border-bottom: 1px dashed color-mix(in srgb, var(--app-text) 16%, transparent);
+	border-bottom: 1px dashed rgba(13, 59, 37, 0.16);
 	padding-bottom: 6px;
 }
 
@@ -1125,14 +1233,14 @@ onBeforeUnmount(() => {
 	font-size: 0.78rem;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
-	color: var(--app-text-muted);
+	color: #6b7a71;
 }
 
 .metric-value {
 	margin: 2px 0 0;
 	font-size: 0.96rem;
 	font-weight: 700;
-	color: var(--app-text);
+	color: #0b2f1f;
 }
 
 .metric-value--wide {
@@ -1152,7 +1260,7 @@ onBeforeUnmount(() => {
 }
 
 .metric-value.emphasis {
-	color: var(--app-text);
+	color: #0f5132;
 	font-size: 1.2rem;
 }
 
@@ -1184,7 +1292,7 @@ onBeforeUnmount(() => {
 	font-size: 0.72rem;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--app-text-muted);
+	color: #7b8b82;
 }
 
 .detail-label.subtle {
@@ -1195,17 +1303,17 @@ onBeforeUnmount(() => {
 	margin: 0;
 	font-size: 0.9rem;
 	font-weight: 600;
-	color: var(--app-text);
+	color: #1b2f23;
 }
 
 .detail-value.highlight {
-	color: var(--app-accent);
+	color: #0f8a4e;
 	font-weight: 700;
 }
 
 .detail-value.muted {
 	font-size: 0.82rem;
-	color: var(--app-text-muted);
+	color: #506058;
 }
 
 .details-list {
@@ -1229,11 +1337,11 @@ onBeforeUnmount(() => {
 .empty-state {
 	margin-top: 32px;
 	padding: 48px;
-	background: var(--app-surface);
+	background: #ffffff;
 	border-radius: 24px;
-	border: 1px dashed color-mix(in srgb, var(--app-accent) 30%, var(--app-border));
+	border: 1px dashed rgba(4, 158, 75, 0.2);
 	text-align: center;
-	color: var(--app-text-muted);
+	color: #4d5b52;
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
@@ -1297,7 +1405,7 @@ onBeforeUnmount(() => {
 }
 
 .modal-shell__alert {
-	margin: 0 0 20px;
+	margin: 0 0 8px;
 }
 
 .modal-shell__form {
@@ -1470,6 +1578,24 @@ onBeforeUnmount(() => {
 	border-radius: 16px;
 	border-width: 1.5px;
 	border-color: rgba(15, 138, 78, 0.18);
+}
+
+:global(.v-theme--dark .modal-shell .v-field__outline) {
+    --v-field-border-opacity: 1;
+    color: #494949ff !important; /* Sets the text color which usually drives border color */
+}
+
+:global(.v-theme--dark .modal-shell .v-field__outline__start),
+:global(.v-theme--dark .modal-shell .v-field__outline__notch),
+:global(.v-theme--dark .modal-shell .v-field__outline__end) {
+    border-color: #4d4d4dff !important; /* Solid slate-500 for clear visibility */
+    opacity: 1 !important;
+}
+
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__start),
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__notch),
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__end) {
+    border-color: #17c364 !important; /* Green accent on focus */
 }
 
 .modal-shell :deep(.v-field__input) {

@@ -82,18 +82,16 @@
 
         <!-- Diálogo para nuevo/editar proveedor -->
         <v-dialog v-model="dialog" max-width="500" persistent>
-            <v-card rounded="lg">
-                <v-card-title class="d-flex align-center justify-space-between">
-                    <span class="text-h6 font-weight-bold">
-                        {{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
-                    </span>
-                    <v-btn icon @click="closeDialog">
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                </v-card-title>
-                <v-card-text>
+            <v-card rounded="lg" class="proveedor-dialog">
+            <v-card-title class="d-flex align-center justify-space-between px-6 pt-6 pb-4">
+                <span class="text-h6 font-weight-bold">
+                    {{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
+                </span>
+                <v-btn icon="mdi-close" variant="text" color="grey-darken-1" density="comfortable" @click="closeDialog"></v-btn>
+            </v-card-title>
+                <v-card-text class="px-6">
                     <v-form @submit.prevent="saveProveedor" ref="proveedorForm">
-                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
+                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-2">
                             {{ errorMessage }}
                         </v-alert>
 
@@ -376,6 +374,49 @@ const closeDialog = () => {
     resetForm()
 }
 
+const formatErrorMessages = (errorResponse) => {
+    const fieldMap = {
+        'nombre': 'nombre',
+        'telefono': 'teléfono',
+        'direccion': 'dirección',
+        'detalle': 'detalle'
+    }
+
+    const msgMap = {
+        'is required': 'es obligatorio',
+        'has already been taken': 'ya está registrado',
+        'must be a number': 'debe ser un número',
+        'must be at least': 'debe tener al menos',
+        'The': 'El campo'
+    }
+
+    if (errorResponse?.errors) {
+        const firstError = Object.values(errorResponse.errors)[0][0]
+        let translated = firstError
+
+        // Reemplazar nombres de campos
+        Object.keys(fieldMap).forEach(key => {
+            if (translated.includes(key)) {
+                translated = translated.replace(key, fieldMap[key])
+            }
+        })
+
+        // Reemplazar mensajes comunes
+        if (translated.includes('The') && translated.includes('field is required')) {
+            translated = translated.replace('The', 'El campo').replace('field is required', 'es obligatorio')
+        } else {
+            Object.keys(msgMap).forEach(key => {
+                if (translated.includes(key)) {
+                    translated = translated.replace(key, msgMap[key])
+                }
+            })
+        }
+        
+        return translated.charAt(0).toUpperCase() + translated.slice(1)
+    }
+    return 'Error al procesar la solicitud.'
+}
+
 // Guardar proveedor
 const saveProveedor = async () => {
     if (!proveedorForm.value) return
@@ -434,12 +475,7 @@ const saveProveedor = async () => {
         } else if (error.status === 403) {
             errorMessage.value = 'No tienes permiso para realizar esta acción.'
         } else if (error.data) {
-            if (error.data.message) {
-                errorMessage.value = error.data.message
-            } else if (error.data.errors) {
-                const errors = Object.values(error.data.errors).flat()
-                errorMessage.value = errors.join(', ')
-            }
+             errorMessage.value = formatErrorMessages(error.data)
         } else {
             errorMessage.value = 'Ocurrió un error al guardar el proveedor'
         }
@@ -605,4 +641,22 @@ watch(page, () => {
     background: transparent !important;
 }
 
+
+:global(.v-theme--dark .proveedor-dialog .v-field__outline) {
+    --v-field-border-opacity: 1;
+    color: #494949ff !important;
+}
+
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__start),
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__notch),
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__end) {
+    border-color: #4d4d4dff !important;
+    opacity: 1 !important;
+}
+
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__start),
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__notch),
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__end) {
+    border-color: #17c364 !important;
+}
 </style>

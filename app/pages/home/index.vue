@@ -6,9 +6,9 @@
                     <p class="hero-eyebrow">Dashboard</p>
                     <h1 class="app-title">Control general del inventario</h1>
                 </div>
-                <v-btn prepend-icon="mdi-upload">
+                <!-- <v-btn prepend-icon="mdi-upload">
                     Exportar
-                </v-btn>
+                </v-btn> -->
             </header>
 
             <div v-if="loadingDashboard || dashboardError" class="feedback-stack">
@@ -125,7 +125,7 @@ const Apexchart = import.meta.client
 const MAX_PRODUCTS_FOR_DASHBOARD = 500
 const LOW_STOCK_THRESHOLD_KG = 10
 const DEFAULT_SHELF_LIFE_DAYS = 7
-const EXPIRY_WARNING_DAYS = 3
+const EXPIRY_WARNING_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const donutColors = ['#0ece78', '#6ee7b7', '#34d399', '#10b981', '#059669', '#65a30d']
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
@@ -265,6 +265,50 @@ const categoryDistribution = computed(() => {
 
 const totalCategoryKilos = computed(() => categoryDistribution.value.reduce((sum, item) => sum + item.value, 0))
 
+// --- LÓGICA DE VENCIMIENTO (COPIADA DE INVENTARIO PARA CONSISTENCIA) ---
+
+const parseDetalle = (detalle) => {
+    if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
+    const trimmed = detalle.trim()
+    if (!trimmed) return { nota: '', frescura: null }
+    if (trimmed.startsWith('{')) {
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed && typeof parsed === 'object') {
+                return {
+                    nota: typeof parsed.nota === 'string' ? parsed.nota : '',
+                    frescura: parsed.frescura || null
+                }
+            }
+        } catch (error) {
+            return { nota: trimmed, frescura: null }
+        }
+    }
+    return { nota: trimmed, frescura: null }
+}
+
+const computeExpiryDate = (producto) => {
+    const { frescura } = parseDetalle(producto?.detalle)
+    let modo = frescura?.modo || producto?.frescura_modo;
+    let fecha = frescura?.fecha || producto?.frescura_fecha;
+    let dias = frescura?.dias || producto?.frescura_dias;
+    
+    if (modo === 'fecha' && fecha) {
+        const f = new Date(fecha);
+        return Number.isNaN(f.getTime()) ? null : f;
+    }
+    if (modo === 'dias' && dias) {
+        const base = producto?.created_at ? new Date(producto.created_at) : null;
+        if (!base || Number.isNaN(base.getTime())) return null;
+        return new Date(base.getTime() + Number(dias) * ONE_DAY_MS);
+    }
+    // Fallback logic if no specific freshness info is found, matching original default behavior or returning null?
+    // User wants it functional. If no data, it shouldn't expire immediately. 
+    // Let's fallback to null so it doesn't show up as expiring unless configured.
+    return null; 
+}
+
+
 // --- CONFIGURACIÓN DE GRÁFICOS (APEX CHARTS) ---
 
 const donutSeries = computed(() =>
@@ -291,7 +335,15 @@ const donutOptions = computed(() => ({
             }
         }
     },
-    dataLabels: { style: { colors: [chartTextColor.value] } },
+    dataLabels: {
+        style: {
+            colors: ['#ffffff'],
+            fontSize: '11px',
+            fontFamily: 'inherit',
+            fontWeight: 400
+        },
+        dropShadow: { enabled: true, top: 1, left: 1, blur: 1, color: '#000', opacity: 0.25 }
+    },
     stroke: { colors: ['transparent'] },
     tooltip: { theme: isDark.value ? 'dark' : 'light' },
     grid: { borderColor: chartGridColor.value },
@@ -347,19 +399,18 @@ const lowStockProducts = computed(() =>
 const expiringProducts = computed(() =>
     productos.value
         .map(p => {
-            if (!p?.created_at) return null
-            const date = new Date(p.created_at)
-            date.setDate(date.getDate() + DEFAULT_SHELF_LIFE_DAYS)
+            const date = computeExpiryDate(p)
+            if (!date) return null
             const days = Math.ceil((date.getTime() - Date.now()) / ONE_DAY_MS)
             return {
                 id: p.id,
                 name: p.nombre,
                 category: p?.categoria?.nombre || 'General',
-                expiresIn: Math.max(days, 0),
+                expiresIn: days,
                 date: date.toLocaleDateString('es-EC')
             }
         })
-        .filter(i => i && i.expiresIn <= EXPIRY_WARNING_DAYS)
+        .filter(i => i && i.expiresIn <= EXPIRY_WARNING_DAYS && i.expiresIn >= 0)
         .sort((a, b) => a.expiresIn - b.expiresIn)
         .slice(0, 6)
 )

@@ -200,7 +200,7 @@ body {
 .v-btn.v-btn--variant-flat,
 .v-btn.v-btn--variant-outlined {
   text-transform: none;
- 
+
 }
 
 .app-pagination .v-pagination__item,
@@ -217,6 +217,7 @@ body {
 .app-pagination .v-pagination__item--is-active .v-btn__content {
   color: #07120d !important;
 }
+
 .v-theme--dark .v-btn {
   color: var(--app-text) !important;
 }
@@ -240,7 +241,7 @@ body {
 .v-theme--dark .v-field__outline__start,
 .v-theme--dark .v-field__outline__end,
 .v-theme--dark .v-field__outline__notch {
-  border-color: color-mix(in srgb, var(--app-text) 20%, transparent) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .v-theme--dark .v-field--focused .v-field__outline__start,
@@ -319,7 +320,7 @@ body {
 .v-theme--dark .frescura-field,
 .v-theme--dark .stock-slider-field {
   background: var(--app-surface) !important;
-  border-color: color-mix(in srgb, var(--app-text) 18%, transparent) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .v-theme--dark .frescura-field__label,
@@ -342,3 +343,24 @@ body {
   min-height: 48px;
 }
 
+.v-alert {
+  height: auto !important;
+  min-height: unset !important;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+  align-items: flex-start !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.v-alert .v-alert__content,
+.v-alert .v-alert__text {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  text-overflow: clip !important;
+  height: auto !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  display: block !important;
+}

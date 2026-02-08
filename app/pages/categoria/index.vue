@@ -1125,34 +1125,51 @@ onMounted(() => {
     border-color: var(--app-border) !important;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table) {
+@media (max-width: 600px) {
+    .modal-shell__header {
+        flex-direction: column;
+    }
+}
+
+/* --- DARK MODE OVERRIDES --- */
+
+/* Fix: Use .list-modal directly as it is on the v-card, ensuring we match inside the dialog portal */
+:global(.v-theme--dark .list-modal .categoria-table) {
     color: var(--app-text) !important;
+    background: transparent !important;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table thead th) {
-    color: #c7d2cc !important;
+:global(.v-theme--dark .list-modal .categoria-table thead th) {
+    color: #94b8a2 !important; /* Soft green-grey text */
     font-weight: 600;
-    background: #0e9b55 !important;
-    border-bottom: 1px solid rgba(47, 214, 119, 0.18) !important;
+    text-transform: uppercase;
+    background: transparent !important;
+    border-bottom: 1px solid #335539 !important;
+    letter-spacing: 0.05em;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table-row td) {
-    background: #35a26c !important;
-    color: #e7efea !important;
-    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+:global(.v-theme--dark .list-modal .categoria-table-row td) {
+    background: #1e3b28cc !important; /* Dark green background with transparency */
+    color: #e2e8f0 !important;
+    border-top: 1px solid #335539 !important;
+    border-bottom: 1px solid #335539 !important;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table-row td:first-child) {
-    border-left: 1px solid rgba(255, 255, 255, 0.04) !important;
+:global(.v-theme--dark .list-modal .categoria-table-row td:first-child) {
+    border-left: 1px solid #335539 !important;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table-row td:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+:global(.v-theme--dark .list-modal .categoria-table-row td:last-child) {
+    border-right: 1px solid #335539 !important;
 }
 
-:global(.v-theme--dark .categoria-dialog .categoria-table-row:hover td) {
-    background: #232826 !important;
-    border-color: rgba(47, 214, 119, 0.18) !important;
+:global(.v-theme--dark .list-modal .categoria-table-row:hover td) {
+    background: #234d32 !important;
+    border-color: #4ade80 !important;
+    color: #ffffff !important;
 }
 
+:global(.v-theme--dark .list-modal .emoji-avatar__emoji) {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
 </style>
