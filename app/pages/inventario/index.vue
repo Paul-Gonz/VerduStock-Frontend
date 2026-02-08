@@ -13,10 +13,14 @@
 						<v-btn class="action-btn" prepend-icon="mdi-plus" @click="openCreateDialog">
 							Nuevo Producto
 						</v-btn>
-						<v-btn class="action-btn" prepend-icon="mdi-file-pdf-box" :loading="exportLoading"
-							@click="exportInventario">
-							Exportar PDF
-						</v-btn>
+						<!-- Reemplaza el botón simple con este menú -->
+						 <v-btn 
+        class="action-btn" 
+        prepend-icon="mdi-file-pdf-box"
+        @click="$router.push('/reportes')"
+    >
+        Reportes
+    </v-btn>
 					</div>
 				</header>
 
@@ -839,6 +843,28 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	if (searchDebounce) clearTimeout(searchDebounce)
 })
+
+const generarReporteRapido = async (tipo) => {
+  try {
+    const params = new URLSearchParams()
+    
+    // Aplicar filtros actuales
+    if (categoriaFiltro.value !== 'all') {
+      params.append('categoria_id', categoriaFiltro.value)
+    }
+    
+    // Usar ruta sin /api/
+    const url = `${API_URL}/reportes/${tipo}?${params.toString()}`
+    console.log('Generando reporte rápido:', url)
+    
+    window.open(url, '_blank')
+    
+  } catch (error) {
+    console.error('Error generando reporte rápido:', error)
+    showSnackbar('Error al generar reporte', 'error')
+  }
+}
+
 </script>
 
 <style scoped>
