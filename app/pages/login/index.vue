@@ -227,7 +227,7 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-bg {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-muted) 100%);
 }
 
 .presentation-section {
@@ -254,7 +254,7 @@ const handleLogin = async () => {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--app-surface) 15%, transparent);
     padding: 10px;
     box-sizing: content-box;
     border-radius: 50%;
@@ -286,10 +286,10 @@ const handleLogin = async () => {
     position: relative;
     z-index: 2;
     padding: 2rem;
-    background: rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--app-text) 20%, transparent);
     border-radius: 20px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--app-text) 18%, transparent);
 }
 
 .floating-veggies {
@@ -303,6 +303,6 @@ const handleLogin = async () => {
 .veggie-icon:hover {
     transform: scale(1.1);
     transition: transform 0.3s ease;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--app-text) 20%, transparent);
 }
 </style>

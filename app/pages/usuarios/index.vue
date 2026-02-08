@@ -62,7 +62,7 @@
                         hide-details
                         style="width: 250px;"
                         rounded="lg"
-                    ></v-text-field>
+                        class="search-input"></v-text-field>
                     <v-btn
                         icon
                         variant="tonal"
@@ -176,7 +176,13 @@
                         :length="totalPages"
                         :total-visible="5"
                         color="success"
-                        rounded="circle"
+                        variant="flat"
+                        rounded="lg"
+                        density="comfortable"
+                        class="app-pagination"
+                        prev-icon="mdi-chevron-left"
+                        next-icon="mdi-chevron-right"
+                        show-first-last
                     ></v-pagination>
                 </div>
             </v-card-text>
@@ -799,13 +805,13 @@ onMounted(() => {
 .usuarios-page {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0rem;
 }
 
 .section-card {
-    border-color: rgba(34, 197, 94, 0.22);
-    background: #ffffff;
-    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .section-card :deep(.v-card-title) {
@@ -817,9 +823,9 @@ onMounted(() => {
 }
 
 .stat-card {
-    background: #f2fff6;
-    border-color: rgba(34, 197, 94, 0.28);
-    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.08);
+    background: var(--app-surface);
+    border-color: var(--app-border);
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .new-user-btn {
@@ -834,9 +840,9 @@ onMounted(() => {
 }
 
 .active-chip {
-    background: #EEFCF5 !important;
-    color: #05a552 !important;
-    border: 1.5px solid #7AF0A8;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
+    color: var(--app-accent) !important;
+    border: 1.5px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
 }
 
 :deep(.v-data-table) {
@@ -844,15 +850,11 @@ onMounted(() => {
 }
 
 :deep(.v-data-table-header) {
-    background: #f8fff9;
+    background: var(--app-surface);
 }
 
 :deep(.v-data-table-row:hover) {
-    background: #f2fff6 !important;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
 }
 
-:deep(.v-pagination__item--is-active) {
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: white !important;
-}
 </style>

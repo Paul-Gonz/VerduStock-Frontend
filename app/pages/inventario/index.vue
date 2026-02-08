@@ -24,7 +24,8 @@
 					<div class="filters-bar__search">
 						<v-text-field v-model="searchQuery" density="comfortable" variant="outlined" color="success"
 							base-color="success" prepend-inner-icon="mdi-magnify"
-							placeholder="Buscar por nombre o proveedor..." hide-details clearable></v-text-field>
+							placeholder="Buscar por nombre o proveedor..." hide-details clearable
+							class="search-input"></v-text-field>
 					</div>
 					<div class="filters-bar__control">
 						<v-select v-model="categoriaFiltro" :items="categoriaOptions" item-title="title"
@@ -76,9 +77,9 @@
 				</v-alert>
 
 				<section class="cards-wrapper">
-					<template v-if="filteredCards.length">
+					<template v-if="paginatedCards.length">
 						<v-row>
-							<v-col v-for="card in filteredCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
+							<v-col v-for="card in paginatedCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
 								<v-card :class="['product-card', card.status.styleKey]" rounded="lg" border
 									elevation="0">
 									<div class="status-banner" :class="card.status.styleKey">
@@ -177,9 +178,11 @@
 							</v-col>
 						</v-row>
 
-						<div class="pagination-block" v-if="pagination.lastPage > 1">
-							<v-pagination v-model="pagination.page" :length="pagination.lastPage" :total-visible="5"
-								color="success"></v-pagination>
+						<div class="pagination-block" v-if="filteredCards.length">
+							<v-pagination v-model="page" :length="totalPaginas" :total-visible="5" color="success"
+								variant="flat" rounded="lg" density="comfortable" class="app-pagination"
+								prev-icon="mdi-chevron-left" next-icon="mdi-chevron-right"
+								show-first-last></v-pagination>
 						</div>
 					</template>
 
@@ -353,7 +356,8 @@ const searchQuery = ref('')
 const categoriaFiltro = ref('all')
 const estadoFiltro = ref('all')
 const exportLoading = ref(false)
-const pagination = reactive({ page: 1, perPage: INVENTORY_PAGE_SIZE, lastPage: 1, total: 0 })
+const page = ref(1)
+const itemsPerPage = INVENTORY_PAGE_SIZE
 const formDialog = ref(false)
 const deleteDialog = ref(false)
 const editingProducto = ref(null)
@@ -364,7 +368,6 @@ const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
-const suppressPageWatch = ref(false)
 let searchDebounce = null
 
 const categoriaOptions = computed(() => [
@@ -520,15 +523,13 @@ const categorySelectItems = computed(() => {
 	}))
 })
 
-const fetchProductos = async (page = pagination.page) => {
+const fetchProductos = async () => {
 	productosLoading.value = true
 	productosError.value = ''
 	try {
-		suppressPageWatch.value = true
-		pagination.page = page
 		const queryParams = new URLSearchParams({
-			page: String(page),
-			por_pagina: String(pagination.perPage),
+			page: '1',
+			por_pagina: '500'
 		})
 
 		if (searchQuery.value.trim()) queryParams.set('busqueda', searchQuery.value.trim())
@@ -539,19 +540,13 @@ const fetchProductos = async (page = pagination.page) => {
 			...fetchConfig
 		})
 
-		productosRaw.value = response?.data || response || []
-
-		const meta = response?.meta || response?.data?.meta
-		if (meta) {
-			pagination.lastPage = meta.last_page || 1
-			pagination.total = meta.total || productosRaw.value.length
-		}
+		const list = response?.data?.data || response?.data || response || []
+		productosRaw.value = Array.isArray(list) ? list : []
 	} catch (error) {
 		if (error.status === 401) await navigateTo('/login')
 		productosRaw.value = []
 		productosError.value = 'No se pudo cargar el inventario.'
 	} finally {
-		suppressPageWatch.value = false
 		productosLoading.value = false
 	}
 }
@@ -584,7 +579,7 @@ const confirmDelete = async () => {
 		})
 		showSnackbar('Producto eliminado correctamente')
 		deleteDialog.value = false
-		await fetchProductos(pagination.page)
+		await fetchProductos()
 	} catch (error) {
 		showSnackbar('No se pudo eliminar el producto', 'error')
 	} finally {
@@ -720,6 +715,13 @@ const filteredCards = computed(() => {
 	return cards
 })
 
+const paginatedCards = computed(() => {
+	const start = (page.value - 1) * itemsPerPage
+	return filteredCards.value.slice(start, start + itemsPerPage)
+})
+
+const totalPaginas = computed(() => Math.max(1, Math.ceil(filteredCards.value.length / itemsPerPage)))
+
 const providerSelectItems = computed(() => {
 	return proveedores.value.map((prov) => ({
 		title: prov.nombre || 'Proveedor sin nombre', // Lo que el usuario lee
@@ -812,22 +814,31 @@ const submitProducto = async () => {
 
 const openDeleteDialog = (p) => { productoSeleccionado.value = p; deleteDialog.value = true }
 const closeDeleteDialog = () => deleteDialog.value = false
-const refreshInventario = () => fetchProductos(1)
+const refreshInventario = () => fetchProductos()
 
 // --- WATCHERS Y LIFECYCLE ---
+
 watch(searchQuery, () => {
 	if (searchDebounce) clearTimeout(searchDebounce)
-	searchDebounce = setTimeout(() => fetchProductos(1), 500)
+	searchDebounce = setTimeout(() => {
+		page.value = 1
+		fetchProductos()
+	}, 500)
 })
 
-watch(categoriaFiltro, () => fetchProductos(1))
-
-watch(estadoFiltro, () => fetchProductos(1))
-
-watch(() => pagination.page, (page) => {
-	if (suppressPageWatch.value) return
-	fetchProductos(page)
+watch(categoriaFiltro, () => {
+	page.value = 1
+	fetchProductos()
 })
+
+watch(estadoFiltro, () => {
+	page.value = 1
+})
+
+watch(filteredCards, () => {
+	if (page.value > totalPaginas.value) page.value = totalPaginas.value
+})
+
 
 onMounted(() => {
 	loadLocalStockThresholds()
@@ -843,21 +854,19 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .inventario-page {
-	padding: 5px 16px 48px;
-	background: #f2f2f2;
+	padding: 1px 6px 8px;
 	min-height: 100%;
 }
 
 .inventory-shell {
 	width: 100%;
 	padding-inline: 0;
+	max-width: 100%;
 }
 
 .inventory-board {
-	background: #ffffff;
-	border: 1px solid rgba(34, 197, 94, 0.22);
-	box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
 	padding: 18px 22px 22px;
+	width: 100%;
 }
 
 .board-header {
@@ -878,12 +887,12 @@ onBeforeUnmount(() => {
 	margin: 0;
 	font-size: 1.rem;
 	font-weight: 700;
-	color: #0d3b25;
+	color: var(--app-text);
 }
 
 .board-subtitle {
 	margin: 0;
-	color: #5a7064;
+	color: var(--app-text-muted);
 	font-size: 0.88rem;
 }
 
@@ -907,10 +916,10 @@ onBeforeUnmount(() => {
 	gap: 12px;
 	margin: 20px 0 28px;
 	padding: 14px 18px;
-	background: #ffffff;
+	background: var(--app-surface);
 	border-radius: 18px;
-	border: 1px solid #e5e9f0;
-	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+	border: 1px solid var(--app-border);
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .filters-bar__search {
@@ -925,7 +934,7 @@ onBeforeUnmount(() => {
 .filters-refresh {
 	min-width: 48px;
 	border-radius: 16px;
-	box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--app-accent) 35%, transparent);
 }
 
 .alert-stack {
@@ -941,50 +950,50 @@ onBeforeUnmount(() => {
 	gap: 12px;
 	padding: 14px 18px;
 	border-radius: 14px;
-	border: 1.5px solid #f0b4b4;
-	background: #fff8f8;
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+	border: 1.5px solid color-mix(in srgb, rgb(var(--v-theme-error)) 30%, var(--app-border));
+	background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 65%, transparent);
 }
 
 .alert-card--warning {
-	border-color: #f6c48b;
-	background: #fff9f1;
+	border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 30%, var(--app-border));
+	background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%);
 }
 
 .alert-card__icon {
 	width: 34px;
 	height: 34px;
 	border-radius: 12px;
-	background: rgba(244, 63, 94, 0.12);
+	background: color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #c53030;
+	color: rgb(var(--v-theme-error));
 }
 
 .alert-card--warning .alert-card__icon {
-	background: rgba(251, 191, 36, 0.16);
-	color: #c05621;
+	background: color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
+	color: rgb(var(--v-theme-warning));
 }
 
 .alert-card__title {
 	margin: 0;
 	font-weight: 700;
-	color: #b42828;
+	color: rgb(var(--v-theme-error));
 }
 
 .alert-card--warning .alert-card__title {
-	color: #c05621;
+	color: rgb(var(--v-theme-warning));
 }
 
 .alert-card__body {
 	margin: 0;
-	color: #5f4b4b;
+	color: var(--app-text-muted);
 	font-size: 0.92rem;
 }
 
 .alert-card--warning .alert-card__body {
-	color: #785327;
+	color: var(--app-text-muted);
 }
 
 .cards-wrapper {
@@ -996,35 +1005,35 @@ onBeforeUnmount(() => {
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
-	background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
-	border: 2px solid rgba(4, 158, 75, 0.18);
+	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) 100%);
+	border: 2px solid color-mix(in srgb, var(--app-accent) 28%, var(--app-border));
 	border-radius: 22px;
-	box-shadow: 0 14px 30px rgba(9, 94, 57, 0.08);
+	box-shadow: 0 14px 30px color-mix(in srgb, var(--app-text) 10%, transparent);
 	min-height: 100%;
 	transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
-	border-color: rgba(4, 158, 75, 0.4);
+	border-color: color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
 	transform: translateY(-4px);
-	box-shadow: 0 18px 36px rgba(9, 94, 57, 0.12);
+	box-shadow: 0 18px 36px color-mix(in srgb, var(--app-text) 14%, transparent);
 }
 
 .product-card.is-healthy {
-	border-color: rgba(15, 182, 122, 0.7);
-	box-shadow: 0 16px 34px rgba(15, 182, 122, 0.18);
+	border-color: color-mix(in srgb, var(--app-accent) 65%, var(--app-border));
+	box-shadow: 0 16px 34px color-mix(in srgb, var(--app-accent) 22%, transparent);
 }
 
 .product-card.is-low {
-	border-color: rgba(234, 67, 53, 0.55);
-	background: linear-gradient(180deg, #fffefe 0%, #fff5f5 100%);
-	box-shadow: 0 16px 34px rgba(234, 67, 53, 0.16);
+	border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 55%, var(--app-border));
+	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%) 100%);
+	box-shadow: 0 16px 34px color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
 }
 
 .product-card.is-expiring {
-	border-color: rgba(245, 158, 11, 0.6);
-	background: linear-gradient(180deg, #fffdf7 0%, #fff5e7 100%);
-	box-shadow: 0 16px 34px rgba(245, 158, 11, 0.16);
+	border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 60%, var(--app-border));
+	background: linear-gradient(180deg, var(--app-surface) 0%, color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%) 100%);
+	box-shadow: 0 16px 34px color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
 }
 
 .status-banner {
@@ -1035,23 +1044,23 @@ onBeforeUnmount(() => {
 	font-weight: 600;
 	padding: 8px 14px;
 	border-radius: 14px;
-	background: #edf8f0;
-	color: #0f5132;
+	background: color-mix(in srgb, var(--app-accent) 18%, transparent);
+	color: var(--app-text);
 }
 
 .status-banner.is-low {
-	background: #fdecec;
-	color: #b42318;
+	background: color-mix(in srgb, rgb(var(--v-theme-error)) 18%, transparent);
+	color: rgb(var(--v-theme-error));
 }
 
 .status-banner.is-expiring {
-	background: #fff1dc;
-	color: #c05621;
+	background: color-mix(in srgb, rgb(var(--v-theme-warning)) 18%, transparent);
+	color: rgb(var(--v-theme-warning));
 }
 
 .status-banner.is-healthy {
-	background: #e7f8ed;
-	color: #0f5132;
+	background: color-mix(in srgb, var(--app-accent) 18%, transparent);
+	color: var(--app-text);
 }
 
 .status-banner+.product-card__header {
@@ -1072,23 +1081,23 @@ onBeforeUnmount(() => {
 }
 
 .category-avatar {
-	background: #f1fbf4;
-	color: #0d3b25;
+	background: var(--app-surface-muted);
+	color: var(--app-text);
 	font-size: 1.2rem;
-	border: 1px solid rgba(4, 158, 75, 0.2);
+	border: 1px solid var(--app-border);
 }
 
 .product-name {
 	font-size: 1rem;
 	font-weight: 700;
 	margin: 0;
-	color: #0b2f1f;
+	color: var(--app-text);
 	line-height: 1.2;
 }
 
 .product-category {
 	margin: 0;
-	color: #66786f;
+	color: var(--app-text-muted);
 	font-size: 0.82rem;
 }
 
@@ -1102,7 +1111,7 @@ onBeforeUnmount(() => {
 	justify-content: space-between;
 	gap: 16px;
 	flex-wrap: wrap;
-	border-bottom: 1px dashed rgba(13, 59, 37, 0.16);
+	border-bottom: 1px dashed color-mix(in srgb, var(--app-text) 16%, transparent);
 	padding-bottom: 6px;
 }
 
@@ -1116,14 +1125,14 @@ onBeforeUnmount(() => {
 	font-size: 0.78rem;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
-	color: #6b7a71;
+	color: var(--app-text-muted);
 }
 
 .metric-value {
 	margin: 2px 0 0;
 	font-size: 0.96rem;
 	font-weight: 700;
-	color: #0b2f1f;
+	color: var(--app-text);
 }
 
 .metric-value--wide {
@@ -1143,7 +1152,7 @@ onBeforeUnmount(() => {
 }
 
 .metric-value.emphasis {
-	color: #0f5132;
+	color: var(--app-text);
 	font-size: 1.2rem;
 }
 
@@ -1175,7 +1184,7 @@ onBeforeUnmount(() => {
 	font-size: 0.72rem;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: #7b8b82;
+	color: var(--app-text-muted);
 }
 
 .detail-label.subtle {
@@ -1186,17 +1195,17 @@ onBeforeUnmount(() => {
 	margin: 0;
 	font-size: 0.9rem;
 	font-weight: 600;
-	color: #1b2f23;
+	color: var(--app-text);
 }
 
 .detail-value.highlight {
-	color: #0f8a4e;
+	color: var(--app-accent);
 	font-weight: 700;
 }
 
 .detail-value.muted {
 	font-size: 0.82rem;
-	color: #506058;
+	color: var(--app-text-muted);
 }
 
 .details-list {
@@ -1220,11 +1229,11 @@ onBeforeUnmount(() => {
 .empty-state {
 	margin-top: 32px;
 	padding: 48px;
-	background: #ffffff;
+	background: var(--app-surface);
 	border-radius: 24px;
-	border: 1px dashed rgba(4, 158, 75, 0.2);
+	border: 1px dashed color-mix(in srgb, var(--app-accent) 30%, var(--app-border));
 	text-align: center;
-	color: #4d5b52;
+	color: var(--app-text-muted);
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
