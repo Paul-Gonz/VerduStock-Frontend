@@ -13,14 +13,9 @@
 						<v-btn class="action-btn" prepend-icon="mdi-plus" @click="openCreateDialog">
 							Nuevo Producto
 						</v-btn>
-						<!-- Reemplaza el botón simple con este menú -->
-						 <v-btn 
-        class="action-btn" 
-        prepend-icon="mdi-file-pdf-box"
-        @click="$router.push('/reportes')"
-    >
-        Reportes
-    </v-btn>
+						<v-btn class="action-btn" prepend-icon="mdi-file-pdf-box" @click="$router.push('/reportes')">
+							Reportes
+						</v-btn>
 					</div>
 				</header>
 
@@ -82,7 +77,7 @@
 				<section class="cards-wrapper">
 					<template v-if="filteredCards.length">
 						<v-row>
-							<v-col v-for="card in filteredCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
+							<v-col v-for="card in paginatedCards" :key="card.id" cols="12" sm="6" md="4" lg="4" xl="4">
 								<v-card :class="['product-card', card.status.styleKey]" rounded="lg" border
 									elevation="0">
 									<div class="status-banner" :class="card.status.styleKey">
@@ -181,9 +176,9 @@
 							</v-col>
 						</v-row>
 
-						<div class="pagination-block" v-if="pagination.lastPage > 1">
-							<v-pagination v-model="pagination.page" :length="pagination.lastPage" :total-visible="5"
-								color="success"></v-pagination>
+						<div class="pagination-block" v-if="totalPages > 1">
+							<v-pagination v-model="currentPage" :length="totalPages" :total-visible="5" color="success"
+								prev-icon="mdi-chevron-left" next-icon="mdi-chevron-right"></v-pagination>
 						</div>
 					</template>
 
@@ -263,11 +258,11 @@
 										</v-radio-group>
 										<v-text-field v-if="productForm.frescura_modo === 'dias'"
 											v-model="productForm.frescura_dias" type="number" min="1" step="1"
-											label="Días de frescura" variant="outlined" density="comfortable" color="success"
-											class="frescura-field__input"></v-text-field>
+											label="Días de frescura" variant="outlined" density="comfortable"
+											color="success" class="frescura-field__input"></v-text-field>
 										<v-text-field v-else v-model="productForm.frescura_fecha" type="date"
-											label="Fecha  de vida útil" variant="outlined" density="comfortable" color="success"
-											class="frescura-field__input"></v-text-field>
+											label="Fecha  de vida útil" variant="outlined" density="comfortable"
+											color="success" class="frescura-field__input"></v-text-field>
 									</div>
 									<div class="stock-slider-field">
 										<div class="stock-slider-field__header">
@@ -276,8 +271,8 @@
 											}}</strong>
 										</div>
 										<v-text-field v-model.number="productForm.stock_minimo" type="number"
-											label="Stock mínimo (kg)" variant="outlined" density="comfortable" color="success"
-											min="0" step="0.1" hide-details></v-text-field>
+											label="Stock mínimo (kg)" variant="outlined" density="comfortable"
+											color="success" min="0" step="0.1" hide-details></v-text-field>
 										<p class="stock-slider-field__hint">
 											Define el umbral que detonará las alertas de bajo stock para este producto.
 										</p>
@@ -327,7 +322,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { navigateTo } from '#app'
 
-// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+// --- CONFIGURACIÓN DE API ---
 const API_URL = 'http://localhost:8000'
 const fetchConfig = {
 	credentials: 'include',
@@ -339,13 +334,16 @@ const fetchConfig = {
 }
 
 const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es obligatorio'
-const INVENTORY_PAGE_SIZE = 12
 const STOCK_MIN_KG = 10
 const STOCK_STEP_KG = 1
 const EXPIRY_WARNING_DAYS = 3
 const DEFAULT_SHELF_LIFE_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
+
+// PAGINACIÓN LOCAL (9 ELEMENTOS)
+const currentPage = ref(1)
+const itemsPerPage = 9
 
 // --- ESTADOS ---
 const productosRaw = ref([])
@@ -356,8 +354,6 @@ const proveedores = ref([])
 const searchQuery = ref('')
 const categoriaFiltro = ref('all')
 const estadoFiltro = ref('all')
-const exportLoading = ref(false)
-const pagination = reactive({ page: 1, perPage: INVENTORY_PAGE_SIZE, lastPage: 1, total: 0 })
 const formDialog = ref(false)
 const deleteDialog = ref(false)
 const editingProducto = ref(null)
@@ -368,8 +364,17 @@ const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
-const suppressPageWatch = ref(false)
 let searchDebounce = null
+
+// COMPUTADAS DE PAGINACIÓN LOCAL
+const totalPages = computed(() => {
+	return Math.ceil(filteredCards.value.length / itemsPerPage)
+})
+
+const paginatedCards = computed(() => {
+	const start = (currentPage.value - 1) * itemsPerPage
+	return filteredCards.value.slice(start, start + itemsPerPage)
+})
 
 const categoriaOptions = computed(() => [
 	{ title: 'Todas las categorias', value: 'all' },
@@ -409,7 +414,6 @@ const getDefaultForm = () => ({
 
 const productForm = ref(getDefaultForm())
 
-// --- FORMATEADORES ---
 const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
 const kilosFormatter = new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2 })
 const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -506,8 +510,6 @@ const getLocalStockThreshold = (productoId) => {
 	return Number.isFinite(Number(stored)) ? Number(stored) : STOCK_MIN_KG
 }
 
-// --- LLAMADAS A RUTAS (ESTILO PROVEEDORES) ---
-
 const fetchProveedores = async () => {
 	try {
 		const response = await $fetch(`${API_URL}/proveedores`, { method: 'GET', ...fetchConfig })
@@ -519,43 +521,27 @@ const fetchProveedores = async () => {
 
 const categorySelectItems = computed(() => {
 	return categorias.value.map((cat) => ({
-		title: cat.nombre || 'Sin nombre', // Lo que el usuario ve
-		value: cat.id                      // Lo que se guarda en la base de datos
+		title: cat.nombre || 'Sin nombre',
+		value: cat.id
 	}))
 })
 
-const fetchProductos = async (page = pagination.page) => {
+const fetchProductos = async () => {
 	productosLoading.value = true
 	productosError.value = ''
 	try {
-		suppressPageWatch.value = true
-		pagination.page = page
-		const queryParams = new URLSearchParams({
-			page: String(page),
-			por_pagina: String(pagination.perPage),
-		})
-
-		if (searchQuery.value.trim()) queryParams.set('busqueda', searchQuery.value.trim())
-		if (categoriaFiltro.value !== 'all') queryParams.set('categoria_id', String(categoriaFiltro.value))
-
-		const response = await $fetch(`${API_URL}/productos?${queryParams.toString()}`, {
+		// SOLICITUD DE TODOS LOS PRODUCTOS PARA PAGINACIÓN LOCAL
+		const response = await $fetch(`${API_URL}/productos`, {
 			method: 'GET',
+			params: { per_page: 1000 },
 			...fetchConfig
 		})
-
 		productosRaw.value = response?.data || response || []
-
-		const meta = response?.meta || response?.data?.meta
-		if (meta) {
-			pagination.lastPage = meta.last_page || 1
-			pagination.total = meta.total || productosRaw.value.length
-		}
 	} catch (error) {
 		if (error.status === 401) await navigateTo('/login')
 		productosRaw.value = []
 		productosError.value = 'No se pudo cargar el inventario.'
 	} finally {
-		suppressPageWatch.value = false
 		productosLoading.value = false
 	}
 }
@@ -564,15 +550,11 @@ const fetchCategorias = async () => {
 	try {
 		const response = await $fetch(`${API_URL}/categorias`, {
 			method: 'GET',
-			params: { per_page: 100 }, // Traer suficientes categorías
+			params: { per_page: 100 },
 			...fetchConfig
 		})
-
-		// Laravel suele enviar la lista en 'data' o directamente en el body
 		const lista = response?.data || response || []
 		categorias.value = Array.isArray(lista) ? lista : []
-
-		console.log("Categorías cargadas para el select:", categorias.value)
 	} catch (error) {
 		console.warn('Error al cargar categorías en inventario:', error)
 	}
@@ -588,7 +570,7 @@ const confirmDelete = async () => {
 		})
 		showSnackbar('Producto eliminado correctamente')
 		deleteDialog.value = false
-		await fetchProductos(pagination.page)
+		await fetchProductos()
 	} catch (error) {
 		showSnackbar('No se pudo eliminar el producto', 'error')
 	} finally {
@@ -596,29 +578,23 @@ const confirmDelete = async () => {
 	}
 }
 
-// --- FUNCIONES DE DIÁLOGO (AÑADIR O REEMPLAZAR) ---
-
-// Esta es la función que llama tu botón "Nuevo Producto"
 const openCreateDialog = () => {
 	editingProducto.value = null
-	productForm.value = getDefaultForm() // Reinicia el formulario
+	productForm.value = getDefaultForm()
 	formError.value = ''
-	formDialog.value = true // Abre el v-dialog
+	formDialog.value = true
 }
 
-// Función para cerrar el diálogo limpiando estados
 const closeFormDialog = () => {
 	formDialog.value = false
 	editingProducto.value = null
 	productForm.value = getDefaultForm()
 }
 
-// Función corregida para editar
 const openEditDialog = (producto) => {
 	editingProducto.value = producto
 	const parsedDetalle = parseDetalle(producto?.detalle)
 	const stockMinimo = getLocalStockThreshold(producto?.id)
-	// Mapeamos los datos del producto al formulario
 	productForm.value = {
 		nombre: producto.nombre,
 		categoria_id: producto.categoria_id,
@@ -641,9 +617,6 @@ const openEditDialog = (producto) => {
 	formDialog.value = true
 }
 
-
-// --- LÓGICA DE INTERFAZ ---
-
 const productCards = computed(() =>
 	productosRaw.value.map((p, index) => {
 		const kilosNetos = Number(p.kilogramos_netos ?? p.kilogramos ?? p.kilo ?? 0)
@@ -656,7 +629,6 @@ const productCards = computed(() =>
 		const isExpiringSoon = daysToExpire !== null && daysToExpire <= EXPIRY_WARNING_DAYS && daysToExpire >= 0
 		const isLowStock = kilos <= stockMin
 		const saleUnit = Number(p.precio_venta_kg || 0)
-		const saleTotal = Number(p.precio_venta_total ?? (kilos * saleUnit))
 		const basePrice = Number(p.precio_compra || 0)
 		const profitPerKg = saleUnit - basePrice
 		const profitTotal = profitPerKg * kilos
@@ -726,8 +698,8 @@ const filteredCards = computed(() => {
 
 const providerSelectItems = computed(() => {
 	return proveedores.value.map((prov) => ({
-		title: prov.nombre || 'Proveedor sin nombre', // Lo que el usuario lee
-		value: prov.id                                // El ID que se envía al backend
+		title: prov.nombre || 'Proveedor sin nombre',
+		value: prov.id
 	}))
 })
 
@@ -800,9 +772,8 @@ const submitProducto = async () => {
 
 		showSnackbar(isEdit ? 'Producto actualizado' : 'Producto registrado')
 		formDialog.value = false
-		await fetchProductos(1)
+		await fetchProductos()
 	} catch (error) {
-		// Esto te mostrará en pantalla exactamente qué campo falló
 		if (error.status === 422) {
 			const firstError = Object.values(error.data.errors)[0][0]
 			formError.value = firstError
@@ -816,21 +787,11 @@ const submitProducto = async () => {
 
 const openDeleteDialog = (p) => { productoSeleccionado.value = p; deleteDialog.value = true }
 const closeDeleteDialog = () => deleteDialog.value = false
-const refreshInventario = () => fetchProductos(1)
+const refreshInventario = () => fetchProductos()
 
-// --- WATCHERS Y LIFECYCLE ---
-watch(searchQuery, () => {
-	if (searchDebounce) clearTimeout(searchDebounce)
-	searchDebounce = setTimeout(() => fetchProductos(1), 500)
-})
-
-watch(categoriaFiltro, () => fetchProductos(1))
-
-watch(estadoFiltro, () => fetchProductos(1))
-
-watch(() => pagination.page, (page) => {
-	if (suppressPageWatch.value) return
-	fetchProductos(page)
+// WATCHER PARA RESET DE PÁGINA AL FILTRAR
+watch([searchQuery, categoriaFiltro, estadoFiltro], () => {
+	currentPage.value = 1
 })
 
 onMounted(() => {
@@ -843,28 +804,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
 	if (searchDebounce) clearTimeout(searchDebounce)
 })
-
-const generarReporteRapido = async (tipo) => {
-  try {
-    const params = new URLSearchParams()
-    
-    // Aplicar filtros actuales
-    if (categoriaFiltro.value !== 'all') {
-      params.append('categoria_id', categoriaFiltro.value)
-    }
-    
-    // Usar ruta sin /api/
-    const url = `${API_URL}/reportes/${tipo}?${params.toString()}`
-    console.log('Generando reporte rápido:', url)
-    
-    window.open(url, '_blank')
-    
-  } catch (error) {
-    console.error('Error generando reporte rápido:', error)
-    showSnackbar('Error al generar reporte', 'error')
-  }
-}
-
 </script>
 
 <style scoped>
