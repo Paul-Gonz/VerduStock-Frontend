@@ -141,19 +141,31 @@
 									<div class="price-inline">
 										<div class="detail-pair">
 											<span class="detail-label">Compra</span>
-											<span class="detail-value">{{ card.purchaseLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value">{{ card.purchaseLabel }}</span>
+												<span v-if="card.secondaryPurchaseLabel" class="detail-value-small">{{ card.secondaryPurchaseLabel }}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Venta</span>
-											<span class="detail-value">{{ card.saleLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value">{{ card.saleLabel }}</span>
+												<span v-if="card.secondarySaleLabel" class="detail-value-small">{{ card.secondarySaleLabel }}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Ganancia por kg</span>
-											<span class="detail-value highlight">{{ card.profitPerKgLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value highlight">{{ card.profitPerKgLabel }}</span>
+												<span v-if="card.secondaryProfitPerKgLabel" class="detail-value-small">{{ card.secondaryProfitPerKgLabel }}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Ganancia total</span>
-											<span class="detail-value highlight">{{ card.profitTotalLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value highlight">{{ card.profitTotalLabel }}</span>
+												<span v-if="card.secondaryProfitTotalLabel" class="detail-value-small">{{ card.secondaryProfitTotalLabel }}</span>
+											</div>
 										</div>
 									</div>
 
@@ -241,16 +253,24 @@
 								<v-text-field v-model="productForm.desperdicio" type="number" label="Desperdicio (kg)"
 									variant="outlined" density="comfortable" color="success" min="0" step="0.001"
 									class="modal-form-grid__item"></v-text-field>
-								<v-text-field v-model="productForm.precio_compra_total" type="number"
-									label="Precio total de compra ($)" variant="outlined" density="comfortable"
-									color="success" min="0" step="0.01" :rules="[requiredRule]"
-									class="modal-form-grid__item"></v-text-field>
+								<div class="currency-input-wrapper modal-form-grid__item">
+									<v-text-field v-model="productForm.precio_compra_total" type="number"
+										:label="`Precio total de compra (${currencySymbol})`" variant="outlined" density="comfortable"
+										color="success" min="0" step="0.01" :rules="[requiredRule]" class="custom-append-input">
+										<template #append-inner>
+											<div class="currency-toggle-pill" @click="toggleCurrency" :class="{ 'is-disabled': !currentRate }">
+												<span class="pill-label">{{ priceCurrency === 'USD' ? 'USD' : 'VEF' }}</span>
+												<v-icon icon="mdi-menu-swap" size="14" class="pill-icon"></v-icon>
+											</div>
+										</template>
+									</v-text-field>
+								</div>
 								<v-text-field :model-value="purchasePricePerKg" type="number"
-									label="Precio de compra por kg ($)" variant="outlined" density="comfortable"
+									:label="`Precio de compra por kg (${currencySymbol})`" variant="outlined" density="comfortable"
 									color="success" min="0" step="0.0001" readonly
 									class="modal-form-grid__item"></v-text-field>
 								<v-text-field v-model="productForm.precio_venta_kg" type="number"
-									label="Precio de venta por kg ($)" variant="outlined" density="comfortable"
+									:label="`Precio de venta por kg (${currencySymbol})`" variant="outlined" density="comfortable"
 									color="success" min="0" step="0.01" :rules="[requiredRule]"
 									class="modal-form-grid__item"></v-text-field>
 								<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
@@ -326,6 +346,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { navigateTo } from '#app'
+import { TasaDolarService } from '~/utils/tasaDolar.js'
+import { useTheme } from 'vuetify'
 
 // --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
 const API_URL = 'http://localhost:8000'
@@ -369,6 +391,9 @@ const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
 const suppressPageWatch = ref(false)
+const priceCurrency = ref('USD') // 'USD' or 'VEF'
+const tasaDolar = ref(null)
+const tasaService = ref(null)
 let searchDebounce = null
 
 const categoriaOptions = computed(() => [
@@ -410,11 +435,13 @@ const getDefaultForm = () => ({
 const productForm = ref(getDefaultForm())
 
 // --- FORMATEADORES ---
-const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
+const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const bsFormatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const kilosFormatter = new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2 })
 const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
 
 const formatCurrency = (value) => currencyFormatter.format(Number(value) || 0)
+const formatCurrencyBs = (value) => `Bs. ${bsFormatter.format(Number(value) || 0)}`
 const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, Number(value) || 0))} kg`
 const formatDate = (value) => value ? dateFormatter.format(new Date(value)) : 'Sin fecha'
 
@@ -425,30 +452,104 @@ const purchasePricePerKg = computed(() => {
 	return Number((total / kilos).toFixed(2))
 })
 
-const parseDetalle = (detalle) => {
-	if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
-	const trimmed = detalle.trim()
-	if (!trimmed) return { nota: '', frescura: null }
-	if (trimmed.startsWith('{')) {
-		try {
-			const parsed = JSON.parse(trimmed)
-			if (parsed && typeof parsed === 'object') {
-				return {
-					nota: typeof parsed.nota === 'string' ? parsed.nota : '',
-					frescura: parsed.frescura || null
-				}
-			}
-		} catch (error) {
-			return { nota: trimmed, frescura: null }
-		}
-	}
-	return { nota: trimmed, frescura: null }
+// Exchange rate utilities
+const currentRate = computed(() => {
+	if (!tasaDolar.value) return null
+	const candidates = [
+		tasaDolar.value.venta,
+		tasaDolar.value.promedio,
+		tasaDolar.value.compra
+	]
+	const rate = candidates
+		.map((value) => Number(value))
+		.find((value) => Number.isFinite(value) && value > 0)
+	return Number.isFinite(rate) && rate > 0 ? rate : null
+})
+
+const convertToUSD = (amountBs) => {
+	const rate = currentRate.value
+	if (!rate) return 0
+	return Number((amountBs / rate).toFixed(2))
 }
 
-const buildDetallePayload = (nota, frescura) => {
+const convertToBs = (amountUSD) => {
+	const rate = currentRate.value
+	if (!rate) return 0
+	return Number((amountUSD * rate).toFixed(2))
+}
+
+const toggleCurrency = () => {
+	if (!currentRate.value) {
+		snackbar.show = true
+		snackbar.message = 'No se pudo obtener la tasa de cambio. Intenta nuevamente.'
+		snackbar.color = 'warning'
+		return
+	}
+	
+	if (priceCurrency.value === 'USD') {
+		// Convert current USD values to Bs
+		if (productForm.value.precio_compra_total) {
+			productForm.value.precio_compra_total = convertToBs(Number(productForm.value.precio_compra_total))
+		}
+		if (productForm.value.precio_venta_kg) {
+			productForm.value.precio_venta_kg = convertToBs(Number(productForm.value.precio_venta_kg))
+		}
+		priceCurrency.value = 'VEF'
+	} else {
+		// Convert current Bs values to USD
+		if (productForm.value.precio_compra_total) {
+			productForm.value.precio_compra_total = convertToUSD(Number(productForm.value.precio_compra_total))
+		}
+		if (productForm.value.precio_venta_kg) {
+			productForm.value.precio_venta_kg = convertToUSD(Number(productForm.value.precio_venta_kg))
+		}
+		priceCurrency.value = 'USD'
+	}
+}
+
+const currencySymbol = computed(() => priceCurrency.value === 'USD' ? '$' : 'Bs')
+
+const parseDetalle = (detalle) => {
+	if (!detalle) return { nota: '', frescura: null, currency: null }
+	
+	let parsed = null
+	if (typeof detalle === 'object') {
+		parsed = detalle
+	} else if (typeof detalle === 'string') {
+		const trimmed = detalle.trim()
+		if (!trimmed) return { nota: '', frescura: null, currency: null }
+		if (trimmed.startsWith('{')) {
+			try {
+				parsed = JSON.parse(trimmed)
+			} catch (error) {
+				return { nota: trimmed, frescura: null, currency: null }
+			}
+		} else {
+			return { nota: trimmed, frescura: null, currency: null }
+		}
+	} else {
+		return { nota: '', frescura: null, currency: null }
+	}
+
+	if (parsed && typeof parsed === 'object') {
+		return {
+			nota: typeof parsed.nota === 'string' ? parsed.nota : '',
+			frescura: parsed.frescura || null,
+			currency: parsed.currency || null
+		}
+	}
+	
+	return { nota: '', frescura: null, currency: null }
+}
+
+const buildDetallePayload = (nota, frescura, currency = null) => {
 	const cleanNota = String(nota ?? '').trim()
-	if (frescura) {
-		return JSON.stringify({ nota: cleanNota || '', frescura })
+	const payload = { nota: cleanNota || '' }
+	if (frescura) payload.frescura = frescura
+	if (currency) payload.currency = currency
+	// Only create JSON if we have frescura or currency
+	if (frescura || currency) {
+		return JSON.stringify(payload)
 	}
 	return cleanNota || null
 }
@@ -605,6 +706,7 @@ const confirmDelete = async () => {
 const openCreateDialog = () => {
 	editingProducto.value = null
 	productForm.value = getDefaultForm() // Reinicia el formulario
+	priceCurrency.value = 'USD'
 	formError.value = ''
 	formDialog.value = true // Abre el v-dialog
 }
@@ -621,6 +723,13 @@ const openEditDialog = (producto) => {
 	editingProducto.value = producto
 	const parsedDetalle = parseDetalle(producto?.detalle)
 	const stockMinimo = getLocalStockThreshold(producto?.id)
+	// Restore currency state
+	priceCurrency.value = parsedDetalle.currency || 'USD'
+	
+	// Base values are in USD
+	const basePurchaseTotal = Number(producto.precio_compra || 0) * Number(producto.kilogramos || 0)
+	const baseSaleKg = Number(producto.precio_venta_kg || 0)
+	
 	// Mapeamos los datos del producto al formulario
 	productForm.value = {
 		nombre: producto.nombre,
@@ -628,8 +737,8 @@ const openEditDialog = (producto) => {
 		proveedor_id: producto.proveedor_id,
 		kilogramos: producto.kilogramos,
 		desperdicio: producto.desperdicio || 0,
-		precio_compra_total: Number(producto.precio_compra || 0) * Number(producto.kilogramos || 0),
-		precio_venta_kg: producto.precio_venta_kg,
+		precio_compra_total: priceCurrency.value === 'VEF' ? convertToBs(basePurchaseTotal) : basePurchaseTotal,
+		precio_venta_kg: priceCurrency.value === 'VEF' ? convertToBs(baseSaleKg) : baseSaleKg,
 		frescura_modo: parsedDetalle.frescura?.modo || 'dias',
 		frescura_dias: parsedDetalle.frescura?.modo === 'dias'
 			? Number(parsedDetalle.frescura?.dias || DEFAULT_SHELF_LIFE_DAYS)
@@ -678,6 +787,16 @@ const productCards = computed(() =>
 			status = { label: 'Por vencer', styleKey: 'is-expiring', icon: 'mdi-alarm', progressColor: 'warning', weight: 1 }
 		}
 
+		// Check if product was registered in Bs
+		const { currency } = parseDetalle(p.detalle)
+		const isInBs = currency === 'VEF'
+		
+		// Calculate Bs values if needed
+		const basePriceBs = currentRate.value ? basePrice * currentRate.value : 0
+		const saleUnitBs = currentRate.value ? saleUnit * currentRate.value : 0
+		const profitPerKgBs = currentRate.value ? profitPerKg * currentRate.value : 0
+		const profitTotalBs = currentRate.value ? profitTotal * currentRate.value : 0
+		
 		return {
 			id: p.id || index,
 			raw: p,
@@ -687,10 +806,22 @@ const productCards = computed(() =>
 			badge: p.categoria?.emoji || p.categoria_emoji || (p.categoria_nombre || p.categoria?.nombre || '').charAt(0) || '📦',
 			kilosLabel: formatKilograms(kilos),
 			stockMinimumLabel: formatKilograms(stockMin),
-			purchaseLabel: formatCurrency(basePrice),
-			saleLabel: formatCurrency(saleUnit),
-			profitPerKgLabel: formatCurrency(profitPerKg),
-			profitTotalLabel: formatCurrency(profitTotal),
+			purchaseLabel: isInBs ? formatCurrencyBs(basePriceBs) : formatCurrency(basePrice),
+			secondaryPurchaseLabel: currentRate.value 
+				? (isInBs ? `≈ ${formatCurrency(basePrice)}` : `≈ ${formatCurrencyBs(basePriceBs)}`) 
+				: null,
+			saleLabel: isInBs ? formatCurrencyBs(saleUnitBs) : formatCurrency(saleUnit),
+			secondarySaleLabel: currentRate.value 
+				? (isInBs ? `≈ ${formatCurrency(saleUnit)}` : `≈ ${formatCurrencyBs(saleUnitBs)}`) 
+				: null,
+			profitPerKgLabel: isInBs ? formatCurrencyBs(profitPerKgBs) : formatCurrency(profitPerKg),
+			secondaryProfitPerKgLabel: currentRate.value 
+				? (isInBs ? `≈ ${formatCurrency(profitPerKg)}` : `≈ ${formatCurrencyBs(profitPerKgBs)}`) 
+				: null,
+			profitTotalLabel: isInBs ? formatCurrencyBs(profitTotalBs) : formatCurrency(profitTotal),
+			secondaryProfitTotalLabel: currentRate.value 
+				? (isInBs ? `≈ ${formatCurrency(profitTotal)}` : `≈ ${formatCurrencyBs(profitTotalBs)}`) 
+				: null,
 			ingresoLabel: formatDate(p.created_at),
 			venceLabel: expiryDate ? formatDate(expiryDate) : 'Revisar stock',
 			status,
@@ -826,15 +957,25 @@ const submitProducto = async () => {
 	formError.value = ''
 	formLoading.value = true
 
+	// Prices in the form might be in Bs if priceCurrency is 'VEF'
+	// We MUST save them in USD to the backend
+	let precio_compra = Number(purchasePricePerKg.value.toFixed(2))
+	let precio_venta_kg = Number(productForm.value.precio_venta_kg)
+
+	if (priceCurrency.value === 'VEF') {
+		precio_compra = convertToUSD(precio_compra)
+		precio_venta_kg = convertToUSD(precio_venta_kg)
+	}
+
 	const payload = {
 		nombre: productForm.value.nombre.trim(),
 		categoria_id: Number(productForm.value.categoria_id),
 		proveedor_id: Number(productForm.value.proveedor_id),
 		kilogramos: Number(productForm.value.kilogramos),
-		precio_compra: Number(purchasePricePerKg.value.toFixed(2)),
-		precio_venta_kg: Number(productForm.value.precio_venta_kg),
+		precio_compra: precio_compra,
+		precio_venta_kg: precio_venta_kg,
 		desperdicio: Number(productForm.value.desperdicio) || 0,
-		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload())
+		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload(), priceCurrency.value)
 	}
 
 	try {
@@ -892,6 +1033,16 @@ onMounted(() => {
 	fetchCategorias()
 	fetchProveedores()
 	fetchProductos()
+	
+	// Load exchange rate
+	if (import.meta.client) {
+		tasaService.value = window?.TasaDolar || new TasaDolarService()
+		tasaService.value.obtenerTasa('oficial').then(data => {
+			tasaDolar.value = data
+		}).catch(error => {
+			console.error('Error loading exchange rate:', error)
+		})
+	}
 })
 
 onBeforeUnmount(() => {
@@ -1259,6 +1410,49 @@ const generarReporteRapido = async (tipo) => {
 	gap: 6px;
 }
 
+/* Currency Toggle Pill - Theme Aware */
+.currency-toggle-pill {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	background: rgba(var(--v-theme-success), 0.08);
+	border: 1.5px solid rgba(var(--v-theme-success), 0.2);
+	border-radius: 99px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	user-select: none;
+	margin-right: -4px;
+}
+
+.currency-toggle-pill:hover:not(.is-disabled) {
+	background: rgba(var(--v-theme-success), 0.15);
+	border-color: rgba(var(--v-theme-success), 0.4);
+	transform: translateY(-1px);
+}
+
+.currency-toggle-pill.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pill-label {
+	font-size: 0.68rem;
+	font-weight: 800;
+	color: rgb(var(--v-theme-success));
+	letter-spacing: 0.04em;
+}
+
+.pill-icon {
+	color: rgb(var(--v-theme-success));
+	opacity: 0.8;
+}
+
+.custom-append-input :deep(.v-field__append-inner) {
+	align-items: center;
+	padding-top: 0;
+}
+
 .metric-value.emphasis {
 	color: #0f5132;
 	font-size: 1.2rem;
@@ -1314,6 +1508,26 @@ const generarReporteRapido = async (tipo) => {
 .detail-value.muted {
 	font-size: 0.82rem;
 	color: #506058;
+}
+
+.detail-value-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 0px;
+}
+
+.detail-value-small {
+	font-size: 0.72rem;
+	color: #66786f;
+	font-weight: 500;
+	margin-top: -2px;
+}
+
+
+.currency-input-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .details-list {

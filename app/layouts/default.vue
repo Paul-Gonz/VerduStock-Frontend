@@ -199,8 +199,8 @@ const tasaFechaTexto = computed(() => {
 
 const themeIcon = computed(() => {
     const current = theme.global.name.value
-    if (current === 'dark') return 'mdi-weather-sunny'
-    if (current === 'light') return 'mdi-moon-waning-crescent'
+    if (current === 'dark') return 'mdi-white-balance-sunny'
+    if (current === 'light') return 'mdi-weather-night'
     return 'mdi-theme-light-dark'
 })
 
@@ -293,9 +293,11 @@ onBeforeUnmount(() => {
     font-family: 'Nunito', sans-serif;
 }
 
+
 .verdus-nav {
-    background: var(--app-surface);
     border-right: 1px solid var(--app-border) !important;
+    background: var(--app-surface) !important;
+    border-bottom: 1px solid var(--app-border) !important;
 }
 
 .nav-inner {
