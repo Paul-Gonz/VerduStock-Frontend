@@ -68,7 +68,7 @@
                             </div>
                             <div class="rate-meta__row" v-if="tasaDolar?.fuente">
                                 <v-icon icon="mdi-database" size="16"></v-icon>
-                                <span>Fuente: {{ tasaDolar.fuente }}</span>
+                                <span>Fuente: Banco Central de Venezuela</span>
                             </div>
                         </div>
                     </v-card-text>
