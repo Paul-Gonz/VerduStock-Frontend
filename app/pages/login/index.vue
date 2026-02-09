@@ -1,5 +1,6 @@
 <template>
-    <v-container fluid class="fill-height login-bg pa-0 v-theme--dark:bg-dark-login" :class="[isDark ? 'dark-login' : '']">
+    <v-container fluid class="fill-height login-bg pa-0 v-theme--dark:bg-dark-login"
+        :class="[isDark ? 'dark-login' : '']">
         <v-row no-gutters class="fill-height">
             <v-col cols="12" md="6"
                 class="presentation-section d-none d-md-flex flex-column align-center justify-center text-white">
@@ -7,9 +8,9 @@
                     <v-avatar color="white" size="100" class="elevation-10 mb-6">
                         <v-icon color="success" size="60" icon="mdi-carrot"></v-icon>
                     </v-avatar>
-                    <h1 class="text-h3 font-weight-bold mb-2">Verdulería Fresca</h1>
+                    <h1 class="text-h3 font-weight-bold mb-2">Disfruver</h1>
                     <p class="text-h6 font-weight-medium text-success-lighten-3">
-                        Sistema de Inventario
+                        ❝ Del campo a tu casa ❞
                     </p>
 
                     <div class="floating-veggies mt-10">
@@ -46,13 +47,6 @@
                             variant="outlined" placeholder="Ingresa tu contraseña" rounded="lg" color="success"
                             @click:append-inner="showPassword = !showPassword" :error-messages="errors.password"
                             required></v-text-field>
-
-                        <div class="d-flex align-center justify-space-between mt-n2 mb-4">
-                            <v-checkbox v-model="remember" label="Recordar sesión" color="success"
-                                hide-details></v-checkbox>
-                            
-                        </div>
-
                         <v-btn block color="success" size="x-large" type="submit"
                             class="text-none font-weight-bold elevation-4" rounded="lg" :loading="loading"
                             :disabled="loading">
@@ -60,7 +54,7 @@
                             Iniciar Sesión
                         </v-btn>
 
-                       
+
                     </v-form>
                 </v-card>
             </v-col>
@@ -74,19 +68,19 @@ const debugAuth = async () => {
         console.log('🔐 Verificando cookies...')
         const cookies = document.cookie
         console.log('Cookies actuales:', cookies)
-        
+
         // Verificar sesión Laravel
         const response = await $fetch('http://localhost:8000/sanctum/csrf-cookie', {
             credentials: 'include'
         })
         console.log('CSRF Cookie establecida:', response)
-        
+
         // Verificar autenticación
         const authCheck = await $fetch('http://localhost:8000/check-auth', {
             credentials: 'include'
         })
         console.log('Auth check:', authCheck)
-        
+
         return authCheck.authenticated
     } catch (error) {
         console.error('❌ Error en debugAuth:', error)
@@ -155,7 +149,7 @@ const handleLogin = async () => {
     try {
         // IMPORTANTE: Usa esta URL exacta (ajusta el puerto si es diferente)
         const apiUrl = 'http://localhost:8000/login'
-        
+
         const response = await $fetch(apiUrl, {
             method: 'POST',
             credentials: 'include', // IMPORTANTE para cookies de sesión
@@ -175,7 +169,7 @@ const handleLogin = async () => {
 
         if (response.success) {
             console.log('Login exitoso, redirigiendo...')
-            
+
             // Esperar un momento para que la sesión se establezca
             setTimeout(async () => {
                 await router.push('/home')
@@ -190,20 +184,20 @@ const handleLogin = async () => {
             statusText: error.statusText,
             data: error.data
         })
-        
+
         // Mostrar información detallada del error
         if (error.status === 422) {
             // Errores de validación
             if (error.data?.errors) {
                 const errorData = error.data.errors
                 if (errorData.nombre) {
-                    errors.value.nombre = Array.isArray(errorData.nombre) 
-                        ? errorData.nombre.join(', ') 
+                    errors.value.nombre = Array.isArray(errorData.nombre)
+                        ? errorData.nombre.join(', ')
                         : errorData.nombre
                 }
                 if (errorData.password) {
-                    errors.value.password = Array.isArray(errorData.password) 
-                        ? errorData.password.join(', ') 
+                    errors.value.password = Array.isArray(errorData.password)
+                        ? errorData.password.join(', ')
                         : errorData.password
                 }
                 if (!errors.value.nombre && !errors.value.password) {
@@ -230,7 +224,6 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-
 .login-bg {
     background: linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-muted) 100%);
 }
@@ -242,13 +235,13 @@ const handleLogin = async () => {
 .login-form-col {
     background: var(--app-surface) !important;
     transition: background 0.3s;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .v-theme--dark .login-form-col {
     background: #232826 !important;
     color: var(--app-text) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.38);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
 }
 
 .v-theme--dark .presentation-section {
@@ -305,16 +298,33 @@ const handleLogin = async () => {
 }
 
 /* Animaciones para cada vegetal con diferentes tiempos */
-.veggie-icon:nth-child(1) { animation-delay: 0s; }
-.veggie-icon:nth-child(2) { animation-delay: 0.5s; }
-.veggie-icon:nth-child(3) { animation-delay: 1s; }
-.veggie-icon:nth-child(4) { animation-delay: 1.5s; }
-.veggie-icon:nth-child(5) { animation-delay: 2s; }
+.veggie-icon:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.veggie-icon:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.veggie-icon:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.veggie-icon:nth-child(4) {
+    animation-delay: 1.5s;
+}
+
+.veggie-icon:nth-child(5) {
+    animation-delay: 2s;
+}
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0) rotate(0deg);
     }
+
     50% {
         transform: translateY(-20px) rotate(5deg);
     }
@@ -353,6 +363,6 @@ const handleLogin = async () => {
 .v-theme--dark .login-form-col h2,
 .v-theme--dark .login-form-col p,
 .v-theme--dark .login-form-col label {
-  color: #fff !important;
+    color: #fff !important;
 }
 </style>
