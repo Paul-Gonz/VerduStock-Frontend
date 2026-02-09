@@ -1,3 +1,26 @@
+import { TasaDolarService } from '@/app/utils/tasaDolar.js'
+const tasaService = new TasaDolarService()
+const tasaDolar = ref({ venta: 1, compra: 1, promedio: 1 })
+const tasaReady = ref(false)
+onMounted(async () => {
+    try {
+        tasaDolar.value = await tasaService.obtenerTasa('oficial')
+        tasaReady.value = true
+    } catch (e) {
+        tasaReady.value = false
+    }
+})
+const getTasa = () => Number(tasaDolar.value?.venta || tasaDolar.value?.promedio || 1)
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VES' || p?.currency === 'VES') return true
+    const precio = Number(p?.precio_venta_kg || p?.precio_venta || 0)
+    return precio > 500 && precio < 1000000
+}
+const convertirBsAUsd = (montoBs) => {
+    const tasa = getTasa()
+    if (!tasa || tasa <= 0) return 0
+    return Number((Number(montoBs) / tasa).toFixed(2))
+}
 <template>
     <section class="categoria-page">
         <v-card class="mb-8 section-card" rounded="lg" border>
@@ -505,7 +528,13 @@ const extractPrecioCompra = (p) => toNumber(p?.precio_compra ?? p?.costo ?? 0)
 
 const computeProductoProfit = (p) => {
     const kilos = extractKilos(p)
-    return kilos * (extractPrecioVenta(p) - extractPrecioCompra(p))
+    let venta = extractPrecioVenta(p)
+    let compra = extractPrecioCompra(p)
+    if (isProductoEnBs(p)) {
+        venta = convertirBsAUsd(venta)
+        compra = convertirBsAUsd(compra)
+    }
+    return kilos * (venta - compra)
 }
 
 const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
@@ -520,8 +549,12 @@ const computeStockMeta = (kilo) => {
 
 const buildProductCard = (p, key) => {
     const kilo = extractKilos(p)
-    const compra = extractPrecioCompra(p)
-    const ventaKg = extractPrecioVenta(p)
+    let compra = extractPrecioCompra(p)
+    let ventaKg = extractPrecioVenta(p)
+    if (isProductoEnBs(p)) {
+        compra = convertirBsAUsd(compra)
+        ventaKg = convertirBsAUsd(ventaKg)
+    }
     const ventaTotal = toNumber(p?.precio_venta_total ?? (kilo * ventaKg))
     const gananciaPorKg = ventaKg - compra
     const gananciaTotal = gananciaPorKg * kilo
@@ -556,7 +589,12 @@ const productosPorCategoriaMap = computed(() => {
 const mappedCategories = computed(() => {
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
-        const totalValue = prods.reduce((s, p) => s + (extractKilos(p) * extractPrecioVenta(p)), 0)
+        // Sumar en USD: convertir cada precio de venta a USD antes de sumar
+        const totalValue = prods.reduce((s, p) => {
+            let venta = extractPrecioVenta(p)
+            if (isProductoEnBs(p)) venta = convertirBsAUsd(venta)
+            return s + (extractKilos(p) * venta)
+        }, 0)
         return {
             id: cat.id,
             name: cat.nombre,

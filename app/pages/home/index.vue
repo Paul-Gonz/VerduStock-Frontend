@@ -104,6 +104,38 @@
 </template>
 
 <script setup>
+import { TasaDolarService } from '~/utils/tasaDolar.js'
+const tasaService = new TasaDolarService()
+const tasaDolar = ref({ venta: 1, compra: 1, promedio: 1 })
+const tasaReady = ref(false)
+
+// Cargar tasa al iniciar
+onMounted(async () => {
+    try {
+        tasaDolar.value = await tasaService.obtenerTasa('oficial')
+        tasaReady.value = true
+    } catch (e) {
+        tasaReady.value = false
+    }
+})
+
+const getTasa = () => Number(tasaDolar.value?.venta || tasaDolar.value?.promedio || 1)
+
+// Detecta si un producto está en Bs (por campo 'moneda', 'currency', o si el precio es muy alto)
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true
+    if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true
+    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
+    if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) return true
+    return false
+}
+
+const convertirBsAUsd = (montoBs) => {
+    const tasa = getTasa()
+    if (!tasa || tasa <= 0) return 0
+    return Number((Number(montoBs) / tasa).toFixed(2))
+}
+
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 import { navigateTo } from '#app'
@@ -244,11 +276,18 @@ const getStockThreshold = (p) => {
 }
 
 const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
-const gananciaPotencial = computed(() => {
-    return productos.value.reduce((acc, p) => {
+import { watchEffect } from 'vue'
+const gananciaPotencial = ref(0)
+watchEffect(() => {
+    // recalcula cada vez que productos o tasaDolar cambian
+    gananciaPotencial.value = productos.value.reduce((acc, p) => {
         const kilos = getNetKilograms(p)
-        const venta = Number(p?.precio_venta_kg || 0)
-        const compra = Number(p?.precio_compra || 0)
+        let venta = Number(p?.precio_venta_kg || 0)
+        let compra = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) {
+            venta = convertirBsAUsd(venta)
+            compra = convertirBsAUsd(compra)
+        }
         return acc + (venta - compra) * kilos
     }, 0)
 })
@@ -357,7 +396,10 @@ const providerInvestments = computed(() => {
     const map = new Map()
     productos.value.forEach((p) => {
         const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
-        const inversion = Number(p?.precio_compra || 0)
+        let inversion = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) {
+            inversion = convertirBsAUsd(inversion)
+        }
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
     return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
@@ -395,26 +437,25 @@ const lowStockProducts = computed(() =>
         .slice(0, 6)
         .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(i.threshold) }))
 )
-
 const expiringProducts = computed(() =>
     productos.value
         .map(p => {
-            const date = computeExpiryDate(p)
-            if (!date) return null
-            const days = Math.ceil((date.getTime() - Date.now()) / ONE_DAY_MS)
+            const expiryDate = computeExpiryDate(p);
+            if (!expiryDate) return null;
+            const diffTime = expiryDate.getTime() - Date.now();
+            const days = Math.ceil(diffTime / ONE_DAY_MS);
             return {
                 id: p.id,
                 name: p.nombre,
-                category: p?.categoria?.nombre || 'General',
+                category: p?.categoria?.nombre || p?.categoria_nombre || 'General',
                 expiresIn: days,
-                date: date.toLocaleDateString('es-EC')
-            }
+                date: expiryDate.toLocaleDateString('es-EC')
+            };
         })
-        .filter(i => i && i.expiresIn <= EXPIRY_WARNING_DAYS && i.expiresIn >= 0)
+        .filter(i => i !== null && i.expiresIn <= EXPIRY_WARNING_DAYS)
         .sort((a, b) => a.expiresIn - b.expiresIn)
         .slice(0, 6)
 )
-
 const resumenTarjetas = computed(() => [
     { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: 'mdi-leaf' },
     { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: 'mdi-trending-up' },
@@ -624,7 +665,7 @@ const resumenTarjetas = computed(() => [
 
 .list-label {
     font-size: 0.75rem;
-    color: var(--app-text-muted);
+    color: rgba(5, 59, 45, 0.6);
 }
 
 .feedback-stack {
@@ -635,7 +676,7 @@ const resumenTarjetas = computed(() => [
 
 .empty-state {
     font-size: 0.85rem;
-    color: var(--app-text-muted);
+    color: rgba(5, 59, 45, 0.7);
 }
 
 @media (max-width: 640px) {
