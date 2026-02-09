@@ -6,9 +6,9 @@
                     <p class="hero-eyebrow">Dashboard</p>
                     <h1 class="app-title">Control general del inventario</h1>
                 </div>
-                <v-btn prepend-icon="mdi-upload">
+                <!-- <v-btn prepend-icon="mdi-upload">
                     Exportar
-                </v-btn>
+                </v-btn> -->
             </header>
 
             <div v-if="loadingDashboard || dashboardError" class="feedback-stack">
@@ -105,6 +105,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
+import { useTheme } from 'vuetify'
 import { navigateTo } from '#app'
 
 // --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
@@ -124,10 +125,11 @@ const Apexchart = import.meta.client
 const MAX_PRODUCTS_FOR_DASHBOARD = 500
 const LOW_STOCK_THRESHOLD_KG = 10
 const DEFAULT_SHELF_LIFE_DAYS = 7
-const EXPIRY_WARNING_DAYS = 3
+const EXPIRY_WARNING_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const donutColors = ['#0ece78', '#6ee7b7', '#34d399', '#10b981', '#059669', '#65a30d']
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
+const theme = useTheme()
 
 // --- FORMATEADORES ---
 const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
@@ -136,6 +138,39 @@ const integerFormatter = new Intl.NumberFormat('es-EC', { maximumFractionDigits:
 
 const formatCurrency = (val = 0) => currencyFormatter.format(Number(val) || 0)
 const formatKilograms = (val = 0) => `${kilosFormatter.format(Number(val) || 0)} kg`
+
+const isDark = computed(() => theme.global.current.value.dark)
+
+const getCssVar = (name, fallback) => {
+    if (!import.meta.client) return fallback
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    return value || fallback
+}
+
+const chartPalette = computed(() => {
+    if (isDark.value) {
+        const accent = getCssVar('--app-accent', '#2be874')
+        const accentStrong = getCssVar('--app-accent-strong', '#0fcb62')
+        return [
+            accent,
+            accentStrong,
+             '#3BC550',
+            '#1fdc75',
+            '#10b85c',
+            '#7afbb8',
+            '#71E559'
+        ]
+    }
+    return donutColors
+})
+
+const chartTextColor = computed(() =>
+    getCssVar('--app-text', isDark.value ? '#ecfdf6' : '#0b2f1f')
+)
+
+const chartGridColor = computed(() =>
+    isDark.value ? 'rgba(236, 253, 246, 0.08)' : 'rgba(5, 59, 45, 0.08)'
+)
 
 // --- ESTADOS ---
 const productos = ref([])
@@ -210,11 +245,18 @@ const getStockThreshold = (p) => {
 }
 
 const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
-const gananciaPotencial = computed(() => {
-    return productos.value.reduce((acc, p) => {
+import { watchEffect } from 'vue'
+const gananciaPotencial = ref(0)
+watchEffect(() => {
+    // recalcula cada vez que productos o tasaDolar cambian
+    gananciaPotencial.value = productos.value.reduce((acc, p) => {
         const kilos = getNetKilograms(p)
-        const venta = Number(p?.precio_venta_kg || 0)
-        const compra = Number(p?.precio_compra || 0)
+        let venta = Number(p?.precio_venta_kg || 0)
+        let compra = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) {
+            venta = convertirBsAUsd(venta)
+            compra = convertirBsAUsd(compra)
+        }
         return acc + (venta - compra) * kilos
     }, 0)
 })
@@ -224,12 +266,78 @@ const categoryDistribution = computed(() => {
     productos.value.forEach((p) => {
         const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
         const kilos = getNetKilograms(p)
-        map.set(name, (map.get(name) ?? 0) + kilos)
+        let venta = Number(p?.precio_venta_kg || 0)
+        if (isProductoEnBs(p)) venta = convertirBsAUsd(venta)
+        // Suma el valor en dólares
+        map.set(name, (map.get(name) ?? 0) + (kilos * venta))
     })
     return Array.from(map, ([name, value]) => ({ name, value }))
 })
 
 const totalCategoryKilos = computed(() => categoryDistribution.value.reduce((sum, item) => sum + item.value, 0))
+
+
+
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
+    if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true;
+    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
+    if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) {
+        return true;
+    }
+    return false;
+}
+
+const convertirBsAUsd = (montoBs) => {
+    // getTasa debe estar definida en el archivo, si no, usa 1
+    const tasa = typeof getTasa === 'function' ? getTasa() : 1;
+    if (!tasa || tasa <= 0) return 0;
+    return Number((Number(montoBs) / tasa).toFixed(2));
+}
+
+// --- LÓGICA DE VENCIMIENTO (COPIADA DE INVENTARIO PARA CONSISTENCIA) ---
+
+const parseDetalle = (detalle) => {
+    if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
+    const trimmed = detalle.trim()
+    if (!trimmed) return { nota: '', frescura: null }
+    if (trimmed.startsWith('{')) {
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed && typeof parsed === 'object') {
+                return {
+                    nota: typeof parsed.nota === 'string' ? parsed.nota : '',
+                    frescura: parsed.frescura || null
+                }
+            }
+        } catch (error) {
+            return { nota: trimmed, frescura: null }
+        }
+    }
+    return { nota: trimmed, frescura: null }
+}
+
+const computeExpiryDate = (producto) => {
+    const { frescura } = parseDetalle(producto?.detalle)
+    let modo = frescura?.modo || producto?.frescura_modo;
+    let fecha = frescura?.fecha || producto?.frescura_fecha;
+    let dias = frescura?.dias || producto?.frescura_dias;
+    
+    if (modo === 'fecha' && fecha) {
+        const f = new Date(fecha);
+        return Number.isNaN(f.getTime()) ? null : f;
+    }
+    if (modo === 'dias' && dias) {
+        const base = producto?.created_at ? new Date(producto.created_at) : null;
+        if (!base || Number.isNaN(base.getTime())) return null;
+        return new Date(base.getTime() + Number(dias) * ONE_DAY_MS);
+    }
+    // Fallback logic if no specific freshness info is found, matching original default behavior or returning null?
+    // User wants it functional. If no data, it shouldn't expire immediately. 
+    // Let's fallback to null so it doesn't show up as expiring unless configured.
+    return null; 
+}
+
 
 // --- CONFIGURACIÓN DE GRÁFICOS (APEX CHARTS) ---
 
@@ -238,10 +346,11 @@ const donutSeries = computed(() =>
 )
 
 const donutOptions = computed(() => ({
-    chart: { type: 'donut' },
+    chart: { type: 'donut', background: 'transparent' },
     labels: categoryDistribution.value.map(i => i.name),
-    colors: donutColors,
+    colors: chartPalette.value,
     legend: { position: 'bottom' },
+    theme: { mode: isDark.value ? 'dark' : 'light' },
     plotOptions: {
         pie: {
             donut: {
@@ -255,6 +364,22 @@ const donutOptions = computed(() => ({
                 }
             }
         }
+    },
+    dataLabels: {
+        style: {
+            colors: ['#ffffff'],
+            fontSize: '11px',
+            fontFamily: 'inherit',
+            fontWeight: 400
+        },
+        dropShadow: { enabled: true, top: 1, left: 1, blur: 1, color: '#000', opacity: 0.25 }
+    },
+    stroke: { colors: ['transparent'] },
+    tooltip: { theme: isDark.value ? 'dark' : 'light' },
+    grid: { borderColor: chartGridColor.value },
+    legend: {
+        position: 'bottom',
+        labels: { colors: chartTextColor.value }
     }
 }))
 
@@ -262,18 +387,23 @@ const providerInvestments = computed(() => {
     const map = new Map()
     productos.value.forEach((p) => {
         const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
-        const inversion = Number(p?.precio_compra || 0)
+        let inversion = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) inversion = convertirBsAUsd(inversion)
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
     return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
 })
 
-const barSeries = computed(() => [{ name: 'Inversión', data: providerInvestments.value.map(i => i.value) }])
+const barSeries = computed(() => [{ name: 'Inversión $', data: providerInvestments.value.map(i => i.value) }])
 const barOptions = computed(() => ({
-    chart: { type: 'bar', toolbar: { show: false } },
+    chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
     plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-    xaxis: { categories: providerInvestments.value.map(i => i.name) },
-    colors: ['#1dd07c']
+    xaxis: { categories: providerInvestments.value.map(i => i.name), labels: { style: { colors: chartTextColor.value } } },
+    yaxis: { labels: { style: { colors: chartTextColor.value } } },
+    colors: [chartPalette.value[0] || '#2aa876'],
+    theme: { mode: isDark.value ? 'dark' : 'light' },
+    grid: { borderColor: chartGridColor.value },
+    
 }))
 
 // --- LISTAS DE ALERTAS ---
@@ -292,27 +422,24 @@ const lowStockProducts = computed(() =>
         .slice(0, 6)
         .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(i.threshold) }))
 )
-
 const expiringProducts = computed(() =>
     productos.value
         .map(p => {
-            if (!p?.created_at) return null
-            const date = new Date(p.created_at)
-            date.setDate(date.getDate() + DEFAULT_SHELF_LIFE_DAYS)
-            const days = Math.ceil((date.getTime() - Date.now()) / ONE_DAY_MS)
+            const date = computeExpiryDate(p)
+            if (!date) return null;
+            const days = Math.ceil((date.getTime() - Date.now()) / ONE_DAY_MS);
             return {
                 id: p.id,
                 name: p.nombre,
-                category: p?.categoria?.nombre || 'General',
-                expiresIn: Math.max(days, 0),
+                category: p?.categoria?.nombre || p?.categoria_nombre || 'General',
+                expiresIn: days,
                 date: date.toLocaleDateString('es-EC')
             }
         })
-        .filter(i => i && i.expiresIn <= EXPIRY_WARNING_DAYS)
+        .filter(i => i !== null && i.expiresIn <= EXPIRY_WARNING_DAYS)
         .sort((a, b) => a.expiresIn - b.expiresIn)
         .slice(0, 6)
 )
-
 const resumenTarjetas = computed(() => [
     { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: 'mdi-leaf' },
     { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: 'mdi-trending-up' },
@@ -325,7 +452,7 @@ const resumenTarjetas = computed(() => [
 .dashboard-page {
     min-height: 100vh;
     padding: 10px 16px 48px;
-    background: #f2f2f2;
+    background: var(--app-bg);
 }
 
 .dashboard-content {
@@ -347,7 +474,7 @@ const resumenTarjetas = computed(() => [
 .hero-card h1 {
     margin: 2px 0 0;
     font-size: 2rem;
-    color: #053b2d;
+    color: var(--app-text);
     font-weight: 600;
 }
 
@@ -355,7 +482,7 @@ const resumenTarjetas = computed(() => [
     text-transform: uppercase;
     letter-spacing: 0.3em;
     font-size: 0.7rem;
-    color: #0f9b63;
+    color: var(--app-text-muted);
     font-weight: 600;
 }
 
@@ -374,7 +501,7 @@ const resumenTarjetas = computed(() => [
     width: 44px;
     height: 44px;
     border-radius: 16px;
-    background: #e6fbf1;
+    background: color-mix(in srgb, var(--app-accent) 18%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -384,18 +511,18 @@ const resumenTarjetas = computed(() => [
 .stat-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #064f38;
+    color: var(--app-text);
 }
 
 .stat-detail {
     font-size: 0.8rem;
-    color: #198754;
+    color: var(--app-text-muted);
 }
 
 .stat-value {
     font-size: 1.9rem;
     font-weight: 600;
-    color: #042e22;
+    color: var(--app-text);
 }
 
 .chart-grid {
@@ -409,7 +536,7 @@ const resumenTarjetas = computed(() => [
     align-items: center;
     gap: 10px;
     font-weight: 600;
-    color: #064f38;
+    color: var(--app-text);
     margin-bottom: 12px;
 }
 
@@ -426,13 +553,13 @@ const resumenTarjetas = computed(() => [
 }
 
 .list-card.danger {
-    border-color: #ffd7dd;
-    background: #fff7f8;
+    border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 28%, var(--app-border));
+    background: color-mix(in srgb, var(--app-surface) 88%, rgb(var(--v-theme-error)) 12%);
 }
 
 .list-card.warning {
-    border-color: #ffe2c2;
-    background: #fff9f0;
+    border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 28%, var(--app-border));
+    background: color-mix(in srgb, var(--app-surface) 88%, rgb(var(--v-theme-warning)) 12%);
 }
 
 .list-heading {
@@ -460,15 +587,15 @@ const resumenTarjetas = computed(() => [
 }
 
 .scrollable-list::-webkit-scrollbar-thumb {
-    background: rgba(4, 46, 34, 0.2);
+    background: color-mix(in srgb, var(--app-text) 25%, transparent);
     border-radius: 999px;
 }
 
 .list-row {
     padding: 14px 16px;
     border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid rgba(5, 59, 45, 0.06);
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -476,24 +603,42 @@ const resumenTarjetas = computed(() => [
 }
 
 .list-card.danger .list-row {
-    background: #fff1f3;
-    border-color: #ffd7dd;
+    background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%);
+    border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 28%, var(--app-border));
+}
+
+:global(.v-theme--dark .list-card.danger .list-label) {
+    color: #f87171;
+}
+
+:global(.v-theme--dark .list-card.warning .list-label) {
+    color: #f8be71;
+}
+
+:global(.v-theme--dark .list-card.danger) {
+    border-color: #5f1218;
+    background: #3a0a0f;
+}
+
+:global(.v-theme--dark .list-card.danger .list-row) {
+    background: #4a0f15;
+    border-color: #5f1218;
 }
 
 .list-card.warning .list-row {
-    background: #fff4e6;
-    border-color: #ffe2c2;
+    background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%);
+    border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 28%, var(--app-border));
 }
 
 .list-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #053b2d;
+    color: var(--app-text);
 }
 
 .list-subtitle {
     font-size: 0.78rem;
-    color: #1b5e46;
+    color: var(--app-text-muted);
 }
 
 .list-meta {
@@ -503,11 +648,11 @@ const resumenTarjetas = computed(() => [
 .list-highlight {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #d7263d;
+    color: rgb(var(--v-theme-error));
 }
 
 .warning-text {
-    color: #e98603;
+    color: rgb(var(--v-theme-warning));
 }
 
 .list-label {
@@ -535,4 +680,6 @@ const resumenTarjetas = computed(() => [
         width: 100%;
     }
 }
+
+
 </style>

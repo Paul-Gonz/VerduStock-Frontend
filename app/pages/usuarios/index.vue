@@ -62,7 +62,7 @@
                         hide-details
                         style="width: 250px;"
                         rounded="lg"
-                    ></v-text-field>
+                        class="search-input"></v-text-field>
                     <v-btn
                         icon
                         variant="tonal"
@@ -176,7 +176,13 @@
                         :length="totalPages"
                         :total-visible="5"
                         color="success"
-                        rounded="circle"
+                        variant="flat"
+                        rounded="lg"
+                        density="comfortable"
+                        class="app-pagination"
+                        prev-icon="mdi-chevron-left"
+                        next-icon="mdi-chevron-right"
+                        show-first-last
                     ></v-pagination>
                 </div>
             </v-card-text>
@@ -184,17 +190,19 @@
 
         <!-- Diálogo para nuevo usuario -->
         <v-dialog v-model="userDialog" max-width="500" persistent>
-            <v-card rounded="lg">
-                <v-card-title class="d-flex align-center justify-space-between">
-                    <span class="text-h6 font-weight-bold">
-                        {{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}
-                    </span>
-                    <v-btn icon @click="closeDialog">
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                </v-card-title>
-                <v-card-text>
+            <v-card rounded="lg" class="usuario-dialog">
+            <v-card-title class="d-flex align-center justify-space-between px-6 pt-6 pb-4">
+                <span class="text-h6 font-weight-bold">
+                    {{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}
+                </span>
+                <v-btn icon="mdi-close" variant="text" color="grey-darken-1" density="comfortable" @click="closeDialog"></v-btn>
+            </v-card-title>
+                <v-card-text class="px-6">
                     <v-form @submit.prevent="saveUser" ref="userForm">
+                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-2">
+                            {{ errorMessage }}
+                        </v-alert>
+
                         <v-text-field
                             v-model="form.nombre"
                             label="Nombre de usuario"
@@ -244,9 +252,7 @@
     ></v-text-field>
 </div>
 
-                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
-                            {{ errorMessage }}
-                        </v-alert>
+
                     </v-form>
                 </v-card-text>
                 <v-card-actions class="px-6 pb-6">
@@ -305,13 +311,11 @@
         <!-- Diálogo para ver detalles -->
         <v-dialog v-model="viewDialog" max-width="500">
             <v-card rounded="lg" v-if="selectedUser">
-                <v-card-title class="d-flex align-center justify-space-between">
+                <v-card-title class="d-flex align-center justify-space-between px-6 pt-6 pb-4">
                     <span class="text-h6 font-weight-bold">Detalles del Usuario</span>
-                    <v-btn icon @click="viewDialog = false">
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
+                    <v-btn icon="mdi-close" variant="text" color="grey-darken-1" density="comfortable" @click="viewDialog = false"></v-btn>
                 </v-card-title>
-                <v-card-text>
+                <v-card-text class="px-6">
                     <div class="text-center mb-6">
                         <v-avatar color="success" size="80">
                             <v-icon size="40" color="white">mdi-account</v-icon>
@@ -649,6 +653,51 @@ const closeDialog = () => {
     resetForm()
 }
 
+const formatErrorMessages = (errorResponse) => {
+    const fieldMap = {
+        'nombre': 'nombre',
+        'password': 'contraseña',
+        'current_password': 'contraseña actual',
+        'password_confirmation': 'confirmación de contraseña'
+    }
+
+    const msgMap = {
+        'is required': 'es obligatorio',
+        'has already been taken': 'ya está registrado',
+        'must be a number': 'debe ser un número',
+        'must be at least': 'debe tener al menos',
+        'The': 'El campo',
+        'does not match': 'no coincide',
+        'confirmation': 'confirmación'
+    }
+
+    if (errorResponse?.errors) {
+        const firstError = Object.values(errorResponse.errors)[0][0]
+        let translated = firstError
+
+        // Reemplazar nombres de campos
+        Object.keys(fieldMap).forEach(key => {
+            if (translated.includes(key)) {
+                translated = translated.replace(key, fieldMap[key])
+            }
+        })
+
+        // Reemplazar mensajes comunes
+        if (translated.includes('The') && translated.includes('field is required')) {
+            translated = translated.replace('The', 'El campo').replace('field is required', 'es obligatorio')
+        } else {
+            Object.keys(msgMap).forEach(key => {
+                if (translated.includes(key)) {
+                    translated = translated.replace(key, msgMap[key])
+                }
+            })
+        }
+        
+        return translated.charAt(0).toUpperCase() + translated.slice(1)
+    }
+    return 'Error al procesar la solicitud.'
+}
+
 // Guardar usuario
 const saveUser = async () => {
     if (!userForm.value) return
@@ -722,12 +771,7 @@ const saveUser = async () => {
         } else if (error.status === 403) {
             errorMessage.value = 'No tienes permiso para realizar esta acción.'
         } else if (error.data) {
-            if (error.data.message) {
-                errorMessage.value = error.data.message
-            } else if (error.data.errors) {
-                const errors = Object.values(error.data.errors).flat()
-                errorMessage.value = errors.join(', ')
-            }
+             errorMessage.value = formatErrorMessages(error.data)
         } else {
             showNotification(
     'Error',
@@ -799,13 +843,13 @@ onMounted(() => {
 .usuarios-page {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0rem;
 }
 
 .section-card {
-    border-color: rgba(34, 197, 94, 0.22);
-    background: #ffffff;
-    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .section-card :deep(.v-card-title) {
@@ -817,9 +861,9 @@ onMounted(() => {
 }
 
 .stat-card {
-    background: #f2fff6;
-    border-color: rgba(34, 197, 94, 0.28);
-    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.08);
+    background: var(--app-surface);
+    border-color: var(--app-border);
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .new-user-btn {
@@ -834,9 +878,9 @@ onMounted(() => {
 }
 
 .active-chip {
-    background: #EEFCF5 !important;
-    color: #05a552 !important;
-    border: 1.5px solid #7AF0A8;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
+    color: var(--app-accent) !important;
+    border: 1.5px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
 }
 
 :deep(.v-data-table) {
@@ -844,15 +888,30 @@ onMounted(() => {
 }
 
 :deep(.v-data-table-header) {
-    background: #f8fff9;
+    background: var(--app-surface);
 }
 
 :deep(.v-data-table-row:hover) {
-    background: #f2fff6 !important;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
 }
 
-:deep(.v-pagination__item--is-active) {
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: white !important;
+
+:global(.v-theme--dark .usuario-dialog .v-field__outline) {
+    --v-field-border-opacity: 1;
+    color: #494949ff !important;
 }
+
+:global(.v-theme--dark .usuario-dialog .v-field__outline__start),
+:global(.v-theme--dark .usuario-dialog .v-field__outline__notch),
+:global(.v-theme--dark .usuario-dialog .v-field__outline__end) {
+    border-color: #4d4d4dff !important;
+    opacity: 1 !important;
+}
+
+:global(.v-theme--dark .usuario-dialog .v-field--focused .v-field__outline__start),
+:global(.v-theme--dark .usuario-dialog .v-field--focused .v-field__outline__notch),
+:global(.v-theme--dark .usuario-dialog .v-field--focused .v-field__outline__end) {
+    border-color: #17c364 !important;
+}
+
 </style>

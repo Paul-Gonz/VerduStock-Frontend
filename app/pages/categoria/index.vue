@@ -1,3 +1,4 @@
+
 <template>
     <section class="categoria-page">
         <v-card class="mb-8 section-card" rounded="lg" border>
@@ -91,8 +92,8 @@
                     <div class="filters-bar__search">
                         <v-text-field v-model="productSearchQuery" label="Buscar producto"
                             placeholder="Escribe el nombre o proveedor" variant="outlined" density="comfortable"
-                            prepend-inner-icon="mdi-magnify" clearable color="success"
-                            base-color="success"></v-text-field>
+                            prepend-inner-icon="mdi-magnify" clearable color="success" base-color="success"
+                            bg-color="surface" class="search-input"></v-text-field>
                     </div>
                     <div class="filters-bar__categories">
 
@@ -392,6 +393,24 @@ const handleEmojiSelect = (emoji) => {
     }
 }
 
+
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
+    if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true;
+    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
+    if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) {
+        return true;
+    }
+    return false;
+}
+
+const convertirBsAUsd = (montoBs) => {
+    // getTasa debe estar definida en el archivo, si no, usa 1
+    const tasa = typeof getTasa === 'function' ? getTasa() : 1;
+    if (!tasa || tasa <= 0) return 0;
+    return Number((Number(montoBs) / tasa).toFixed(2));
+}
+
 // --- FUNCIONES DE LLAMADA A RUTA (AJUSTADAS) ---
 
 const fetchCategorias = async () => {
@@ -500,12 +519,22 @@ const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 
 const extractKilos = (p) => toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
-const extractPrecioVenta = (p) => toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
-const extractPrecioCompra = (p) => toNumber(p?.precio_compra ?? p?.costo ?? 0)
+const extractPrecioVenta = (p) => {
+    let val = toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
+const extractPrecioCompra = (p) => {
+    let val = toNumber(p?.precio_compra ?? p?.costo ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
 
 const computeProductoProfit = (p) => {
     const kilos = extractKilos(p)
-    return kilos * (extractPrecioVenta(p) - extractPrecioCompra(p))
+    const venta = extractPrecioVenta(p)
+    const compra = extractPrecioCompra(p)
+    return kilos * (venta - compra)
 }
 
 const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
@@ -522,7 +551,7 @@ const buildProductCard = (p, key) => {
     const kilo = extractKilos(p)
     const compra = extractPrecioCompra(p)
     const ventaKg = extractPrecioVenta(p)
-    const ventaTotal = toNumber(p?.precio_venta_total ?? (kilo * ventaKg))
+    const ventaTotal = kilo * ventaKg
     const gananciaPorKg = ventaKg - compra
     const gananciaTotal = gananciaPorKg * kilo
     const meta = computeStockMeta(kilo)
@@ -556,7 +585,10 @@ const productosPorCategoriaMap = computed(() => {
 const mappedCategories = computed(() => {
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
-        const totalValue = prods.reduce((s, p) => s + (extractKilos(p) * extractPrecioVenta(p)), 0)
+        const totalValue = prods.reduce((s, p) => {
+            const venta = extractPrecioVenta(p)
+            return s + (extractKilos(p) * venta)
+        }, 0)
         return {
             id: cat.id,
             name: cat.nombre,
@@ -635,9 +667,9 @@ onMounted(() => {
 }
 
 .section-card {
-    border-color: rgba(34, 197, 94, 0.22);
-    background: #ffffff;
-    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
+    border-color: var(--app-border);
+    background: var(--app-surface);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .section-card :deep(.v-card-title) {
@@ -650,13 +682,25 @@ onMounted(() => {
 
 .stat-card,
 .product-card {
-    background: #f2fff6;
-    border-color: rgba(34, 197, 94, 0.28);
-    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.08);
+    background: var(--app-surface);
+    border-color: var(--app-border);
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
 .product-card {
     min-height: 210px;
+}
+
+:global(.v-theme--light .categoria-page .product-card) {
+    background: color-mix(in srgb, var(--app-surface) 88%, var(--app-accent) 12%);
+    border-color: color-mix(in srgb, var(--app-accent) 28%, var(--app-border));
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--app-text) 10%, transparent);
+}
+
+:global(.v-theme--dark .categoria-page .stat-card) {
+    background: color-mix(in srgb, var(--app-surface) 75%, var(--app-bg) 25%);
+    border-color: color-mix(in srgb, var(--app-text) 14%, transparent);
+    box-shadow: 0 12px 26px color-mix(in srgb, #000000 40%, transparent);
 }
 
 .stat-card :deep(.v-card-text),
@@ -666,9 +710,9 @@ onMounted(() => {
 
 .modal-shell {
     padding: 26px 30px;
-    background: linear-gradient(135deg, #ffffff 0%, #f5fff9 70%);
-    border-color: rgba(11, 155, 74, 0.2);
-    box-shadow: 0 26px 55px rgba(5, 84, 40, 0.18);
+    background: var(--app-surface);
+    border-color: var(--app-border);
+    box-shadow: 0 26px 55px color-mix(in srgb, var(--app-text) 18%, transparent);
     display: flex;
     flex-direction: column;
     max-height: 85vh;
@@ -687,18 +731,18 @@ onMounted(() => {
     font-size: 0.74rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #0b8a4a;
+    color: var(--app-text-muted);
 }
 
 .modal-shell__title {
     margin: 0;
     font-size: 1.35rem;
-    color: #062f1b;
+    color: var(--app-text);
 }
 
 .modal-shell__subtitle {
     margin: 6px 0 0;
-    color: #5a6a61;
+    color: var(--app-text-muted);
     font-size: 0.92rem;
 }
 
@@ -708,7 +752,7 @@ onMounted(() => {
 
 .modal-shell__divider {
     height: 1px;
-    background: rgba(11, 155, 74, 0.14);
+    background: color-mix(in srgb, var(--app-text) 12%, transparent);
     margin: 18px 0 24px;
 }
 
@@ -782,7 +826,7 @@ onMounted(() => {
 .modal-shell :deep(.v-field__outline) {
     border-radius: 18px;
     border-width: 1.5px;
-    border-color: rgba(15, 138, 78, 0.18);
+    border-color: color-mix(in srgb, var(--app-text) 18%, transparent);
 }
 
 .modal-shell :deep(.v-field__input) {
@@ -844,32 +888,32 @@ onMounted(() => {
 }
 
 .gain-chip {
-    border: 2px solid #7AF0A8;
-    color: #05a552;
-    background: #EEFCF5;
+    border: 2px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
+    color: var(--app-accent);
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%);
     padding: 6px 10px;
     border-radius: 10px;
     font-weight: 700;
 }
 
 .stock-chip--success {
-    background: #EEFCF5 !important;
-    color: #05a552 !important;
-    border: 1.5px solid #7AF0A8;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
+    color: var(--app-accent) !important;
+    border: 1.5px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
 }
 
 .availability--low {
-    color: #df2f26;
+    color: rgb(var(--v-theme-error));
 }
 
 .progress--low :deep(.v-progress-linear__determinate) {
-    background-color: #df2f26 !important;
+    background-color: rgb(var(--v-theme-error)) !important;
 }
 
 .modal-card {
-    background: #ffffff;
-    border-color: rgba(34, 197, 94, 0.18);
-    box-shadow: 0 18px 40px rgba(5, 165, 82, 0.22);
+    background: var(--app-surface);
+    border-color: var(--app-border);
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--app-text) 18%, transparent);
 }
 
 .submit-btn {
@@ -881,7 +925,7 @@ onMounted(() => {
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: #05a552;
+    color: var(--app-accent);
 }
 
 .categoria-table tbody td {
@@ -896,7 +940,7 @@ onMounted(() => {
 
 :deep(.categoria-table-row td) {
     padding: 16px 18px;
-    background: #f7fff9;
+    background: var(--app-surface);
 }
 
 :deep(.categoria-table-row td:first-child) {
@@ -933,8 +977,8 @@ onMounted(() => {
 
 
 .emoji-avatar {
-    background: #e7f9ee !important;
-    color: #05934a !important;
+    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
+    color: var(--app-accent) !important;
 }
 
 .emoji-avatar__emoji {
@@ -957,9 +1001,9 @@ onMounted(() => {
     height: 58px;
     min-width: 58px;
     border-radius: 50% !important;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-    background: #f8fafc !important;
-    color: #111827;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface) !important;
+    color: var(--app-text);
     font-size: 1.5rem;
     padding: 0;
     display: inline-flex;
@@ -972,7 +1016,7 @@ onMounted(() => {
 }
 
 .emoji-selector__icon {
-    color: #6b7280;
+    color: var(--app-text-muted);
 }
 
 .emoji-selector__value {
@@ -998,12 +1042,12 @@ onMounted(() => {
 .name-field :deep(.v-field__outline),
 .description-field :deep(.v-field__outline) {
     border-width: 1.5px;
-    border-color: rgba(15, 103, 60, 0.18);
+    border-color: var(--app-border);
 }
 
 .name-field :deep(.v-field__outline--notch),
 .description-field :deep(.v-field__outline--notch) {
-    border-color: rgba(15, 103, 60, 0.18);
+    border-color: var(--app-border);
 }
 
 .emoji-picker-surface {
@@ -1022,9 +1066,9 @@ onMounted(() => {
 .category-group {
     margin-bottom: 2.5rem;
     padding: 14px 16px;
-    border: 1px solid rgba(5, 165, 82, 0.12);
+    border: 1px solid var(--app-border);
     border-radius: 20px;
-    background: #f7fff9;
+    background: var(--app-surface);
 }
 
 .category-group__content {
@@ -1037,7 +1081,7 @@ onMounted(() => {
 .category-group__header {
     position: sticky;
     top: 0;
-    background: #f7fff9;
+    background: var(--app-surface);
     padding-bottom: 10px;
     z-index: 1;
 }
@@ -1047,7 +1091,7 @@ onMounted(() => {
 }
 
 .category-group__content::-webkit-scrollbar-thumb {
-    background: rgba(5, 165, 82, 0.35);
+    background: color-mix(in srgb, var(--app-accent) 45%, transparent);
     border-radius: 4px;
 }
 
@@ -1061,37 +1105,101 @@ onMounted(() => {
 @media (min-width: 960px) {
     .filters-bar {
         flex-direction: row;
-        align-items: top;
+        align-items: center;
         gap: 50px;
     }
 
     .filters-bar__search {
         flex: 1 1 50%;
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+        margin-left: 10px;
     }
 
     .filters-bar__categories {
         flex: 1 1 50%;
         flex-direction: row;
-        align-items: top;
+        align-items: center;
         gap: 16px;
     }
 }
 
 .category-chip {
     border-radius: 14px;
-    border-color: rgba(5, 165, 82, 0.24) !important;
-    color: #05934a !important;
-    background: #ffffff;
+    border-color: color-mix(in srgb, var(--app-accent) 35%, var(--app-border)) !important;
+    color: var(--app-accent) !important;
+    background: var(--app-surface);
 }
 
 .category-chip--active {
-    background: #e8fdf0 !important;
-    border-color: #06a453 !important;
-    color: #06a453 !important;
+    background: color-mix(in srgb, var(--app-surface) 80%, var(--app-accent) 20%) !important;
+    border-color: var(--app-accent) !important;
+    color: var(--app-accent) !important;
 }
 
 .category-chip__emoji {
     margin-right: 6px;
     font-size: 1rem;
+}
+
+:global(.v-theme--dark .categoria-page .list-categories-btn) {
+    background: color-mix(in srgb, var(--app-accent) 28%, transparent) !important;
+    border-color: #000000 !important;
+}
+
+:global(.v-theme--dark .categoria-page .list-categories-btn .v-icon) {
+    color: var(--app-accent) !important;
+}
+
+:global(.v-theme--dark .categoria-dialog .list-modal) {
+    background: var(--app-surface) !important;
+    border-color: var(--app-border) !important;
+}
+
+@media (max-width: 600px) {
+    .modal-shell__header {
+        flex-direction: column;
+    }
+}
+
+:global(.v-theme--dark .list-modal .categoria-table) {
+    color: var(--app-text) !important;
+    background: transparent !important;
+}
+
+:global(.v-theme--dark .list-modal .categoria-table thead th) {
+    color: #94b8a2 !important; /* Soft green-grey text */
+    font-weight: 600;
+    text-transform: uppercase;
+    background: transparent !important;
+    border-bottom: 1px solid #335539 !important;
+    letter-spacing: 0.05em;
+}
+
+:global(.v-theme--dark .list-modal .categoria-table-row td) {
+    background: #1e3b28cc !important; /* Dark green background with transparency */
+    color: #e2e8f0 !important;
+    border-top: 1px solid #335539 !important;
+   
+    border-bottom: 1px solid #335539 !important;
+}
+
+:global(.v-theme--dark .list-modal .categoria-table-row td:first-child) {
+    border-left: 1px solid #335539 !important;
+}
+
+:global(.v-theme--dark .list-modal .categoria-table-row td:last-child) {
+    border-right: 1px solid #335539 !important;
+}
+
+:global(.v-theme--dark .list-modal .categoria-table-row:hover td) {
+    background: #234d32 !important;
+    border-color: #4ade80 !important;
+    color: #ffffff !important;
+}
+
+:global(.v-theme--dark .list-modal .emoji-avatar__emoji) {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 </style>

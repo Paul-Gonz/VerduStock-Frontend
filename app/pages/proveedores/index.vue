@@ -1,17 +1,17 @@
 <template>
-    <section class="categoria-page">
-        <v-card class="section-card pt-5" rounded="lg" border>
-            <span class="text-subtitle-1 font-weight-bold pa-5 text-green-800">Directorio de Proveedores</span>
+    <section class="d-flex flex-column ga-6">
+        <v-card class="app-card pt-5" rounded="lg">
+            <span class="text-subtitle-1 font-weight-bold pa-5 text-success providers-title">Directorio de Proveedores</span>
 
             <v-card-title class="d-flex align-center justify-space-between pa-5">
                 <div class="d-flex align-center flex-grow-1 mr-5">
                     <v-text-field v-model="search" prepend-inner-icon="mdi-magnify"
-                        label="Buscar por nombre, tlf o dirección..." variant="solo" flat hide-details density="compact"
-                        bg-color="#f2fff6" class="search-input max-w-sm" rounded="lg" clearable></v-text-field>
+                        label="Buscar por nombre, tlf o dirección..." variant="outlined" hide-details
+                        density="comfortable" color="success" base-color="success" bg-color="surface"
+                        class="search-input flex-grow-1" rounded="lg" clearable></v-text-field>
                 </div>
 
-                <v-btn class="new-category-btn" color="success" variant="flat" prepend-icon="mdi-plus"
-                    @click="openNewDialog">
+                <v-btn color="success" variant="flat" prepend-icon="mdi-plus" @click="openNewDialog">
                     Nuevo proveedor
                 </v-btn>
             </v-card-title>
@@ -19,42 +19,42 @@
             <v-card-text class="px-6 pb-6">
                 <v-row v-if="loading">
                     <v-col v-for="n in 9" :key="n" cols="12" md="4">
-                        <v-skeleton-loader type="card" class="bg-[#f2fff6] border-[#22c55e28]"></v-skeleton-loader>
+                        <v-skeleton-loader type="card"></v-skeleton-loader>
                     </v-col>
                 </v-row>
 
                 <div v-else>
-                    <v-row v-if="proveedoresPaginados.length > 0">
-                        <v-col v-for="prov in proveedoresPaginados" :key="prov.id || prov.nombre" cols="12" md="4">
-                            <v-card class="product-card" rounded="lg" border>
-                                <v-card-text>
-                                    <div class="d-flex align-center justify-space-between mb-3">
-                                        <div class="text-subtitle-2 font-weight-bold text-green-700">
+                    <v-row v-if="proveedoresPaginados.length > 0" class="ga-2">
+                        <v-col v-for="prov in proveedoresPaginados" :key="prov.id || prov.nombre" cols="12" md="4" lg="4" class="pa-2">
+                            <v-card class="app-card" rounded="lg" elevation="4">
+                                <v-card-text class="py-2 px-3">
+                                    <div class="d-flex align-center justify-space-between mb-2">
+                                        <div class="text-subtitle-2 font-weight-bold text-success">
                                             {{ prov.nombre }}
                                         </div>
                                         <v-icon color="success" size="small">mdi-check-decagram</v-icon>
                                     </div>
 
-                                    <div class="flex flex-col gap-2 mt-2">
-                                        <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
+                                    <div class="d-flex flex-column ga-1 mt-2">
+                                        <div class="text-body-2 text-medium-emphasis d-flex align-center ga-2">
                                             <v-icon size="16" color="success">mdi-phone</v-icon>
-                                            <span class="text-slate-700 font-medium">{{ prov.telefono || 'Sin teléfono'
-                                            }}</span>
+                                            <span>{{ prov.telefono || 'Sin teléfono' }}</span>
                                         </div>
-                                        <div class="text-body-2 text-medium-emphasis flex items-center gap-2">
+                                        <div class="text-body-2 text-medium-emphasis d-flex align-center ga-2">
                                             <v-icon size="16" color="success">mdi-map-marker</v-icon>
                                             <span class="text-truncate" :title="prov.direccion || ''">
                                                 {{ prov.direccion || 'Sin dirección' }}
                                             </span>
                                         </div>
                                         <div v-if="prov.detalle"
-                                            class="text-[11px] bg-white p-2 rounded-md border border-green-100 text-slate-500 italic mt-1">
+                                            class="text-caption text-medium-emphasis font-italic mt-1 pa-2 rounded-lg border"
+                                            :style="{ background: 'var(--app-surface-muted)', borderColor: 'var(--app-border)' }">
                                             "{{ prov.detalle }}"
                                         </div>
                                     </div>
 
-                                    <v-divider class="my-4"></v-divider>
-                                    <div class="flex justify-end gap-1">
+                                    <v-divider class="my-3"></v-divider>
+                                    <div class="d-flex justify-end ga-1">
                                         <v-btn icon="mdi-pencil" variant="text" size="small" color="success"
                                             @click="editProveedor(prov)"></v-btn>
                                         <v-btn icon="mdi-trash-can-outline" variant="text" size="small" color="error"
@@ -72,7 +72,9 @@
 
                     <div class="d-flex justify-center mt-8">
                         <v-pagination v-model="page" :length="totalPaginas" :total-visible="5" active-color="success"
-                            variant="flat" rounded="lg" density="comfortable"></v-pagination>
+                            variant="flat" rounded="lg" density="comfortable" class="app-pagination"
+                            prev-icon="mdi-chevron-left" next-icon="mdi-chevron-right"
+                            show-first-last></v-pagination>
                     </div>
                 </div>
             </v-card-text>
@@ -80,18 +82,16 @@
 
         <!-- Diálogo para nuevo/editar proveedor -->
         <v-dialog v-model="dialog" max-width="500" persistent>
-            <v-card rounded="lg">
-                <v-card-title class="d-flex align-center justify-space-between">
-                    <span class="text-h6 font-weight-bold">
-                        {{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
-                    </span>
-                    <v-btn icon @click="closeDialog">
-                        <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                </v-card-title>
-                <v-card-text>
+            <v-card rounded="lg" class="proveedor-dialog">
+            <v-card-title class="d-flex align-center justify-space-between px-6 pt-6 pb-4">
+                <span class="text-h6 font-weight-bold">
+                    {{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}
+                </span>
+                <v-btn icon="mdi-close" variant="text" color="grey-darken-1" density="comfortable" @click="closeDialog"></v-btn>
+            </v-card-title>
+                <v-card-text class="px-6">
                     <v-form @submit.prevent="saveProveedor" ref="proveedorForm">
-                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
+                        <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-2">
                             {{ errorMessage }}
                         </v-alert>
 
@@ -374,6 +374,49 @@ const closeDialog = () => {
     resetForm()
 }
 
+const formatErrorMessages = (errorResponse) => {
+    const fieldMap = {
+        'nombre': 'nombre',
+        'telefono': 'teléfono',
+        'direccion': 'dirección',
+        'detalle': 'detalle'
+    }
+
+    const msgMap = {
+        'is required': 'es obligatorio',
+        'has already been taken': 'ya está registrado',
+        'must be a number': 'debe ser un número',
+        'must be at least': 'debe tener al menos',
+        'The': 'El campo'
+    }
+
+    if (errorResponse?.errors) {
+        const firstError = Object.values(errorResponse.errors)[0][0]
+        let translated = firstError
+
+        // Reemplazar nombres de campos
+        Object.keys(fieldMap).forEach(key => {
+            if (translated.includes(key)) {
+                translated = translated.replace(key, fieldMap[key])
+            }
+        })
+
+        // Reemplazar mensajes comunes
+        if (translated.includes('The') && translated.includes('field is required')) {
+            translated = translated.replace('The', 'El campo').replace('field is required', 'es obligatorio')
+        } else {
+            Object.keys(msgMap).forEach(key => {
+                if (translated.includes(key)) {
+                    translated = translated.replace(key, msgMap[key])
+                }
+            })
+        }
+        
+        return translated.charAt(0).toUpperCase() + translated.slice(1)
+    }
+    return 'Error al procesar la solicitud.'
+}
+
 // Guardar proveedor
 const saveProveedor = async () => {
     if (!proveedorForm.value) return
@@ -432,12 +475,7 @@ const saveProveedor = async () => {
         } else if (error.status === 403) {
             errorMessage.value = 'No tienes permiso para realizar esta acción.'
         } else if (error.data) {
-            if (error.data.message) {
-                errorMessage.value = error.data.message
-            } else if (error.data.errors) {
-                const errors = Object.values(error.data.errors).flat()
-                errorMessage.value = errors.join(', ')
-            }
+             errorMessage.value = formatErrorMessages(error.data)
         } else {
             errorMessage.value = 'Ocurrió un error al guardar el proveedor'
         }
@@ -564,8 +602,61 @@ watch(page, () => {
     border: 1px solid #05a552 !important;
 }
 
-:deep(.v-pagination__item--is-active) {
-    background: linear-gradient(135deg, #0bc965 0%, #05a552 100%) !important;
-    color: white !important;
+:global(.v-theme--dark .categoria-page .search-input .v-field) {
+    background: #1b1e1d !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--app-text) !important;
+}
+
+:global(.v-theme--dark .categoria-page .search-input .v-field__input) {
+    color: var(--app-text) !important;
+}
+
+:global(.v-theme--dark .categoria-page .search-input .v-field--focused) {
+    border-color: rgba(75, 228, 143, 0.6) !important;
+}
+
+:global(.v-theme--dark .categoria-page .product-card) {
+    background: #1b1e1d !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32);
+}
+
+:global(.v-theme--dark .categoria-page .product-card:hover) {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4);
+}
+
+
+:global(.v-theme--dark .categoria-page .product-card .bg-white) {
+    background: #1a1f1d !important;
+}
+
+:global(.v-theme--dark .categoria-page .product-card .border-green-100) {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+:global(.v-theme--dark .categoria-page .product-card .text-slate-700) {
+    color: var(--app-text) !important;
+    background: transparent !important;
+}
+
+
+:global(.v-theme--dark .proveedor-dialog .v-field__outline) {
+    --v-field-border-opacity: 1;
+    color: #494949ff !important;
+}
+
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__start),
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__notch),
+:global(.v-theme--dark .proveedor-dialog .v-field__outline__end) {
+    border-color: #4d4d4dff !important;
+    opacity: 1 !important;
+}
+
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__start),
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__notch),
+:global(.v-theme--dark .proveedor-dialog .v-field--focused .v-field__outline__end) {
+    border-color: #17c364 !important;
 }
 </style>

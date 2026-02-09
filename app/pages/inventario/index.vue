@@ -136,19 +136,37 @@
 									<div class="price-inline">
 										<div class="detail-pair">
 											<span class="detail-label">Compra</span>
-											<span class="detail-value">{{ card.purchaseLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value">{{ card.purchaseLabel }}</span>
+												<span v-if="card.secondaryPurchaseLabel" class="detail-value-small">{{
+													card.secondaryPurchaseLabel }}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Venta</span>
-											<span class="detail-value">{{ card.saleLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value">{{ card.saleLabel }}</span>
+												<span v-if="card.secondarySaleLabel" class="detail-value-small">{{
+													card.secondarySaleLabel }}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Ganancia por kg</span>
-											<span class="detail-value highlight">{{ card.profitPerKgLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value highlight">{{ card.profitPerKgLabel }}</span>
+												<span v-if="card.secondaryProfitPerKgLabel"
+													class="detail-value-small">{{ card.secondaryProfitPerKgLabel
+													}}</span>
+											</div>
 										</div>
 										<div class="detail-pair">
 											<span class="detail-label">Ganancia total</span>
-											<span class="detail-value highlight">{{ card.profitTotalLabel }}</span>
+											<div class="detail-value-stack">
+												<span class="detail-value highlight">{{ card.profitTotalLabel }}</span>
+												<span v-if="card.secondaryProfitTotalLabel"
+													class="detail-value-small">{{ card.secondaryProfitTotalLabel
+													}}</span>
+											</div>
 										</div>
 									</div>
 
@@ -236,17 +254,28 @@
 								<v-text-field v-model="productForm.desperdicio" type="number" label="Desperdicio (kg)"
 									variant="outlined" density="comfortable" color="success" min="0" step="0.001"
 									class="modal-form-grid__item"></v-text-field>
-								<v-text-field v-model="productForm.precio_compra_total" type="number"
-									label="Precio total de compra ($)" variant="outlined" density="comfortable"
-									color="success" min="0" step="0.01" :rules="[requiredRule]"
-									class="modal-form-grid__item"></v-text-field>
+								<div class="currency-input-wrapper modal-form-grid__item">
+									<v-text-field v-model="productForm.precio_compra_total" type="number"
+										:label="`Precio total de compra (${currencySymbol})`" variant="outlined"
+										density="comfortable" color="success" min="0" step="0.01"
+										:rules="[requiredRule]" class="custom-append-input">
+										<template #append-inner>
+											<div class="currency-toggle-pill" @click="toggleCurrency"
+												:class="{ 'is-disabled': !currentRate }">
+												<span class="pill-label">{{ priceCurrency === 'USD' ? 'USD' : 'VEF'
+												}}</span>
+												<v-icon icon="mdi-menu-swap" size="14" class="pill-icon"></v-icon>
+											</div>
+										</template>
+									</v-text-field>
+								</div>
 								<v-text-field :model-value="purchasePricePerKg" type="number"
-									label="Precio de compra por kg ($)" variant="outlined" density="comfortable"
-									color="success" min="0" step="0.0001" readonly
+									:label="`Precio de compra por kg (${currencySymbol})`" variant="outlined"
+									density="comfortable" color="success" min="0" step="0.0001" readonly
 									class="modal-form-grid__item"></v-text-field>
 								<v-text-field v-model="productForm.precio_venta_kg" type="number"
-									label="Precio de venta por kg ($)" variant="outlined" density="comfortable"
-									color="success" min="0" step="0.01" :rules="[requiredRule]"
+									:label="`Precio de venta por kg (${currencySymbol})`" variant="outlined"
+									density="comfortable" color="success" min="0" step="0.01" :rules="[requiredRule]"
 									class="modal-form-grid__item"></v-text-field>
 								<div class="modal-form-grid__item modal-form-grid__item--full modal-form-grid__pair">
 									<div class="frescura-field">
@@ -321,6 +350,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { navigateTo } from '#app'
+import { TasaDolarService } from '~/utils/tasaDolar.js'
+import { useTheme } from 'vuetify'
 
 // --- CONFIGURACIÓN DE API ---
 const API_URL = 'http://localhost:8000'
@@ -336,7 +367,7 @@ const fetchConfig = {
 const requiredRule = (value) => !!String(value ?? '').trim() || 'Este campo es obligatorio'
 const STOCK_MIN_KG = 10
 const STOCK_STEP_KG = 1
-const EXPIRY_WARNING_DAYS = 3
+const EXPIRY_WARNING_DAYS = 7
 const DEFAULT_SHELF_LIFE_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
@@ -364,6 +395,10 @@ const deleteLoading = ref(false)
 const snackbar = reactive({ show: false, message: '', color: 'success' })
 const localStockThresholds = ref({})
 const inlineStockLoading = ref({})
+const suppressPageWatch = ref(false)
+const priceCurrency = ref('USD') // 'USD' or 'VEF'
+const tasaDolar = ref(null)
+const tasaService = ref(null)
 let searchDebounce = null
 
 // COMPUTADAS DE PAGINACIÓN LOCAL
@@ -414,11 +449,14 @@ const getDefaultForm = () => ({
 
 const productForm = ref(getDefaultForm())
 
-const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
+// --- FORMATEADORES ---
+const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const bsFormatter = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const kilosFormatter = new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2 })
 const dateFormatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
 
 const formatCurrency = (value) => currencyFormatter.format(Number(value) || 0)
+const formatCurrencyBs = (value) => `Bs. ${bsFormatter.format(Number(value) || 0)}`
 const formatKilograms = (value) => `${kilosFormatter.format(Math.max(0, Number(value) || 0))} kg`
 const formatDate = (value) => value ? dateFormatter.format(new Date(value)) : 'Sin fecha'
 
@@ -429,30 +467,104 @@ const purchasePricePerKg = computed(() => {
 	return Number((total / kilos).toFixed(2))
 })
 
-const parseDetalle = (detalle) => {
-	if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
-	const trimmed = detalle.trim()
-	if (!trimmed) return { nota: '', frescura: null }
-	if (trimmed.startsWith('{')) {
-		try {
-			const parsed = JSON.parse(trimmed)
-			if (parsed && typeof parsed === 'object') {
-				return {
-					nota: typeof parsed.nota === 'string' ? parsed.nota : '',
-					frescura: parsed.frescura || null
-				}
-			}
-		} catch (error) {
-			return { nota: trimmed, frescura: null }
-		}
-	}
-	return { nota: trimmed, frescura: null }
+// Exchange rate utilities
+const currentRate = computed(() => {
+	if (!tasaDolar.value) return null
+	const candidates = [
+		tasaDolar.value.venta,
+		tasaDolar.value.promedio,
+		tasaDolar.value.compra
+	]
+	const rate = candidates
+		.map((value) => Number(value))
+		.find((value) => Number.isFinite(value) && value > 0)
+	return Number.isFinite(rate) && rate > 0 ? rate : null
+})
+
+const convertToUSD = (amountBs) => {
+	const rate = currentRate.value
+	if (!rate) return 0
+	return Number((amountBs / rate).toFixed(2))
 }
 
-const buildDetallePayload = (nota, frescura) => {
+const convertToBs = (amountUSD) => {
+	const rate = currentRate.value
+	if (!rate) return 0
+	return Number((amountUSD * rate).toFixed(2))
+}
+
+const toggleCurrency = () => {
+	if (!currentRate.value) {
+		snackbar.show = true
+		snackbar.message = 'No se pudo obtener la tasa de cambio. Intenta nuevamente.'
+		snackbar.color = 'warning'
+		return
+	}
+
+	if (priceCurrency.value === 'USD') {
+		// Convert current USD values to Bs
+		if (productForm.value.precio_compra_total) {
+			productForm.value.precio_compra_total = convertToBs(Number(productForm.value.precio_compra_total))
+		}
+		if (productForm.value.precio_venta_kg) {
+			productForm.value.precio_venta_kg = convertToBs(Number(productForm.value.precio_venta_kg))
+		}
+		priceCurrency.value = 'VEF'
+	} else {
+		// Convert current Bs values to USD
+		if (productForm.value.precio_compra_total) {
+			productForm.value.precio_compra_total = convertToUSD(Number(productForm.value.precio_compra_total))
+		}
+		if (productForm.value.precio_venta_kg) {
+			productForm.value.precio_venta_kg = convertToUSD(Number(productForm.value.precio_venta_kg))
+		}
+		priceCurrency.value = 'USD'
+	}
+}
+
+const currencySymbol = computed(() => priceCurrency.value === 'USD' ? '$' : 'Bs')
+
+const parseDetalle = (detalle) => {
+	if (!detalle) return { nota: '', frescura: null, currency: null }
+
+	let parsed = null
+	if (typeof detalle === 'object') {
+		parsed = detalle
+	} else if (typeof detalle === 'string') {
+		const trimmed = detalle.trim()
+		if (!trimmed) return { nota: '', frescura: null, currency: null }
+		if (trimmed.startsWith('{')) {
+			try {
+				parsed = JSON.parse(trimmed)
+			} catch (error) {
+				return { nota: trimmed, frescura: null, currency: null }
+			}
+		} else {
+			return { nota: trimmed, frescura: null, currency: null }
+		}
+	} else {
+		return { nota: '', frescura: null, currency: null }
+	}
+
+	if (parsed && typeof parsed === 'object') {
+		return {
+			nota: typeof parsed.nota === 'string' ? parsed.nota : '',
+			frescura: parsed.frescura || null,
+			currency: parsed.currency || null
+		}
+	}
+
+	return { nota: '', frescura: null, currency: null }
+}
+
+const buildDetallePayload = (nota, frescura, currency = null) => {
 	const cleanNota = String(nota ?? '').trim()
-	if (frescura) {
-		return JSON.stringify({ nota: cleanNota || '', frescura })
+	const payload = { nota: cleanNota || '' }
+	if (frescura) payload.frescura = frescura
+	if (currency) payload.currency = currency
+	// Only create JSON if we have frescura or currency
+	if (frescura || currency) {
+		return JSON.stringify(payload)
 	}
 	return cleanNota || null
 }
@@ -467,18 +579,21 @@ const buildFrescuraPayload = () => {
 }
 
 const computeExpiryDate = (producto) => {
+	// Primero intenta extraer frescura del campo detalle
 	const { frescura } = parseDetalle(producto?.detalle)
-	if (!frescura) return null
-	if (frescura.modo === 'fecha' && frescura.fecha) {
-		const fecha = new Date(frescura.fecha)
-		return Number.isNaN(fecha.getTime()) ? null : fecha
+	let modo = frescura?.modo || producto?.frescura_modo;
+	let fecha = frescura?.fecha || producto?.frescura_fecha;
+	let dias = frescura?.dias || producto?.frescura_dias;
+	if (modo === 'fecha' && fecha) {
+		const f = new Date(fecha);
+		return Number.isNaN(f.getTime()) ? null : f;
 	}
-	if (frescura.modo === 'dias' && frescura.dias) {
-		const base = producto?.created_at ? new Date(producto.created_at) : null
-		if (!base || Number.isNaN(base.getTime())) return null
-		return new Date(base.getTime() + Number(frescura.dias) * ONE_DAY_MS)
+	if (modo === 'dias' && dias) {
+		const base = producto?.created_at ? new Date(producto.created_at) : null;
+		if (!base || Number.isNaN(base.getTime())) return null;
+		return new Date(base.getTime() + Number(dias) * ONE_DAY_MS);
 	}
-	return null
+	return null;
 }
 
 const loadLocalStockThresholds = () => {
@@ -580,7 +695,8 @@ const confirmDelete = async () => {
 
 const openCreateDialog = () => {
 	editingProducto.value = null
-	productForm.value = getDefaultForm()
+	productForm.value = getDefaultForm() // Reinicia el formulario
+	priceCurrency.value = 'USD'
 	formError.value = ''
 	formDialog.value = true
 }
@@ -595,14 +711,22 @@ const openEditDialog = (producto) => {
 	editingProducto.value = producto
 	const parsedDetalle = parseDetalle(producto?.detalle)
 	const stockMinimo = getLocalStockThreshold(producto?.id)
+	// Restore currency state
+	priceCurrency.value = parsedDetalle.currency || 'USD'
+
+	// Base values are in USD
+	const basePurchaseTotal = Number(producto.precio_compra || 0) * Number(producto.kilogramos || 0)
+	const baseSaleKg = Number(producto.precio_venta_kg || 0)
+
+	// Mapeamos los datos del producto al formulario
 	productForm.value = {
 		nombre: producto.nombre,
 		categoria_id: producto.categoria_id,
 		proveedor_id: producto.proveedor_id,
 		kilogramos: producto.kilogramos,
 		desperdicio: producto.desperdicio || 0,
-		precio_compra_total: Number(producto.precio_compra || 0) * Number(producto.kilogramos || 0),
-		precio_venta_kg: producto.precio_venta_kg,
+		precio_compra_total: priceCurrency.value === 'VEF' ? convertToBs(basePurchaseTotal) : basePurchaseTotal,
+		precio_venta_kg: priceCurrency.value === 'VEF' ? convertToBs(baseSaleKg) : baseSaleKg,
 		frescura_modo: parsedDetalle.frescura?.modo || 'dias',
 		frescura_dias: parsedDetalle.frescura?.modo === 'dias'
 			? Number(parsedDetalle.frescura?.dias || DEFAULT_SHELF_LIFE_DAYS)
@@ -647,6 +771,16 @@ const productCards = computed(() =>
 			status = { label: 'Por vencer', styleKey: 'is-expiring', icon: 'mdi-alarm', progressColor: 'warning', weight: 1 }
 		}
 
+		// Check if product was registered in Bs
+		const { currency } = parseDetalle(p.detalle)
+		const isInBs = currency === 'VEF'
+
+		// Calculate Bs values if needed
+		const basePriceBs = currentRate.value ? basePrice * currentRate.value : 0
+		const saleUnitBs = currentRate.value ? saleUnit * currentRate.value : 0
+		const profitPerKgBs = currentRate.value ? profitPerKg * currentRate.value : 0
+		const profitTotalBs = currentRate.value ? profitTotal * currentRate.value : 0
+
 		return {
 			id: p.id || index,
 			raw: p,
@@ -656,10 +790,22 @@ const productCards = computed(() =>
 			badge: p.categoria?.emoji || p.categoria_emoji || (p.categoria_nombre || p.categoria?.nombre || '').charAt(0) || '📦',
 			kilosLabel: formatKilograms(kilos),
 			stockMinimumLabel: formatKilograms(stockMin),
-			purchaseLabel: formatCurrency(basePrice),
-			saleLabel: formatCurrency(saleUnit),
-			profitPerKgLabel: formatCurrency(profitPerKg),
-			profitTotalLabel: formatCurrency(profitTotal),
+			purchaseLabel: isInBs ? formatCurrencyBs(basePriceBs) : formatCurrency(basePrice),
+			secondaryPurchaseLabel: currentRate.value
+				? (isInBs ? `≈ ${formatCurrency(basePrice)}` : `≈ ${formatCurrencyBs(basePriceBs)}`)
+				: null,
+			saleLabel: isInBs ? formatCurrencyBs(saleUnitBs) : formatCurrency(saleUnit),
+			secondarySaleLabel: currentRate.value
+				? (isInBs ? `≈ ${formatCurrency(saleUnit)}` : `≈ ${formatCurrencyBs(saleUnitBs)}`)
+				: null,
+			profitPerKgLabel: isInBs ? formatCurrencyBs(profitPerKgBs) : formatCurrency(profitPerKg),
+			secondaryProfitPerKgLabel: currentRate.value
+				? (isInBs ? `≈ ${formatCurrency(profitPerKg)}` : `≈ ${formatCurrencyBs(profitPerKgBs)}`)
+				: null,
+			profitTotalLabel: isInBs ? formatCurrencyBs(profitTotalBs) : formatCurrency(profitTotal),
+			secondaryProfitTotalLabel: currentRate.value
+				? (isInBs ? `≈ ${formatCurrency(profitTotal)}` : `≈ ${formatCurrencyBs(profitTotalBs)}`)
+				: null,
 			ingresoLabel: formatDate(p.created_at),
 			venceLabel: expiryDate ? formatDate(expiryDate) : 'Revisar stock',
 			status,
@@ -705,7 +851,10 @@ const providerSelectItems = computed(() => {
 
 const lowStockProducts = computed(() => productCards.value.filter(c => c.status.weight === 0))
 const hasLowStockAlerts = computed(() => lowStockProducts.value.length > 0)
-const expiringProducts = computed(() => productCards.value.filter(c => c.isExpiring))
+const expiringProducts = computed(() => productCards.value.filter(c => {
+	// Solo productos con fecha de vencimiento válida calculada
+	return c.isExpiring;
+}))
 const hasExpiringAlerts = computed(() => expiringProducts.value.length > 0)
 
 const showSnackbar = (message, color = 'success') => {
@@ -738,19 +887,79 @@ const adjustStock = async (producto, delta) => {
 	}
 }
 
+const formatErrorMessages = (errorResponse) => {
+	const fieldMap = {
+		'nombre': 'nombre',
+		'categoria_id': 'categoría',
+		'proveedor_id': 'proveedor',
+		'kilogramos': 'cantidad',
+		'precio_compra': 'precio de compra',
+		'precio_venta_kg': 'precio de venta',
+		'desperdicio': 'desperdicio',
+		'stock_minimo': 'stock mínimo',
+		'password': 'contraseña',
+		'telefono': 'teléfono',
+		'direccion': 'dirección'
+	}
+
+	const msgMap = {
+		'is required': 'es obligatorio',
+		'has already been taken': 'ya está registrado',
+		'must be a number': 'debe ser un número',
+		'must be at least': 'debe tener al menos'
+	}
+
+	if (errorResponse?.errors) {
+		const firstError = Object.values(errorResponse.errors)[0][0]
+		let translated = firstError
+
+		// Reemplazar nombres de campos
+		Object.keys(fieldMap).forEach(key => {
+			const regex = new RegExp(`\\b${key}\\b`, 'yi')
+			if (translated.includes(key)) {
+				translated = translated.replace(key, fieldMap[key])
+			}
+		})
+
+		// Reemplazar mensajes comunes
+		if (translated.includes('The') && translated.includes('field is required')) {
+			translated = translated.replace('The', 'El campo').replace('field is required', 'es obligatorio')
+		} else {
+			Object.keys(msgMap).forEach(key => {
+				if (translated.includes(key)) {
+					translated = translated.replace(key, msgMap[key])
+				}
+			})
+		}
+
+		return translated.charAt(0).toUpperCase() + translated.slice(1)
+	}
+	return 'Error al procesar la solicitud.'
+}
+
 const submitProducto = async () => {
 	formError.value = ''
 	formLoading.value = true
+
+	// Prices in the form might be in Bs if priceCurrency is 'VEF'
+	// We MUST save them in USD to the backend
+	let precio_compra = Number(purchasePricePerKg.value.toFixed(2))
+	let precio_venta_kg = Number(productForm.value.precio_venta_kg)
+
+	if (priceCurrency.value === 'VEF') {
+		precio_compra = convertToUSD(precio_compra)
+		precio_venta_kg = convertToUSD(precio_venta_kg)
+	}
 
 	const payload = {
 		nombre: productForm.value.nombre.trim(),
 		categoria_id: Number(productForm.value.categoria_id),
 		proveedor_id: Number(productForm.value.proveedor_id),
 		kilogramos: Number(productForm.value.kilogramos),
-		precio_compra: Number(purchasePricePerKg.value.toFixed(2)),
-		precio_venta_kg: Number(productForm.value.precio_venta_kg),
+		precio_compra: precio_compra,
+		precio_venta_kg: precio_venta_kg,
 		desperdicio: Number(productForm.value.desperdicio) || 0,
-		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload())
+		detalle: buildDetallePayload(productForm.value.detalle, buildFrescuraPayload(), priceCurrency.value)
 	}
 
 	try {
@@ -775,8 +984,7 @@ const submitProducto = async () => {
 		await fetchProductos()
 	} catch (error) {
 		if (error.status === 422) {
-			const firstError = Object.values(error.data.errors)[0][0]
-			formError.value = firstError
+			formError.value = formatErrorMessages(error.data)
 		} else {
 			formError.value = 'Error al guardar el producto.'
 		}
@@ -799,6 +1007,16 @@ onMounted(() => {
 	fetchCategorias()
 	fetchProveedores()
 	fetchProductos()
+
+	// Load exchange rate
+	if (import.meta.client) {
+		tasaService.value = window?.TasaDolar || new TasaDolarService()
+		tasaService.value.obtenerTasa('oficial').then(data => {
+			tasaDolar.value = data
+		}).catch(error => {
+			console.error('Error loading exchange rate:', error)
+		})
+	}
 })
 
 onBeforeUnmount(() => {
@@ -823,6 +1041,40 @@ onBeforeUnmount(() => {
 	border: 1px solid rgba(34, 197, 94, 0.22);
 	box-shadow: 0 6px 18px rgba(34, 197, 94, 0.08);
 	padding: 18px 22px 22px;
+}
+
+/* Fondo del menú (v-menu, v-list, etc.) */
+:deep(.v-menu__content),
+:deep(.v-list),
+:deep(.v-navigation-drawer) {
+	background: #f6fff8 !important;
+	/* verde muy claro casi blanco */
+}
+
+/* Alertas más suaves en modo claro */
+:deep(.alert-card--danger) {
+	background: #ffeaea !important;
+	border-color: #ffb3b3 !important;
+	color: #b71c1c !important;
+}
+
+:deep(.alert-card--warning) {
+	background: #fffbe6 !important;
+	border-color: #ffe9a7 !important;
+	color: #b26a00 !important;
+}
+
+/* Alertas modo oscuro: bordes aún más oscuros */
+:deep(.v-theme--dark .alert-card--danger),
+:deep(.v-theme--dark .v-alert[type="error"]) {
+	background: #330c0c7a !important;
+	border-color: #a10000a4 !important;
+}
+
+:deep(.v-theme--dark .alert-card--warning),
+:deep(.v-theme--dark .v-alert[type="warning"]) {
+	background: #412d00c1 !important;
+	border-color: #ff7300b5 !important;
 }
 
 .board-header {
@@ -909,6 +1161,11 @@ onBeforeUnmount(() => {
 	border: 1.5px solid #f0b4b4;
 	background: #fff8f8;
 	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.alert-card--danger {
+	border-color: #fdecec;
+	background: #ffeaea;
 }
 
 .alert-card--warning {
@@ -1004,10 +1261,12 @@ onBeforeUnmount(() => {
 	color: #0f5132;
 }
 
+
 .status-banner.is-low {
 	background: #fdecec;
 	color: #b42318;
 }
+
 
 .status-banner.is-expiring {
 	background: #fff1dc;
@@ -1107,6 +1366,49 @@ onBeforeUnmount(() => {
 	gap: 6px;
 }
 
+/* Currency Toggle Pill - Theme Aware */
+.currency-toggle-pill {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	background: rgba(var(--v-theme-success), 0.08);
+	border: 1.5px solid rgba(var(--v-theme-success), 0.2);
+	border-radius: 99px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	user-select: none;
+	margin-right: -4px;
+}
+
+.currency-toggle-pill:hover:not(.is-disabled) {
+	background: rgba(var(--v-theme-success), 0.15);
+	border-color: rgba(var(--v-theme-success), 0.4);
+	transform: translateY(-1px);
+}
+
+.currency-toggle-pill.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pill-label {
+	font-size: 0.68rem;
+	font-weight: 800;
+	color: rgb(var(--v-theme-success));
+	letter-spacing: 0.04em;
+}
+
+.pill-icon {
+	color: rgb(var(--v-theme-success));
+	opacity: 0.8;
+}
+
+.custom-append-input :deep(.v-field__append-inner) {
+	align-items: center;
+	padding-top: 0;
+}
+
 .metric-value.emphasis {
 	color: #0f5132;
 	font-size: 1.2rem;
@@ -1162,6 +1464,26 @@ onBeforeUnmount(() => {
 .detail-value.muted {
 	font-size: 0.82rem;
 	color: #506058;
+}
+
+.detail-value-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 0px;
+}
+
+.detail-value-small {
+	font-size: 0.72rem;
+	color: #66786f;
+	font-weight: 500;
+	margin-top: -2px;
+}
+
+
+.currency-input-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .details-list {
@@ -1253,7 +1575,7 @@ onBeforeUnmount(() => {
 }
 
 .modal-shell__alert {
-	margin: 0 0 20px;
+	margin: 0 0 8px;
 }
 
 .modal-shell__form {
@@ -1426,6 +1748,27 @@ onBeforeUnmount(() => {
 	border-radius: 16px;
 	border-width: 1.5px;
 	border-color: rgba(15, 138, 78, 0.18);
+}
+
+:global(.v-theme--dark .modal-shell .v-field__outline) {
+	--v-field-border-opacity: 1;
+	color: #494949ff !important;
+	/* Sets the text color which usually drives border color */
+}
+
+:global(.v-theme--dark .modal-shell .v-field__outline__start),
+:global(.v-theme--dark .modal-shell .v-field__outline__notch),
+:global(.v-theme--dark .modal-shell .v-field__outline__end) {
+	border-color: #4d4d4dff !important;
+	/* Solid slate-500 for clear visibility */
+	opacity: 1 !important;
+}
+
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__start),
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__notch),
+:global(.v-theme--dark .modal-shell .v-field--focused .v-field__outline__end) {
+	border-color: #17c364 !important;
+	/* Green accent on focus */
 }
 
 .modal-shell :deep(.v-field__input) {

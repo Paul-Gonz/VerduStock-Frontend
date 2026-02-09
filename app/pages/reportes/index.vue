@@ -429,4 +429,52 @@ onMounted(() => {
   margin-top: 8px;
 }
 
+.v-theme--dark .reportes-page {
+  background: #0f0f0fff !important;
+}
+
+.v-theme--dark .reportes-shell {
+  background: transparent !important;
+}
+
+.v-theme--dark .reportes-board {
+  background: #0e1c13ff !important;
+  border-color: #335539ff !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.v-theme--dark .board-label {
+  color: #f1f5f9 !important;
+}
+
+.v-theme--dark .board-subtitle {
+  color: #94a3b8 !important;
+}
+
+.v-theme--dark .reporte-card {
+  background: #062c14b3 !important;
+  border-color: #335539ff !important;
+}
+
+.v-theme--dark .reporte-card:hover {
+  background: #0a280330 !important;
+  border-color: #1c3923ff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.v-theme--dark .reporte-card__title {
+  color: #e2e8f0 !important;
+}
+
+.v-theme--dark .reporte-card__desc {
+  color: #94b8a2ff !important;
+}
+
+.v-theme--dark .reporte-card__actions {
+  border-top-color: #335536ff !important;
+}
+
+.v-theme--dark .umbral-hint {
+  color: #648b74ff !important;
+}
 </style>
