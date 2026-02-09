@@ -1,5 +1,5 @@
 <template>
-    <v-container fluid class="fill-height login-bg pa-0">
+    <v-container fluid class="fill-height login-bg pa-0 v-theme--dark:bg-dark-login" :class="[isDark ? 'dark-login' : '']">
         <v-row no-gutters class="fill-height">
             <v-col cols="12" md="6"
                 class="presentation-section d-none d-md-flex flex-column align-center justify-center text-white">
@@ -19,7 +19,7 @@
                 </div>
             </v-col>
 
-            <v-col cols="12" md="6" class="d-flex align-center justify-center bg-white">
+            <v-col cols="12" md="6" class="d-flex align-center justify-center login-form-col">
                 <v-card flat width="100%" max-width="450" class="pa-8">
                     <div class="text-center mb-8">
                         <h2 class="text-h4 font-weight-bold text-grey-darken-3">Iniciar Sesión</h2>
@@ -95,8 +95,12 @@ const debugAuth = async () => {
 }
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
+import { computed } from 'vue'
 
 const router = useRouter()
+const theme = useTheme()
+const isDark = computed(() => theme.global.current.value.dark)
 
 const nombre = ref('')
 const password = ref('')
@@ -226,8 +230,47 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
+
 .login-bg {
     background: linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-muted) 100%);
+}
+
+.dark-login {
+    background: linear-gradient(135deg, #181c1b 0%, #232826 100%) !important;
+}
+
+.login-form-col {
+    background: var(--app-surface) !important;
+    transition: background 0.3s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.v-theme--dark .login-form-col {
+    background: #232826 !important;
+    color: var(--app-text) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.38);
+}
+
+.v-theme--dark .presentation-section {
+    background: linear-gradient(rgba(30, 40, 50, 0.92), rgba(30, 40, 50, 0.98)),
+        url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80');
+    background-size: cover;
+    background-position: center;
+}
+
+.v-theme--dark .presentation-content {
+    background: color-mix(in srgb, var(--app-surface) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--app-text) 10%, transparent);
+}
+
+.v-theme--dark .veggie-icon {
+    background: color-mix(in srgb, var(--app-surface) 25%, transparent);
+}
+
+.v-theme--dark .v-card {
+    background: var(--app-surface) !important;
+    color: var(--app-text) !important;
+    border-color: var(--app-border) !important;
 }
 
 .presentation-section {
@@ -304,5 +347,12 @@ const handleLogin = async () => {
     transform: scale(1.1);
     transition: transform 0.3s ease;
     box-shadow: 0 10px 20px color-mix(in srgb, var(--app-text) 20%, transparent);
+}
+
+.v-theme--dark .login-form-col,
+.v-theme--dark .login-form-col h2,
+.v-theme--dark .login-form-col p,
+.v-theme--dark .login-form-col label {
+  color: #fff !important;
 }
 </style>
