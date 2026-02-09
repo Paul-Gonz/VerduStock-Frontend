@@ -247,8 +247,12 @@ const totalProductos = computed(() => Number(estadisticas.value?.total_productos
 const gananciaPotencial = computed(() => {
     return productos.value.reduce((acc, p) => {
         const kilos = getNetKilograms(p)
-        const venta = Number(p?.precio_venta_kg || 0)
-        const compra = Number(p?.precio_compra || 0)
+        let venta = Number(p?.precio_venta_kg || 0)
+        let compra = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) {
+            venta = convertirBsAUsd(venta)
+            compra = convertirBsAUsd(compra)
+        }
         return acc + (venta - compra) * kilos
     }, 0)
 })
@@ -258,12 +262,34 @@ const categoryDistribution = computed(() => {
     productos.value.forEach((p) => {
         const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
         const kilos = getNetKilograms(p)
-        map.set(name, (map.get(name) ?? 0) + kilos)
+        let venta = Number(p?.precio_venta_kg || 0)
+        if (isProductoEnBs(p)) venta = convertirBsAUsd(venta)
+        // Suma el valor en dólares
+        map.set(name, (map.get(name) ?? 0) + (kilos * venta))
     })
     return Array.from(map, ([name, value]) => ({ name, value }))
 })
 
 const totalCategoryKilos = computed(() => categoryDistribution.value.reduce((sum, item) => sum + item.value, 0))
+
+
+
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
+    if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true;
+    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
+    if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) {
+        return true;
+    }
+    return false;
+}
+
+const convertirBsAUsd = (montoBs) => {
+    // getTasa debe estar definida en el archivo, si no, usa 1
+    const tasa = typeof getTasa === 'function' ? getTasa() : 1;
+    if (!tasa || tasa <= 0) return 0;
+    return Number((Number(montoBs) / tasa).toFixed(2));
+}
 
 // --- LÓGICA DE VENCIMIENTO (COPIADA DE INVENTARIO PARA CONSISTENCIA) ---
 
@@ -357,7 +383,8 @@ const providerInvestments = computed(() => {
     const map = new Map()
     productos.value.forEach((p) => {
         const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
-        const inversion = Number(p?.precio_compra || 0)
+        let inversion = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) inversion = convertirBsAUsd(inversion)
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
     return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
@@ -367,16 +394,12 @@ const barSeries = computed(() => [{ name: 'Inversión', data: providerInvestment
 const barOptions = computed(() => ({
     chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
     plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-    xaxis: { categories: providerInvestments.value.map(i => i.name) },
+    xaxis: { categories: providerInvestments.value.map(i => i.name), labels: { style: { colors: chartTextColor.value } } },
+    yaxis: { labels: { style: { colors: chartTextColor.value } } },
     colors: [chartPalette.value[0] || '#2aa876'],
     theme: { mode: isDark.value ? 'dark' : 'light' },
     grid: { borderColor: chartGridColor.value },
-    xaxis: {
-        categories: providerInvestments.value.map(i => i.name),
-        labels: { style: { colors: chartTextColor.value } }
-    },
-    yaxis: { labels: { style: { colors: chartTextColor.value } } },
-    tooltip: { theme: isDark.value ? 'dark' : 'light' }
+    
 }))
 
 // --- LISTAS DE ALERTAS ---

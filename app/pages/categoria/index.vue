@@ -1,3 +1,4 @@
+
 <template>
     <section class="categoria-page">
         <v-card class="mb-8 section-card" rounded="lg" border>
@@ -392,6 +393,24 @@ const handleEmojiSelect = (emoji) => {
     }
 }
 
+
+const isProductoEnBs = (p) => {
+    if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
+    if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true;
+    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
+    if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) {
+        return true;
+    }
+    return false;
+}
+
+const convertirBsAUsd = (montoBs) => {
+    // getTasa debe estar definida en el archivo, si no, usa 1
+    const tasa = typeof getTasa === 'function' ? getTasa() : 1;
+    if (!tasa || tasa <= 0) return 0;
+    return Number((Number(montoBs) / tasa).toFixed(2));
+}
+
 // --- FUNCIONES DE LLAMADA A RUTA (AJUSTADAS) ---
 
 const fetchCategorias = async () => {
@@ -500,12 +519,22 @@ const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 
 const extractKilos = (p) => toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
-const extractPrecioVenta = (p) => toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
-const extractPrecioCompra = (p) => toNumber(p?.precio_compra ?? p?.costo ?? 0)
+const extractPrecioVenta = (p) => {
+    let val = toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
+const extractPrecioCompra = (p) => {
+    let val = toNumber(p?.precio_compra ?? p?.costo ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
 
 const computeProductoProfit = (p) => {
     const kilos = extractKilos(p)
-    return kilos * (extractPrecioVenta(p) - extractPrecioCompra(p))
+    const venta = extractPrecioVenta(p)
+    const compra = extractPrecioCompra(p)
+    return kilos * (venta - compra)
 }
 
 const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
@@ -522,7 +551,7 @@ const buildProductCard = (p, key) => {
     const kilo = extractKilos(p)
     const compra = extractPrecioCompra(p)
     const ventaKg = extractPrecioVenta(p)
-    const ventaTotal = toNumber(p?.precio_venta_total ?? (kilo * ventaKg))
+    const ventaTotal = kilo * ventaKg
     const gananciaPorKg = ventaKg - compra
     const gananciaTotal = gananciaPorKg * kilo
     const meta = computeStockMeta(kilo)
@@ -556,7 +585,10 @@ const productosPorCategoriaMap = computed(() => {
 const mappedCategories = computed(() => {
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
-        const totalValue = prods.reduce((s, p) => s + (extractKilos(p) * extractPrecioVenta(p)), 0)
+        const totalValue = prods.reduce((s, p) => {
+            const venta = extractPrecioVenta(p)
+            return s + (extractKilos(p) * venta)
+        }, 0)
         return {
             id: cat.id,
             name: cat.nombre,
