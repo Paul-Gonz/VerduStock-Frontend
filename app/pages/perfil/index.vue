@@ -24,8 +24,7 @@
                     <v-row>
                         <v-col cols="12" sm="4" md="3">
                             <v-text-field v-model="form.id" label="ID" readonly variant="outlined" rounded="lg"
-                                color="success" prepend-inner-icon="mdi-identifier" hide-details
-                                bg-color="grey-lighten-5"></v-text-field>
+                                color="success" prepend-inner-icon="mdi-identifier" hide-details></v-text-field>
                         </v-col>
 
                         <v-col cols="12" sm="8" md="9">
