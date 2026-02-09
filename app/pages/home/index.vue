@@ -154,10 +154,11 @@ const chartPalette = computed(() => {
         return [
             accent,
             accentStrong,
-            '#46f592',
+             '#3BC550',
             '#1fdc75',
             '#10b85c',
-            '#7afbb8'
+            '#7afbb8',
+            '#71E559'
         ]
     }
     return donutColors
@@ -393,7 +394,7 @@ const providerInvestments = computed(() => {
     return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
 })
 
-const barSeries = computed(() => [{ name: 'Inversión', data: providerInvestments.value.map(i => i.value) }])
+const barSeries = computed(() => [{ name: 'Inversión $', data: providerInvestments.value.map(i => i.value) }])
 const barOptions = computed(() => ({
     chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
     plotOptions: { bar: { borderRadius: 4, horizontal: true } },
@@ -606,6 +607,14 @@ const resumenTarjetas = computed(() => [
     border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 28%, var(--app-border));
 }
 
+:global(.v-theme--dark .list-card.danger .list-label) {
+    color: #f87171;
+}
+
+:global(.v-theme--dark .list-card.warning .list-label) {
+    color: #f8be71;
+}
+
 :global(.v-theme--dark .list-card.danger) {
     border-color: #5f1218;
     background: #3a0a0f;
@@ -671,4 +680,6 @@ const resumenTarjetas = computed(() => [
         width: 100%;
     }
 }
+
+
 </style>

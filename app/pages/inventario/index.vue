@@ -1113,14 +1113,12 @@ const generarReporteRapido = async (tipo) => {
 :deep(.v-theme--dark .alert-card--danger),
 :deep(.v-theme--dark .v-alert[type="error"]) {
   background: #330c0c7a !important;
-  border-color: #810808 !important;
-  color: #ffd8d8 !important;
+  border-color: #a10000a4 !important;
 }
 :deep(.v-theme--dark .alert-card--warning),
 :deep(.v-theme--dark .v-alert[type="warning"]) {
   background: #412d00c1 !important;
-  border-color: #865e08 !important;
-  color: #ffe9a7 !important;
+  border-color: #ff7300b5 !important;
 }
 
 .board-header {
@@ -1307,10 +1305,12 @@ const generarReporteRapido = async (tipo) => {
 	color: #0f5132;
 }
 
+
 .status-banner.is-low {
 	background: #fdecec;
 	color: #b42318;
 }
+
 
 .status-banner.is-expiring {
 	background: #fff1dc;

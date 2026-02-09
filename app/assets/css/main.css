@@ -115,7 +115,7 @@ body {
 
 .v-theme--dark .list-card.danger .list-row {
   background: #4a0f156e !important;
-  border-color: #5f12186a !important;
+  border-color: #5f1218cb !important;
 }
 
 .v-theme--dark .list-card.danger .list-highlight {
@@ -135,16 +135,23 @@ body {
 .v-theme--dark .list-card.warning .warning-text {
   color: #fbbf24 !important;
 }
-
-.v-theme--dark .alert-card--danger {
-  background: color-mix(in srgb, var(--app-surface) 85%, #3b0a0a 15%) !important;
-  border-color: #7f1d1d !important;
+.v-theme--dark .status-banner.is-low {
+  background: #4a0f156e !important;
+  color: #f87171 !important;
 }
 
-.v-theme--dark .alert-card--warning {
-  background: color-mix(in srgb, var(--app-surface) 85%, #3a2505 15%) !important;
-  border-color: #a16207 !important;
+
+.v-theme--dark .status-banner.is-expiring {
+  background: #4a2e07b0 !important;
+  color: #fbbf24 !important;
 }
+
+
+.v-theme--dark .status-banner.is-healthy {
+  background: #0dbb012b !important;
+  color: #abf89c !important;
+}
+
 
 .v-theme--dark .alert-card__icon {
   background: color-mix(in srgb, #7f1d1d 20%, transparent) !important;
@@ -157,11 +164,19 @@ body {
 }
 
 .v-theme--dark .alert-card__title {
-  color: #fca5a5 !important;
+  color: #fe8383 !important;
 }
 
 .v-theme--dark .alert-card--warning .alert-card__title {
   color: #fcd34d !important;
+}
+
+.v-theme--dark .alert-card--danger .alert-card__body{
+ color: #f0b4b4c6 !important;
+} 
+
+.v-theme--dark .alert-card--warning .alert-card__body{
+ color: #f0e2b4b5 !important;
 }
 
 .v-theme--dark .hero-card h1,

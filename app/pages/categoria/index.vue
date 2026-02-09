@@ -1145,7 +1145,7 @@ onMounted(() => {
 
 :global(.v-theme--dark .categoria-page .list-categories-btn) {
     background: color-mix(in srgb, var(--app-accent) 28%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--app-accent) 55%, transparent) !important;
+    border-color: #000000 !important;
 }
 
 :global(.v-theme--dark .categoria-page .list-categories-btn .v-icon) {
@@ -1163,9 +1163,6 @@ onMounted(() => {
     }
 }
 
-/* --- DARK MODE OVERRIDES --- */
-
-/* Fix: Use .list-modal directly as it is on the v-card, ensuring we match inside the dialog portal */
 :global(.v-theme--dark .list-modal .categoria-table) {
     color: var(--app-text) !important;
     background: transparent !important;
@@ -1184,6 +1181,7 @@ onMounted(() => {
     background: #1e3b28cc !important; /* Dark green background with transparency */
     color: #e2e8f0 !important;
     border-top: 1px solid #335539 !important;
+   
     border-bottom: 1px solid #335539 !important;
 }
 
