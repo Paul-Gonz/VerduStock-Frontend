@@ -20,21 +20,20 @@
             <v-card-text>
                 <v-progress-linear v-if="categoriasLoading" indeterminate color="success" height="6" rounded
                     class="mb-4"></v-progress-linear>
-                
+
                 <!-- Contenedor de paginación por categoría -->
                 <div v-if="paginatedCategories.length > 0">
                     <!-- Navegación simplificada -->
                     <div class="category-navigation mb-6">
                         <div class="d-flex align-center justify-space-between mb-4">
                             <div class="d-flex align-center ga-2">
-                                <v-btn icon="mdi-chevron-left" variant="tonal" color="success" 
-                                    :disabled="currentCategoryPage === 0" 
-                                    @click="prevCategoryPage"
-                                    size="small">
+                                <v-btn icon="mdi-chevron-left" variant="tonal" color="success"
+                                    :disabled="currentCategoryPage === 0" @click="prevCategoryPage" size="small">
                                 </v-btn>
-                                
+
                                 <div class="category-current-info text-center px-4">
-                                    <div class="text-subtitle-2 font-weight-bold d-flex align-center ga-2 justify-center">
+                                    <div
+                                        class="text-subtitle-2 font-weight-bold d-flex align-center ga-2 justify-center">
                                         <v-avatar color="success-lighten-4" size="32" class="emoji-avatar">
                                             <span class="emoji-avatar__emoji">{{ currentCategory?.emoji }}</span>
                                         </v-avatar>
@@ -44,29 +43,18 @@
                                         Página {{ currentCategoryPage + 1 }} de {{ paginatedCategories.length }}
                                     </div>
                                 </div>
-                                
-                                <v-btn icon="mdi-chevron-right" variant="tonal" color="success" 
-                                    :disabled="currentCategoryPage === paginatedCategories.length - 1" 
-                                    @click="nextCategoryPage"
-                                    size="small">
+
+                                <v-btn icon="mdi-chevron-right" variant="tonal" color="success"
+                                    :disabled="currentCategoryPage === paginatedCategories.length - 1"
+                                    @click="nextCategoryPage" size="small">
                                 </v-btn>
                             </div>
-                            
+
                             <!-- Selector rápido de categorías -->
-                            <v-select
-                                v-model="currentCategoryPage"
-                                :items="paginatedCategories"
-                                item-title="name"
-                                item-value="pageIndex"
-                                density="compact"
-                                variant="outlined"
-                                color="success"
-                                label="Cambiar categoría"
-                                style="max-width: 220px;"
-                                class="category-quick-select"
-                                hide-details
-                                prepend-inner-icon="mdi-filter"
-                            >
+                            <v-select v-model="currentCategoryPage" :items="paginatedCategories" item-title="name"
+                                item-value="pageIndex" density="compact" variant="outlined" color="success"
+                                label="Cambiar categoría" style="max-width: 220px;" class="category-quick-select"
+                                hide-details prepend-inner-icon="mdi-filter">
                                 <template #item="{ props, item }">
                                     <v-list-item v-bind="props">
                                         <template #prepend>
@@ -87,17 +75,12 @@
                                 </template>
                             </v-select>
                         </div>
-                        
+
                         <!-- Barra de progreso minimalista -->
-                        <v-progress-linear 
-                            :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100" 
-                            color="success" 
-                            height="4" 
-                            rounded
-                            class="mb-2"
-                        ></v-progress-linear>
+                        <v-progress-linear :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100"
+                            color="success" height="4" rounded class="mb-2"></v-progress-linear>
                     </div>
-                    
+
                     <!-- Estadísticas de la categoría actual -->
                     <v-row v-if="currentCategory">
                         <v-col cols="12">
@@ -131,14 +114,17 @@
                                         <v-col cols="6" md="3">
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Productos registrados</div>
-                                                <div class="text-h5 font-weight-bold">{{ currentCategory.products }}</div>
+                                                <div class="text-h5 font-weight-bold">{{ currentCategory.products }}
+                                                </div>
                                             </div>
                                         </v-col>
                                         <v-col cols="6" md="3">
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Cantidad neta</div>
-                                                <div class="text-h5 font-weight-bold">{{ currentCategory.totalQty }}</div>
-                                                <div class="text-caption text-error" v-if="currentCategory.totalDesperdicio !== '0.00 kg'">
+                                                <div class="text-h5 font-weight-bold">{{ currentCategory.totalQty }}
+                                                </div>
+                                                <div class="text-caption text-error"
+                                                    v-if="currentCategory.totalDesperdicio !== '0.00 kg'">
                                                     {{ currentCategory.totalDesperdicio }} desperdicio
                                                 </div>
                                             </div>
@@ -165,34 +151,28 @@
                                     <div class="mt-6">
                                         <div class="d-flex justify-space-between mb-2">
                                             <div class="text-caption text-medium-emphasis">
-                                                Progreso: {{ currentCategoryPage + 1 }} / {{ paginatedCategories.length }}
+                                                Progreso: {{ currentCategoryPage + 1 }} / {{ paginatedCategories.length
+                                                }}
                                             </div>
                                             <div class="text-caption text-medium-emphasis">
-                                                {{ Math.round(((currentCategoryPage + 1) / paginatedCategories.length) * 100) }}%
+                                                {{ Math.round(((currentCategoryPage + 1) / paginatedCategories.length) *
+                                                    100) }}%
                                             </div>
                                         </div>
-                                        <v-progress-linear 
-                                            :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100" 
-                                            color="success" 
-                                            height="8" 
-                                            rounded
-                                        ></v-progress-linear>
+                                        <v-progress-linear
+                                            :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100"
+                                            color="success" height="8" rounded></v-progress-linear>
                                     </div>
                                 </v-card-text>
                             </v-card>
                         </v-col>
                     </v-row>
                 </div>
-                
+
                 <div v-else-if="!categoriasLoading" class="text-body-2 text-medium-emphasis py-8 text-center">
                     <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-folder-outline</v-icon>
                     <div>Aún no registras categorías.</div>
-                    <v-btn 
-                        color="success" 
-                        variant="tonal" 
-                        class="mt-4"
-                        @click="openCreateDialog"
-                    >
+                    <v-btn color="success" variant="tonal" class="mt-4" @click="openCreateDialog">
                         <v-icon icon="mdi-plus" class="me-2"></v-icon>
                         Crear primera categoría
                     </v-btn>
@@ -209,7 +189,9 @@
                     </v-avatar>
                     <div>
                         <span class="text-subtitle-1 font-weight-bold">Productos en </span>
-                        <span class="text-subtitle-1 font-weight-bold text-success">{{ currentCategory?.name || 'Categoría actual' }}</span>
+                        <span class="text-subtitle-1 font-weight-bold text-success">
+                            {{ currentCategory?.name || 'Categoría actual' }}
+                        </span>
                     </div>
                 </div>
                 <div class="d-flex align-center ga-2">
@@ -224,48 +206,28 @@
             <v-card-text>
                 <div class="filters-bar mb-4">
                     <div class="filters-bar__search">
-                        <v-text-field 
-                            v-model="productSearchQuery" 
+                        <v-text-field v-model="productSearchQuery"
                             :label="`Buscar en ${currentCategory?.name || 'categoría'}`"
-                            placeholder="Escribe el nombre o proveedor" 
-                            variant="outlined" 
-                            density="comfortable"
-                            prepend-inner-icon="mdi-magnify" 
-                            clearable 
-                            color="success" 
-                            base-color="success"
-                            bg-color="surface" 
-                            class="search-input"
-                        ></v-text-field>
+                            placeholder="Escribe el nombre o proveedor" variant="outlined" density="comfortable"
+                            prepend-inner-icon="mdi-magnify" clearable color="success" base-color="success"
+                            bg-color="surface" class="search-input"></v-text-field>
                     </div>
                 </div>
-                
-                <v-alert 
-                    v-if="!currentCategory && !categoriasLoading" 
-                    type="info" 
-                    density="comfortable" 
-                    variant="tonal" 
-                    class="mb-4"
-                >
+
+                <v-alert v-if="!currentCategory && !categoriasLoading" type="info" density="comfortable" variant="tonal"
+                    class="mb-4">
                     Selecciona una categoría para ver sus productos.
                 </v-alert>
-                
+
                 <v-progress-linear v-if="productosLoading" indeterminate color="success" height="6" rounded
                     class="mb-4"></v-progress-linear>
                 <v-alert v-if="productosError" type="error" density="comfortable" variant="tonal" class="mb-4">
                     {{ productosError }}
                 </v-alert>
-                
+
                 <template v-if="filteredProducts.length > 0">
                     <v-row>
-                        <v-col 
-                            v-for="product in paginatedProducts" 
-                            :key="product.id" 
-                            cols="12" 
-                            sm="6" 
-                            md="4" 
-                            lg="3"
-                        >
+                        <v-col v-for="product in paginatedProducts" :key="product.id" cols="12" sm="6" md="4" lg="3">
                             <v-card class="product-card" rounded="lg" border>
                                 <v-card-text>
                                     <div class="d-flex align-center justify-space-between">
@@ -286,7 +248,8 @@
                                         <span> Kilos brutos: {{ product.kilosBrutos }}</span>
                                         <v-tooltip v-if="product.desperdicio > 0" location="bottom">
                                             <template #activator="{ props }">
-                                                <v-icon v-bind="props" size="small" color="error">mdi-alert-circle-outline</v-icon>
+                                                <v-icon v-bind="props" size="small"
+                                                    color="error">mdi-alert-circle-outline</v-icon>
                                             </template>
                                             <span>Desperdicio: {{ product.desperdicio }}kg</span>
                                         </v-tooltip>
@@ -317,36 +280,25 @@
                             </v-card>
                         </v-col>
                     </v-row>
-                    
+
                     <!-- Paginación de productos dentro de la categoría -->
                     <div v-if="filteredProducts.length > itemsPerPage" class="mt-6">
-                        <v-pagination
-                            v-model="currentProductPage"
-                            :length="totalProductPages"
-                            :total-visible="7"
-                            color="success"
-                            variant="tonal"
-                            rounded="circle"
-                        ></v-pagination>
+                        <v-pagination v-model="currentProductPage" :length="totalProductPages" :total-visible="7"
+                            color="success" variant="tonal" rounded="circle"></v-pagination>
                     </div>
                 </template>
-                
-                <div v-else-if="productsForCurrentCategory.length === 0 && currentCategory && !productosLoading" 
+
+                <div v-else-if="productsForCurrentCategory.length === 0 && currentCategory && !productosLoading"
                     class="text-body-2 text-medium-emphasis py-6 text-center">
                     <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-package-variant</v-icon>
                     <div>Esta categoría no tiene productos registrados.</div>
-                    <v-btn 
-                        color="success" 
-                        variant="tonal" 
-                        class="mt-4"
-                        :to="{ name: 'productos' }"
-                    >
+                    <v-btn color="success" variant="tonal" class="mt-4" :to="{ name: 'productos' }">
                         <v-icon icon="mdi-plus" class="me-2"></v-icon>
                         Agregar productos
                     </v-btn>
                 </div>
-                
-                <div v-else-if="filteredProducts.length === 0 && productSearchQuery && !productosLoading" 
+
+                <div v-else-if="filteredProducts.length === 0 && productSearchQuery && !productosLoading"
                     class="text-body-2 text-medium-emphasis py-6 text-center">
                     No se encontraron productos que coincidan con "{{ productSearchQuery }}"
                 </div>
@@ -476,6 +428,31 @@
                         Aún no registras categorías.
                     </div>
                 </v-card-text>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="confirmDeleteDialog" max-width="400">
+            <v-card rounded="xl" border class="pa-4 text-center">
+                <v-card-text>
+                    <v-avatar color="error-lighten-5" size="70" class="mb-4">
+                        <v-icon color="error" size="40">mdi-delete-alert-outline</v-icon>
+                    </v-avatar>
+
+                    <h3 class="text-h6 font-weight-bold mb-2">¿Confirmar eliminación?</h3>
+                    <p class="text-body-2 text-medium-emphasis">
+                        Estás a punto de eliminar la categoría <strong>"{{ categoryToDelete?.nombre }}"</strong>.
+                        Esta acción no se puede deshacer.
+                    </p>
+                </v-card-text>
+
+                <v-card-actions class="justify-center ga-2 pb-4">
+                    <v-btn variant="text" color="grey-darken-1" rounded="lg" @click="confirmDeleteDialog = false">
+                        Cancelar
+                    </v-btn>
+                    <v-btn color="error" variant="flat" rounded="lg" class="px-6"
+                        :loading="categoriaEliminando === categoryToDelete?.id" @click="executeDelete">
+                        Sí, eliminar
+                    </v-btn>
+                </v-card-actions>
             </v-card>
         </v-dialog>
     </section>
@@ -704,27 +681,6 @@ const submitCategory = async () => {
     }
 }
 
-const deleteCategoria = async (categoria) => {
-    if (!window.confirm(`¿Eliminar la categoría "${categoria.nombre}"?`)) return
-
-    categoriaEliminando.value = categoria.id
-    try {
-        await $fetch(`${API_URL}/categorias/${categoria.id}`, {
-            method: 'DELETE',
-            ...fetchConfig
-        })
-        await fetchCategorias()
-        // Si eliminamos la categoría actual, ir a la primera disponible
-        if (currentCategoryPage.value >= categoriasRegistradas.value.length) {
-            currentCategoryPage.value = Math.max(0, categoriasRegistradas.value.length - 1)
-        }
-    } catch (error) {
-        alert('Error al eliminar: ' + (error.data?.message || 'Error desconocido'))
-    } finally {
-        categoriaEliminando.value = null
-    }
-}
-
 // --- LÓGICA DE TRANSFORMACIÓN DE DATOS ---
 
 const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
@@ -747,7 +703,7 @@ const buildProductCard = (p, key) => {
     const gananciaPorKg = ventaKg - compra
     const gananciaTotal = gananciaPorKg * kilosNetos
     const meta = computeStockMeta(kilosNetos) // Usar kilos netos para el cálculo de stock
-    
+
     return {
         id: p?.id ?? key,
         name: p?.nombre ?? 'Sin nombre',
@@ -779,30 +735,67 @@ const productosPorCategoriaMap = computed(() => {
     return map
 })
 
+const confirmDeleteDialog = ref(false)
+const categoryToDelete = ref(null)
+
+// 1. Abre el diálogo y guarda la categoría a eliminar
+const deleteCategoria = (categoria) => {
+    categoryToDelete.value = categoria
+    confirmDeleteDialog.value = true
+}
+
+// 2. Ejecuta la llamada a la API
+const executeDelete = async () => {
+    if (!categoryToDelete.value) return
+
+    categoriaEliminando.value = categoryToDelete.value.id
+    try {
+        await $fetch(`${API_URL}/categorias/${categoryToDelete.value.id}`, {
+            method: 'DELETE',
+            ...fetchConfig
+        })
+
+        await fetchCategorias()
+
+        // Si eliminamos la categoría actual, retroceder una página
+        if (currentCategoryPage.value >= categoriasRegistradas.value.length) {
+            currentCategoryPage.value = Math.max(0, categoriasRegistradas.value.length - 1)
+        }
+
+        // Cerrar el diálogo al finalizar con éxito
+        confirmDeleteDialog.value = false
+        categoryToDelete.value = null
+    } catch (error) {
+        alert('Error al eliminar: ' + (error.data?.message || 'Error desconocido'))
+    } finally {
+        categoriaEliminando.value = null
+    }
+}
+
 const mappedCategories = computed(() => {
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
-        
+
         // Calcular kilos netos totales
         const totalKilosNetos = prods.reduce((s, p) => {
             return s + extractKilos(p)
         }, 0)
-        
+
         // Calcular desperdicio total
         const totalDesperdicio = prods.reduce((s, p) => {
             return s + extractDesperdicio(p)
         }, 0)
-        
+
         // Calcular valor total usando kilos netos
         const totalValue = prods.reduce((s, p) => {
             const venta = extractPrecioVenta(p)
             const kilosNetos = extractKilos(p)
             return s + (kilosNetos * venta)
         }, 0)
-        
+
         // Calcular ganancia total usando kilos netos
         const profit = prods.reduce((s, p) => s + computeProductoProfit(p), 0)
-        
+
         return {
             id: cat.id,
             name: cat.nombre,
@@ -839,9 +832,9 @@ const productsForCurrentCategory = computed(() => {
 const filteredProducts = computed(() => {
     const term = productSearchQuery.value?.toLowerCase().trim()
     if (!term) return productsForCurrentCategory.value
-    
-    return productsForCurrentCategory.value.filter(product => 
-        product.name.toLowerCase().includes(term) || 
+
+    return productsForCurrentCategory.value.filter(product =>
+        product.name.toLowerCase().includes(term) ||
         product.source.toLowerCase().includes(term)
     )
 })
@@ -1373,7 +1366,7 @@ onMounted(() => {
 }
 
 :global(.v-theme--dark .list-modal .emoji-avatar__emoji) {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 /* Responsive adjustments */
@@ -1382,7 +1375,7 @@ onMounted(() => {
         flex-direction: column;
         gap: 16px;
     }
-    
+
     .category-quick-select {
         max-width: 100% !important;
         margin-top: 12px;
@@ -1401,25 +1394,41 @@ onMounted(() => {
     .modal-shell__actions {
         flex-direction: column;
     }
-    
+
     .name-input-block {
         grid-template-columns: 1fr;
     }
-    
+
     .emoji-selector--floating {
         margin: 0 auto 16px;
     }
-    
+
     .category-current-info {
         min-width: 140px;
     }
-    
+
     .current-category-card :deep(.v-card-text) {
         padding: 16px 12px;
     }
-    
+
     .stat-item {
         padding: 8px;
     }
+}
+
+:global(.v-theme--light .bg-error-lighten-5) {
+    background-color: #ffebee !important;
+}
+
+:global(.v-theme--dark .bg-error-lighten-5) {
+    background-color: rgba(255, 82, 82, 0.15) !important;
+}
+
+.categoria-table tbody td {
+    font-size: 0.92rem;
+    vertical-align: middle;
+    white-space: normal;
+    word-break: break-all;
+    max-width: 300px;
 }
 </style>
