@@ -301,7 +301,8 @@
 										</div>
 										<v-text-field v-model.number="productForm.stock_minimo" type="number"
 											label="Stock mínimo (kg)" variant="outlined" density="comfortable"
-											color="success" min="0" step="0.1" hide-details></v-text-field>
+											color="success" min="0" step="0.1" hide-details
+											style="max-height: 50px; margin-top: 15px; margin-bottom: 10px; "></v-text-field>
 										<p class="stock-slider-field__hint">
 											Define el umbral que detonará las alertas de bajo stock para este producto.
 										</p>

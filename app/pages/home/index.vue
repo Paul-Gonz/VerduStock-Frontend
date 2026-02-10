@@ -266,10 +266,8 @@ const categoryDistribution = computed(() => {
     productos.value.forEach((p) => {
         const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
         const kilos = getNetKilograms(p)
-        let venta = Number(p?.precio_venta_kg || 0)
-        if (isProductoEnBs(p)) venta = convertirBsAUsd(venta)
-        // Suma el valor en dólares
-        map.set(name, (map.get(name) ?? 0) + (kilos * venta))
+        // Suma solo los kg netos
+        map.set(name, (map.get(name) ?? 0) + kilos)
     })
     return Array.from(map, ([name, value]) => ({ name, value }))
 })
