@@ -385,8 +385,12 @@ const providerInvestments = computed(() => {
     const map = new Map()
     productos.value.forEach((p) => {
         const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
-        let inversion = Number(p?.precio_compra || 0)
-        if (isProductoEnBs(p)) inversion = convertirBsAUsd(inversion)
+        let kilos = Number(p?.kilogramos || p?.kilogramos_netos || p?.kilo || p?.stock || 0)
+        let desperdicio = Number(p?.desperdicio || p?.waste || p?.perdida || 0)
+        let netKg = Math.max(0, kilos - desperdicio)
+        let precioCompra = Number(p?.precio_compra || 0)
+        if (isProductoEnBs(p)) precioCompra = convertirBsAUsd(precioCompra)
+        let inversion = netKg * precioCompra
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
     return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
