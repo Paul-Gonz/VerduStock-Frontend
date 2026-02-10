@@ -1,4 +1,3 @@
-
 <template>
     <section class="categoria-page">
         <v-card class="mb-8 section-card" rounded="lg" border>
@@ -21,166 +20,335 @@
             <v-card-text>
                 <v-progress-linear v-if="categoriasLoading" indeterminate color="success" height="6" rounded
                     class="mb-4"></v-progress-linear>
-                <v-row v-if="visibleCategories.length" align="center" class="ga-2">
-                    <v-col cols="auto" class="d-flex justify-center">
-                        <v-btn icon="mdi-chevron-left" variant="text" color="success" :disabled="!canGoPrev"
-                            @click="prevCategory"></v-btn>
-                    </v-col>
-                    <v-col>
-                        <v-row>
-                            <v-col v-for="item in visibleCategories" :key="item.id" cols="12" md="6">
-                                <v-card class="stat-card" rounded="lg" border>
-                                    <v-card-text>
-                                        <div class="d-flex align-center justify-space-between">
-                                            <div class="d-flex align-center ga-3">
-                                                <v-avatar color="success-lighten-4" size="44" class="emoji-avatar">
-                                                    <span class="emoji-avatar__emoji">{{ item.emoji }}</span>
-                                                </v-avatar>
-                                                <div>
-                                                    <div class="text-subtitle-1 font-weight-bold">{{ item.name }}</div>
-                                                    <div class="text-caption text-medium-emphasis">
-                                                        {{ item.products }} producto(s)
-                                                    </div>
+                
+                <!-- Contenedor de paginación por categoría -->
+                <div v-if="paginatedCategories.length > 0">
+                    <!-- Navegación simplificada -->
+                    <div class="category-navigation mb-6">
+                        <div class="d-flex align-center justify-space-between mb-4">
+                            <div class="d-flex align-center ga-2">
+                                <v-btn icon="mdi-chevron-left" variant="tonal" color="success" 
+                                    :disabled="currentCategoryPage === 0" 
+                                    @click="prevCategoryPage"
+                                    size="small">
+                                </v-btn>
+                                
+                                <div class="category-current-info text-center px-4">
+                                    <div class="text-subtitle-2 font-weight-bold d-flex align-center ga-2 justify-center">
+                                        <v-avatar color="success-lighten-4" size="32" class="emoji-avatar">
+                                            <span class="emoji-avatar__emoji">{{ currentCategory?.emoji }}</span>
+                                        </v-avatar>
+                                        <span>{{ currentCategory?.name }}</span>
+                                    </div>
+                                    <div class="text-caption text-medium-emphasis">
+                                        Página {{ currentCategoryPage + 1 }} de {{ paginatedCategories.length }}
+                                    </div>
+                                </div>
+                                
+                                <v-btn icon="mdi-chevron-right" variant="tonal" color="success" 
+                                    :disabled="currentCategoryPage === paginatedCategories.length - 1" 
+                                    @click="nextCategoryPage"
+                                    size="small">
+                                </v-btn>
+                            </div>
+                            
+                            <!-- Selector rápido de categorías -->
+                            <v-select
+                                v-model="currentCategoryPage"
+                                :items="paginatedCategories"
+                                item-title="name"
+                                item-value="pageIndex"
+                                density="compact"
+                                variant="outlined"
+                                color="success"
+                                label="Cambiar categoría"
+                                style="max-width: 220px;"
+                                class="category-quick-select"
+                                hide-details
+                                prepend-inner-icon="mdi-filter"
+                            >
+                                <template #item="{ props, item }">
+                                    <v-list-item v-bind="props">
+                                        <template #prepend>
+                                            <span class="me-2">{{ item.raw.emoji }}</span>
+                                        </template>
+                                        <template #append>
+                                            <v-chip size="x-small" color="success" variant="tonal">
+                                                {{ item.raw.products }}
+                                            </v-chip>
+                                        </template>
+                                    </v-list-item>
+                                </template>
+                                <template #selection="{ item }">
+                                    <div class="d-flex align-center">
+                                        <span class="me-2">{{ item.raw.emoji }}</span>
+                                        <span>{{ item.title }}</span>
+                                    </div>
+                                </template>
+                            </v-select>
+                        </div>
+                        
+                        <!-- Barra de progreso minimalista -->
+                        <v-progress-linear 
+                            :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100" 
+                            color="success" 
+                            height="4" 
+                            rounded
+                            class="mb-2"
+                        ></v-progress-linear>
+                    </div>
+                    
+                    <!-- Estadísticas de la categoría actual -->
+                    <v-row v-if="currentCategory">
+                        <v-col cols="12">
+                            <v-card class="stat-card current-category-card" rounded="lg" border>
+                                <v-card-text>
+                                    <!--<div class="d-flex align-center justify-space-between mb-4">
+                                        <div class="d-flex align-center ga-3">
+                                            <v-avatar color="success-lighten-4" size="64" class="emoji-avatar">
+                                                <span class="emoji-avatar__emoji">{{ currentCategory.emoji }}</span>
+                                            </v-avatar>
+                                            <div>
+                                                <div class="text-h6 font-weight-bold">{{ currentCategory.name }}</div>
+                                                <div class="text-caption text-medium-emphasis">
+                                                    {{ currentCategory.products }} producto(s)
                                                 </div>
                                             </div>
-                                            <v-chip color="success" variant="tonal" size="small">{{ item.tag }}</v-chip>
                                         </div>
-
-                                        <v-divider class="my-3"></v-divider>
-
-                                        <v-row class="text-body-2">
-                                            <v-col cols="6">
-                                                <div class="text-medium-emphasis">Cantidad total</div>
-                                                <div class="font-weight-semibold">{{ item.totalQty }}</div>
-                                            </v-col>
-                                            <v-col cols="6">
-                                                <div class="text-medium-emphasis">Valor en venta</div>
-                                                <div class="font-weight-semibold">{{ formatCurrency(item.totalValue) }}
-                                                </div>
-                                            </v-col>
-                                        </v-row>
-
-                                        <v-divider class="my-2"></v-divider>
-
-                                        <div class="gain-chip d-flex align-center justify-space-between">
-                                            <div class="d-flex align-center ga-2">
-                                                <v-icon size="18" icon="mdi-cash-multiple"></v-icon>
-                                                <span class="text-body-2 font-weight-semibold">Ganancia</span>
+                                        <div class="text-right">
+                                            <v-chip color="success" variant="flat" size="large" class="mb-2">
+                                                Categoría actual
+                                            </v-chip>
+                                            <div class="text-caption text-medium-emphasis">
+                                                {{ formatCurrency(currentCategory.totalValue) }} en inventario
                                             </div>
-                                            <div class="font-weight-bold">{{ formatCurrency(item.profit) }}</div>
                                         </div>
-                                    </v-card-text>
-                                </v-card>
-                            </v-col>
-                        </v-row>
-                    </v-col>
-                    <v-col cols="auto" class="d-flex justify-center">
-                        <v-btn icon="mdi-chevron-right" variant="text" color="success" :disabled="!canGoNext"
-                            @click="nextCategory"></v-btn>
-                    </v-col>
-                </v-row>
-                <div v-else class="text-body-2 text-medium-emphasis py-8 text-center">
-                    Aún no registras categorías.
+                                    </div>
+
+                                    <v-divider class="my-4"></v-divider>-->
+
+                                    <v-row class="text-body-1">
+                                        <v-col cols="6" md="3">
+                                            <div class="stat-item">
+                                                <div class="text-medium-emphasis mb-1">Productos registrados</div>
+                                                <div class="text-h5 font-weight-bold">{{ currentCategory.products }}</div>
+                                            </div>
+                                        </v-col>
+                                        <v-col cols="6" md="3">
+                                            <div class="stat-item">
+                                                <div class="text-medium-emphasis mb-1">Cantidad neta</div>
+                                                <div class="text-h5 font-weight-bold">{{ currentCategory.totalQty }}</div>
+                                                <div class="text-caption text-error" v-if="currentCategory.totalDesperdicio !== '0.00 kg'">
+                                                    {{ currentCategory.totalDesperdicio }} desperdicio
+                                                </div>
+                                            </div>
+                                        </v-col>
+                                        <v-col cols="6" md="3">
+                                            <div class="stat-item">
+                                                <div class="text-medium-emphasis mb-1">Valor en venta</div>
+                                                <div class="text-h5 font-weight-bold">
+                                                    {{ formatCurrency(currentCategory.totalValue) }}
+                                                </div>
+                                            </div>
+                                        </v-col>
+                                        <v-col cols="6" md="3">
+                                            <div class="stat-item">
+                                                <div class="text-medium-emphasis mb-1">Ganancia estimada</div>
+                                                <div class="text-h5 font-weight-bold text-success">
+                                                    {{ formatCurrency(currentCategory.profit) }}
+                                                </div>
+                                            </div>
+                                        </v-col>
+                                    </v-row>
+
+                                    <!-- Indicador de progreso de la paginación -->
+                                    <div class="mt-6">
+                                        <div class="d-flex justify-space-between mb-2">
+                                            <div class="text-caption text-medium-emphasis">
+                                                Progreso: {{ currentCategoryPage + 1 }} / {{ paginatedCategories.length }}
+                                            </div>
+                                            <div class="text-caption text-medium-emphasis">
+                                                {{ Math.round(((currentCategoryPage + 1) / paginatedCategories.length) * 100) }}%
+                                            </div>
+                                        </div>
+                                        <v-progress-linear 
+                                            :model-value="((currentCategoryPage + 1) / paginatedCategories.length) * 100" 
+                                            color="success" 
+                                            height="8" 
+                                            rounded
+                                        ></v-progress-linear>
+                                    </div>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </div>
+                
+                <div v-else-if="!categoriasLoading" class="text-body-2 text-medium-emphasis py-8 text-center">
+                    <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-folder-outline</v-icon>
+                    <div>Aún no registras categorías.</div>
+                    <v-btn 
+                        color="success" 
+                        variant="tonal" 
+                        class="mt-4"
+                        @click="openCreateDialog"
+                    >
+                        <v-icon icon="mdi-plus" class="me-2"></v-icon>
+                        Crear primera categoría
+                    </v-btn>
                 </div>
             </v-card-text>
         </v-card>
 
+        <!-- SECCIÓN DE PRODUCTOS (solo muestra productos de la categoría actual) -->
         <v-card class="section-card" rounded="lg" border>
-            <v-card-title class="text-subtitle-1 font-weight-bold">Productos por Categoría</v-card-title>
+            <v-card-title class="d-flex align-center justify-space-between">
+                <div class="d-flex align-center ga-3">
+                    <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
+                        <span class="emoji-avatar__emoji">{{ currentCategory?.emoji }}</span>
+                    </v-avatar>
+                    <div>
+                        <span class="text-subtitle-1 font-weight-bold">Productos en </span>
+                        <span class="text-subtitle-1 font-weight-bold text-success">{{ currentCategory?.name || 'Categoría actual' }}</span>
+                    </div>
+                </div>
+                <div class="d-flex align-center ga-2">
+                    <v-chip color="success" variant="tonal" size="small">
+                        {{ productsForCurrentCategory.length }} productos
+                    </v-chip>
+                    <v-chip color="success" variant="flat" size="small">
+                        {{ formatCurrency(currentCategory?.profit || 0) }} ganancia
+                    </v-chip>
+                </div>
+            </v-card-title>
             <v-card-text>
                 <div class="filters-bar mb-4">
                     <div class="filters-bar__search">
-                        <v-text-field v-model="productSearchQuery" label="Buscar producto"
-                            placeholder="Escribe el nombre o proveedor" variant="outlined" density="comfortable"
-                            prepend-inner-icon="mdi-magnify" clearable color="success" base-color="success"
-                            bg-color="surface" class="search-input"></v-text-field>
-                    </div>
-                    <div class="filters-bar__categories">
-
-                        <v-chip-group v-model="categoriaFiltroSeleccionada"
-                            class="category-chip-group filters-bar__chips" column>
-                            <v-chip v-for="item in categoriaFilterItems" :key="item.value" :value="item.value"
-                                variant="outlined" size="small" class="category-chip"
-                                :class="{ 'category-chip--active': categoriaFiltroSeleccionada === item.value }">
-                                <span v-if="item.emoji" class="category-chip__emoji">{{ item.emoji }}</span>
-                                <span class="category-chip__label">{{ item.title }}</span>
-                            </v-chip>
-                        </v-chip-group>
+                        <v-text-field 
+                            v-model="productSearchQuery" 
+                            :label="`Buscar en ${currentCategory?.name || 'categoría'}`"
+                            placeholder="Escribe el nombre o proveedor" 
+                            variant="outlined" 
+                            density="comfortable"
+                            prepend-inner-icon="mdi-magnify" 
+                            clearable 
+                            color="success" 
+                            base-color="success"
+                            bg-color="surface" 
+                            class="search-input"
+                        ></v-text-field>
                     </div>
                 </div>
+                
+                <v-alert 
+                    v-if="!currentCategory && !categoriasLoading" 
+                    type="info" 
+                    density="comfortable" 
+                    variant="tonal" 
+                    class="mb-4"
+                >
+                    Selecciona una categoría para ver sus productos.
+                </v-alert>
+                
                 <v-progress-linear v-if="productosLoading" indeterminate color="success" height="6" rounded
                     class="mb-4"></v-progress-linear>
                 <v-alert v-if="productosError" type="error" density="comfortable" variant="tonal" class="mb-4">
                     {{ productosError }}
                 </v-alert>
-                <template v-if="filteredProductGroups.length">
-                    <div v-for="group in filteredProductGroups" :key="group.id" class="category-group">
-                        <div class="category-group__header d-flex align-center ga-2 mb-4">
-                            <v-avatar color="success-lighten-4" size="36" class="emoji-avatar">
-                                <span class="emoji-avatar__emoji">{{ group.emoji }}</span>
-                            </v-avatar>
-                            <div class="text-subtitle-2 font-weight-bold">
-                                {{ group.name }} ({{ group.items.length }})
-                            </div>
-                        </div>
+                
+                <template v-if="filteredProducts.length > 0">
+                    <v-row>
+                        <v-col 
+                            v-for="product in paginatedProducts" 
+                            :key="product.id" 
+                            cols="12" 
+                            sm="6" 
+                            md="4" 
+                            lg="3"
+                        >
+                            <v-card class="product-card" rounded="lg" border>
+                                <v-card-text>
+                                    <div class="d-flex align-center justify-space-between">
+                                        <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
+                                        <v-chip :color="product.stockColor" size="small" variant="tonal"
+                                            :class="{ 'stock-chip--success': product.stockColor === 'success' }">
+                                            {{ product.stock }}
+                                        </v-chip>
+                                    </div>
 
-                        <div class="category-group__content" v-if="group.items.length">
-                            <v-row>
-                                <v-col v-for="product in group.items" :key="product.id" cols="12" md="4">
-                                    <v-card class="product-card" rounded="lg" border>
-                                        <v-card-text>
-                                            <div class="d-flex align-center justify-space-between">
-                                                <div class="text-subtitle-2 font-weight-bold">{{ product.name }}</div>
-                                                <v-chip :color="product.stockColor" size="small" variant="tonal"
-                                                    :class="{ 'stock-chip--success': product.stockColor === 'success' }">
-                                                    {{ product.stock }}
-                                                </v-chip>
-                                            </div>
+                                    <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> Compra: {{ product.purchaseLabel }}</span>
+                                    </div>
+                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> Venta: {{ product.saleLabel }}</span>
+                                    </div>
+                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> Kilos brutos: {{ product.kilosBrutos }}</span>
+                                        <v-tooltip v-if="product.desperdicio > 0" location="bottom">
+                                            <template #activator="{ props }">
+                                                <v-icon v-bind="props" size="small" color="error">mdi-alert-circle-outline</v-icon>
+                                            </template>
+                                            <span>Desperdicio: {{ product.desperdicio }}kg</span>
+                                        </v-tooltip>
+                                    </div>
+                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> Ganancia por kg: {{ product.profitPerKgLabel }}</span>
+                                    </div>
+                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> Ganancia total: {{ product.profitTotalLabel }}</span>
+                                    </div>
+                                    <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
+                                        <span> {{ product.source }}</span>
+                                    </div>
 
-                                            <div class="mt-2 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> Compra: {{ product.purchaseLabel }}</span>
-                                            </div>
-                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> Venta: {{ product.saleLabel }}</span>
-                                            </div>
-                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> Ganancia por kg: {{ product.profitPerKgLabel }}</span>
-                                            </div>
-                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> Ganancia total: {{ product.profitTotalLabel }}</span>
-                                            </div>
-                                            <div class="mt-1 text-body-2 text-medium-emphasis d-flex align-center ga-2">
-                                                <span> {{ product.source }}</span>
-                                            </div>
+                                    <v-divider class="my-3"></v-divider>
 
-                                            <v-divider class="my-3"></v-divider>
-
-                                            <div class="d-flex align-center justify-space-between text-body-2">
-                                                <span class="text-medium-emphasis">Disponibilidad</span>
-                                                <span class="font-weight-semibold"
-                                                    :class="{ 'availability--low': product.progressColor === 'error' }">
-                                                    {{ product.availability }}
-                                                </span>
-                                            </div>
-                                            <v-progress-linear class="mt-2" :model-value="product.progress"
-                                                :color="product.progressColor" height="6" rounded
-                                                :class="{ 'progress--low': product.progressColor === 'error' }"></v-progress-linear>
-                                        </v-card-text>
-                                    </v-card>
-                                </v-col>
-                            </v-row>
-                        </div>
-                        <div v-else class="text-body-2 text-medium-emphasis py-4 px-3 bg-grey-lighten-5 rounded-lg">
-                            Esta categoría aún no tiene productos registrados.
-                        </div>
+                                    <div class="d-flex align-center justify-space-between text-body-2">
+                                        <span class="text-medium-emphasis">Disponibilidad</span>
+                                        <span class="font-weight-semibold"
+                                            :class="{ 'availability--low': product.progressColor === 'error' }">
+                                            {{ product.availability }}
+                                        </span>
+                                    </div>
+                                    <v-progress-linear class="mt-2" :model-value="product.progress"
+                                        :color="product.progressColor" height="6" rounded
+                                        :class="{ 'progress--low': product.progressColor === 'error' }"></v-progress-linear>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                    
+                    <!-- Paginación de productos dentro de la categoría -->
+                    <div v-if="filteredProducts.length > itemsPerPage" class="mt-6">
+                        <v-pagination
+                            v-model="currentProductPage"
+                            :length="totalProductPages"
+                            :total-visible="7"
+                            color="success"
+                            variant="tonal"
+                            rounded="circle"
+                        ></v-pagination>
                     </div>
                 </template>
-                <div v-else-if="productGroups.length && !productosLoading"
+                
+                <div v-else-if="productsForCurrentCategory.length === 0 && currentCategory && !productosLoading" 
                     class="text-body-2 text-medium-emphasis py-6 text-center">
-                    No hay productos que coincidan con los filtros aplicados.
+                    <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-package-variant</v-icon>
+                    <div>Esta categoría no tiene productos registrados.</div>
+                    <v-btn 
+                        color="success" 
+                        variant="tonal" 
+                        class="mt-4"
+                        :to="{ name: 'productos' }"
+                    >
+                        <v-icon icon="mdi-plus" class="me-2"></v-icon>
+                        Agregar productos
+                    </v-btn>
                 </div>
-                <div v-else-if="!productosLoading" class="text-body-2 text-medium-emphasis py-6 text-center">
-                    No hay categorías o productos para mostrar todavía.
+                
+                <div v-else-if="filteredProducts.length === 0 && productSearchQuery && !productosLoading" 
+                    class="text-body-2 text-medium-emphasis py-6 text-center">
+                    No se encontraron productos que coincidan con "{{ productSearchQuery }}"
                 </div>
             </v-card-text>
         </v-card>
@@ -314,12 +482,12 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import { navigateTo } from '#app'
 
-// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+// --- CONFIGURACIÓN DE API ---
 const API_URL = 'http://localhost:8000'
 const fetchConfig = {
     credentials: 'include',
@@ -347,13 +515,11 @@ const formatWeight = (value = 0) => `${weightFormatter.format(Number(value) || 0
 
 // --- CONSTANTES Y ESTADOS ---
 const MAX_PRODUCTOS_PER_PAGE = 500
-const visibleSlots = 2
 const HIGH_STOCK_THRESHOLD = 30
 const MEDIUM_STOCK_THRESHOLD = 10
-const ALL_CATEGORIES_VALUE = '__all__'
+const ITEMS_PER_PAGE = 12
 
 const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
-const emojiAllowedGroup = 'food_drink'
 const emojiDisabledGroups = ['smileys_people', 'animals_nature', 'activities', 'travel_places', 'objects', 'symbols', 'flags']
 
 const categoriasRegistradas = ref([])
@@ -366,7 +532,6 @@ const productosError = ref('')
 const categoriaEliminando = ref(null)
 const formError = ref('')
 const productSearchQuery = ref('')
-const categoriaFiltroSeleccionada = ref(ALL_CATEGORIES_VALUE)
 
 const showCreateDialog = ref(false)
 const showListDialog = ref(false)
@@ -375,7 +540,11 @@ const formulario = ref({ nombre: '', detalle: '', emoji: '' })
 const cargando = ref(false)
 const categoriaEditando = ref(null)
 const showEmojiPicker = ref(false)
-const categoryCursor = ref(0)
+
+// Nuevas variables para paginación por categoría
+const currentCategoryPage = ref(0)
+const currentProductPage = ref(1)
+const itemsPerPage = ref(ITEMS_PER_PAGE)
 
 // --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
@@ -383,16 +552,14 @@ const submitLabel = computed(() => (categoriaEditando.value ? 'Actualizar' : 'Gu
 const submitIcon = computed(() => (categoriaEditando.value ? 'mdi-content-save-edit' : 'mdi-content-save'))
 const requiredRule = (value) => !!value?.trim() || 'Este campo es obligatorio'
 
-// --- MANEJO DE EMOJIS (CORREGIDO) ---
+// --- MANEJO DE EMOJIS ---
 const handleEmojiSelect = (emoji) => {
-    // vue3-emoji-picker devuelve el caracter en la propiedad .i o .native
     const symbol = emoji.i || emoji.native;
     if (symbol) {
         formulario.value.emoji = symbol;
         showEmojiPicker.value = false;
     }
 }
-
 
 const isProductoEnBs = (p) => {
     if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
@@ -405,13 +572,49 @@ const isProductoEnBs = (p) => {
 }
 
 const convertirBsAUsd = (montoBs) => {
-    // getTasa debe estar definida en el archivo, si no, usa 1
     const tasa = typeof getTasa === 'function' ? getTasa() : 1;
     if (!tasa || tasa <= 0) return 0;
     return Number((Number(montoBs) / tasa).toFixed(2));
 }
 
-// --- FUNCIONES DE LLAMADA A RUTA (AJUSTADAS) ---
+// --- FUNCIONES DE EXTRACCIÓN DE DATOS CON DESPERDICIO ---
+const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0 }
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
+
+const extractKilosBrutos = (p) => {
+    return toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
+}
+
+const extractDesperdicio = (p) => {
+    return toNumber(p?.desperdicio ?? p?.waste ?? p?.perdida ?? 0)
+}
+
+const extractKilos = (p) => {
+    const kilosBrutos = extractKilosBrutos(p)
+    const desperdicio = extractDesperdicio(p)
+    return Math.max(0, kilosBrutos - desperdicio)
+}
+
+const extractPrecioVenta = (p) => {
+    let val = toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
+
+const extractPrecioCompra = (p) => {
+    let val = toNumber(p?.precio_compra ?? p?.costo ?? 0)
+    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
+    return val
+}
+
+const computeProductoProfit = (p) => {
+    const kilosNetos = extractKilos(p)
+    const venta = extractPrecioVenta(p)
+    const compra = extractPrecioCompra(p)
+    return kilosNetos * (venta - compra)
+}
+
+// --- FUNCIONES DE LLAMADA A RUTA ---
 
 const fetchCategorias = async () => {
     categoriasLoading.value = true
@@ -422,6 +625,11 @@ const fetchCategorias = async () => {
             ...fetchConfig
         })
         categoriasRegistradas.value = response?.data || response || []
+        // Si es la primera vez que cargamos, seleccionar la primera categoría
+        if (categoriasRegistradas.value.length > 0 && currentCategoryPage.value === 0) {
+            // Asegurarnos de que la página actual sea válida
+            currentCategoryPage.value = Math.min(currentCategoryPage.value, categoriasRegistradas.value.length - 1)
+        }
     } catch (error) {
         if (error.status === 401) await navigateTo('/login')
         categoriasError.value = 'No se pudieron cargar las categorías.'
@@ -483,7 +691,7 @@ const submitCategory = async () => {
 
         await $fetch(url, {
             method,
-            body: payload, // $fetch serializa automáticamente a JSON
+            body: payload,
             ...fetchConfig
         })
 
@@ -506,6 +714,10 @@ const deleteCategoria = async (categoria) => {
             ...fetchConfig
         })
         await fetchCategorias()
+        // Si eliminamos la categoría actual, ir a la primera disponible
+        if (currentCategoryPage.value >= categoriasRegistradas.value.length) {
+            currentCategoryPage.value = Math.max(0, categoriasRegistradas.value.length - 1)
+        }
     } catch (error) {
         alert('Error al eliminar: ' + (error.data?.message || 'Error desconocido'))
     } finally {
@@ -514,28 +726,6 @@ const deleteCategoria = async (categoria) => {
 }
 
 // --- LÓGICA DE TRANSFORMACIÓN DE DATOS ---
-
-const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0 }
-const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
-
-const extractKilos = (p) => toNumber(p?.kilogramos ?? p?.kilogramos_netos ?? p?.kilo ?? p?.stock ?? 0)
-const extractPrecioVenta = (p) => {
-    let val = toNumber(p?.precio_venta_kg ?? p?.precio_ventakg ?? p?.precio_venta ?? p?.precio ?? 0)
-    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
-    return val
-}
-const extractPrecioCompra = (p) => {
-    let val = toNumber(p?.precio_compra ?? p?.costo ?? 0)
-    if (isProductoEnBs(p)) val = convertirBsAUsd(val)
-    return val
-}
-
-const computeProductoProfit = (p) => {
-    const kilos = extractKilos(p)
-    const venta = extractPrecioVenta(p)
-    const compra = extractPrecioCompra(p)
-    return kilos * (venta - compra)
-}
 
 const getCategoriaEmoji = (cat, idx) => cat?.emoji ?? cat?.icono ?? emojiFallbacks[idx % emojiFallbacks.length]
 
@@ -548,13 +738,16 @@ const computeStockMeta = (kilo) => {
 }
 
 const buildProductCard = (p, key) => {
-    const kilo = extractKilos(p)
+    const kilosBrutos = extractKilosBrutos(p)
+    const desperdicio = extractDesperdicio(p)
+    const kilosNetos = extractKilos(p)
     const compra = extractPrecioCompra(p)
     const ventaKg = extractPrecioVenta(p)
-    const ventaTotal = kilo * ventaKg
+    const ventaTotal = kilosNetos * ventaKg
     const gananciaPorKg = ventaKg - compra
-    const gananciaTotal = gananciaPorKg * kilo
-    const meta = computeStockMeta(kilo)
+    const gananciaTotal = gananciaPorKg * kilosNetos
+    const meta = computeStockMeta(kilosNetos) // Usar kilos netos para el cálculo de stock
+    
     return {
         id: p?.id ?? key,
         name: p?.nombre ?? 'Sin nombre',
@@ -564,13 +757,17 @@ const buildProductCard = (p, key) => {
         profitPerKgLabel: formatCurrency(gananciaPorKg),
         profitTotalLabel: formatCurrency(gananciaTotal),
         source: p?.proveedor_nombre || p?.proveedor?.nombre || proveedoresLookup.value.get(p?.proveedor_id)?.nombre || 'S/P',
-        stock: kilo ? `${weightFormatter.format(kilo)} kg` : '0 kg',
+        // Mostrar información del desperdicio
+        stock: kilosNetos > 0 ? `${weightFormatter.format(kilosNetos)} kg` : '0 kg',
+        kilosBrutos: weightFormatter.format(kilosBrutos),
+        desperdicio: desperdicio,
+        desperdicioLabel: desperdicio > 0 ? `(${weightFormatter.format(desperdicio)} desperdicio)` : '',
         ...meta,
         progressColor: meta.stockColor,
     }
 }
 
-// --- COMPUTED MAPS ---
+// --- COMPUTED PARA PAGINACIÓN POR CATEGORÍA ---
 
 const productosPorCategoriaMap = computed(() => {
     const map = new Map()
@@ -585,54 +782,112 @@ const productosPorCategoriaMap = computed(() => {
 const mappedCategories = computed(() => {
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
+        
+        // Calcular kilos netos totales
+        const totalKilosNetos = prods.reduce((s, p) => {
+            return s + extractKilos(p)
+        }, 0)
+        
+        // Calcular desperdicio total
+        const totalDesperdicio = prods.reduce((s, p) => {
+            return s + extractDesperdicio(p)
+        }, 0)
+        
+        // Calcular valor total usando kilos netos
         const totalValue = prods.reduce((s, p) => {
             const venta = extractPrecioVenta(p)
-            return s + (extractKilos(p) * venta)
+            const kilosNetos = extractKilos(p)
+            return s + (kilosNetos * venta)
         }, 0)
+        
+        // Calcular ganancia total usando kilos netos
+        const profit = prods.reduce((s, p) => s + computeProductoProfit(p), 0)
+        
         return {
             id: cat.id,
             name: cat.nombre,
             products: prods.length,
-            totalQty: formatWeight(prods.reduce((s, p) => s + extractKilos(p), 0)),
+            totalQty: formatWeight(totalKilosNetos),
+            totalDesperdicio: formatWeight(totalDesperdicio),
             totalValue,
-            profit: prods.reduce((s, p) => s + computeProductoProfit(p), 0),
+            profit,
             emoji: getCategoriaEmoji(cat, idx),
             tag: cat.estado ?? 'Activa',
         }
     })
 })
 
-const visibleCategories = computed(() => mappedCategories.value.slice(categoryCursor.value, categoryCursor.value + visibleSlots))
-const canGoPrev = computed(() => categoryCursor.value > 0)
-const canGoNext = computed(() => categoryCursor.value + visibleSlots < mappedCategories.value.length)
-
-const prevCategory = () => { if (canGoPrev.value) categoryCursor.value-- }
-const nextCategory = () => { if (canGoNext.value) categoryCursor.value++ }
-
-const productGroups = computed(() => {
-    const groups = categoriasRegistradas.value.map((cat, idx) => ({
-        id: cat.id,
-        name: cat.nombre,
-        emoji: getCategoriaEmoji(cat, idx),
-        items: (productosPorCategoriaMap.value.get(cat.id) ?? []).map((p, pIdx) => buildProductCard(p, `p-${cat.id}-${pIdx}`))
+const paginatedCategories = computed(() => {
+    return mappedCategories.value.map((cat, index) => ({
+        ...cat,
+        pageIndex: index
     }))
-    return groups
 })
 
-const categoriaFilterItems = computed(() => [
-    { title: 'Todas', value: ALL_CATEGORIES_VALUE, emoji: '⭐' },
-    ...productGroups.value.map(g => ({ title: g.name, value: String(g.id), emoji: g.emoji }))
-])
+const currentCategory = computed(() => {
+    if (paginatedCategories.value.length === 0) return null
+    return paginatedCategories.value[currentCategoryPage.value] || paginatedCategories.value[0]
+})
 
-const filteredProductGroups = computed(() => {
+const productsForCurrentCategory = computed(() => {
+    if (!currentCategory.value) return []
+    const catId = currentCategory.value.id
+    const prods = productosPorCategoriaMap.value.get(catId) ?? []
+    return prods.map((p, idx) => buildProductCard(p, `p-${catId}-${idx}`))
+})
+
+const filteredProducts = computed(() => {
     const term = productSearchQuery.value?.toLowerCase().trim()
-    const selected = categoriaFiltroSeleccionada.value !== ALL_CATEGORIES_VALUE ? String(categoriaFiltroSeleccionada.value) : null
+    if (!term) return productsForCurrentCategory.value
+    
+    return productsForCurrentCategory.value.filter(product => 
+        product.name.toLowerCase().includes(term) || 
+        product.source.toLowerCase().includes(term)
+    )
+})
 
-    return productGroups.value.map(g => {
-        if (selected && String(g.id) !== selected) return null
-        const items = term ? g.items.filter(i => i.name.toLowerCase().includes(term) || i.source.toLowerCase().includes(term)) : g.items
-        return items.length ? { ...g, items } : null
-    }).filter(Boolean)
+const paginatedProducts = computed(() => {
+    const startIndex = (currentProductPage.value - 1) * itemsPerPage.value
+    const endIndex = startIndex + itemsPerPage.value
+    return filteredProducts.value.slice(startIndex, endIndex)
+})
+
+const totalProductPages = computed(() => {
+    return Math.ceil(filteredProducts.value.length / itemsPerPage.value)
+})
+
+// --- FUNCIONES DE NAVEGACIÓN ---
+const prevCategoryPage = () => {
+    if (currentCategoryPage.value > 0) {
+        currentCategoryPage.value--
+        currentProductPage.value = 1 // Resetear paginación de productos
+        productSearchQuery.value = '' // Limpiar búsqueda
+    }
+}
+
+const nextCategoryPage = () => {
+    if (currentCategoryPage.value < paginatedCategories.value.length - 1) {
+        currentCategoryPage.value++
+        currentProductPage.value = 1 // Resetear paginación de productos
+        productSearchQuery.value = '' // Limpiar búsqueda
+    }
+}
+
+const goToCategoryPage = (pageIndex) => {
+    currentCategoryPage.value = pageIndex
+    currentProductPage.value = 1
+    productSearchQuery.value = ''
+}
+
+// Watch para resetear paginación de productos cuando cambia la categoría
+watch(currentCategoryPage, () => {
+    currentProductPage.value = 1
+    productSearchQuery.value = ''
+})
+
+// Watch para resetear paginación de productos cuando se filtra
+watch(productSearchQuery, () => {
+    currentProductPage.value = 1
 })
 
 // --- DIÁLOGOS ---
@@ -680,32 +935,55 @@ onMounted(() => {
     padding: 18px 25px 22px;
 }
 
-.stat-card,
+.category-navigation {
+    padding: 16px;
+    background: color-mix(in srgb, var(--app-surface) 95%, var(--app-accent) 5%);
+    border-radius: 16px;
+    border: 1px solid var(--app-border);
+}
+
+.category-current-info {
+    min-width: 180px;
+}
+
+.current-category-card {
+    background: linear-gradient(145deg, color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) 0%, var(--app-surface) 100%);
+    border: 2px solid color-mix(in srgb, var(--app-accent) 25%, transparent);
+}
+
 .product-card {
+    min-height: 240px;
+    transition: all 0.3s ease;
     background: var(--app-surface);
     border-color: var(--app-border);
     box-shadow: 0 4px 10px color-mix(in srgb, var(--app-text) 8%, transparent);
 }
 
-.product-card {
-    min-height: 210px;
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--app-text) 12%, transparent);
 }
 
 :global(.v-theme--light .categoria-page .product-card) {
     background: color-mix(in srgb, var(--app-surface) 88%, var(--app-accent) 12%);
     border-color: color-mix(in srgb, var(--app-accent) 28%, var(--app-border));
-    box-shadow: 0 10px 22px color-mix(in srgb, var(--app-text) 10%, transparent);
 }
 
 :global(.v-theme--dark .categoria-page .stat-card) {
     background: color-mix(in srgb, var(--app-surface) 75%, var(--app-bg) 25%);
     border-color: color-mix(in srgb, var(--app-text) 14%, transparent);
-    box-shadow: 0 12px 26px color-mix(in srgb, #000000 40%, transparent);
 }
 
 .stat-card :deep(.v-card-text),
 .product-card :deep(.v-card-text) {
     padding: 18px 18px 16px;
+}
+
+.stat-item {
+    padding: 12px;
+    background: color-mix(in srgb, var(--app-surface) 95%, transparent);
+    border-radius: 12px;
+    border: 1px solid var(--app-border);
 }
 
 .modal-shell {
@@ -823,31 +1101,6 @@ onMounted(() => {
     font-weight: 600;
 }
 
-.modal-shell :deep(.v-field__outline) {
-    border-radius: 18px;
-    border-width: 1.5px;
-    border-color: color-mix(in srgb, var(--app-text) 18%, transparent);
-}
-
-.modal-shell :deep(.v-field__input) {
-    padding-top: 18px;
-    padding-bottom: 14px;
-}
-
-@media (max-width: 600px) {
-    .modal-shell {
-        padding: 22px 20px;
-    }
-
-    .modal-shell__header {
-        flex-direction: column;
-    }
-
-    .modal-shell__actions {
-        flex-direction: column;
-    }
-}
-
 .action-btn {
     min-height: 34px;
     width: 170px;
@@ -885,15 +1138,6 @@ onMounted(() => {
 
 .new-category-btn :deep(.v-btn__content) {
     letter-spacing: 0.2px;
-}
-
-.gain-chip {
-    border: 2px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
-    color: var(--app-accent);
-    background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%);
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-weight: 700;
 }
 
 .stock-chip--success {
@@ -975,7 +1219,6 @@ onMounted(() => {
     backdrop-filter: blur(2px);
 }
 
-
 .emoji-avatar {
     background: color-mix(in srgb, var(--app-surface) 85%, var(--app-accent) 15%) !important;
     color: var(--app-accent) !important;
@@ -985,8 +1228,6 @@ onMounted(() => {
     font-size: 1.6rem;
     line-height: 1;
 }
-
-
 
 .name-input-block {
     display: grid;
@@ -1045,11 +1286,6 @@ onMounted(() => {
     border-color: var(--app-border);
 }
 
-.name-field :deep(.v-field__outline--notch),
-.description-field :deep(.v-field__outline--notch) {
-    border-color: var(--app-border);
-}
-
 .emoji-picker-surface {
     border-radius: 20px;
     background: transparent;
@@ -1062,39 +1298,6 @@ onMounted(() => {
     width: 72px;
     text-align: center;
 }
-
-.category-group {
-    margin-bottom: 2.5rem;
-    padding: 14px 16px;
-    border: 1px solid var(--app-border);
-    border-radius: 20px;
-    background: var(--app-surface);
-}
-
-.category-group__content {
-    max-height: 420px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 6px;
-}
-
-.category-group__header {
-    position: sticky;
-    top: 0;
-    background: var(--app-surface);
-    padding-bottom: 10px;
-    z-index: 1;
-}
-
-.category-group__content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.category-group__content::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--app-accent) 45%, transparent);
-    border-radius: 4px;
-}
-
 
 .filters-bar {
     display: flex;
@@ -1110,37 +1313,14 @@ onMounted(() => {
     }
 
     .filters-bar__search {
-        flex: 1 1 50%;
+        flex: 1 1 100%;
         display: flex;
         align-items: center;
-        margin-top: 20px;
-        margin-left: 10px;
-    }
-
-    .filters-bar__categories {
-        flex: 1 1 50%;
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
     }
 }
 
-.category-chip {
-    border-radius: 14px;
-    border-color: color-mix(in srgb, var(--app-accent) 35%, var(--app-border)) !important;
-    color: var(--app-accent) !important;
-    background: var(--app-surface);
-}
-
-.category-chip--active {
-    background: color-mix(in srgb, var(--app-surface) 80%, var(--app-accent) 20%) !important;
-    border-color: var(--app-accent) !important;
-    color: var(--app-accent) !important;
-}
-
-.category-chip__emoji {
-    margin-right: 6px;
-    font-size: 1rem;
+.category-quick-select :deep(.v-field) {
+    border-radius: 12px;
 }
 
 :global(.v-theme--dark .categoria-page .list-categories-btn) {
@@ -1157,19 +1337,13 @@ onMounted(() => {
     border-color: var(--app-border) !important;
 }
 
-@media (max-width: 600px) {
-    .modal-shell__header {
-        flex-direction: column;
-    }
-}
-
 :global(.v-theme--dark .list-modal .categoria-table) {
     color: var(--app-text) !important;
     background: transparent !important;
 }
 
 :global(.v-theme--dark .list-modal .categoria-table thead th) {
-    color: #94b8a2 !important; /* Soft green-grey text */
+    color: #94b8a2 !important;
     font-weight: 600;
     text-transform: uppercase;
     background: transparent !important;
@@ -1178,10 +1352,9 @@ onMounted(() => {
 }
 
 :global(.v-theme--dark .list-modal .categoria-table-row td) {
-    background: #1e3b28cc !important; /* Dark green background with transparency */
+    background: #1e3b28cc !important;
     color: #e2e8f0 !important;
     border-top: 1px solid #335539 !important;
-   
     border-bottom: 1px solid #335539 !important;
 }
 
@@ -1201,5 +1374,52 @@ onMounted(() => {
 
 :global(.v-theme--dark .list-modal .emoji-avatar__emoji) {
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+    .category-navigation {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .category-quick-select {
+        max-width: 100% !important;
+        margin-top: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-shell {
+        padding: 22px 20px;
+    }
+
+    .modal-shell__header {
+        flex-direction: column;
+    }
+
+    .modal-shell__actions {
+        flex-direction: column;
+    }
+    
+    .name-input-block {
+        grid-template-columns: 1fr;
+    }
+    
+    .emoji-selector--floating {
+        margin: 0 auto 16px;
+    }
+    
+    .category-current-info {
+        min-width: 140px;
+    }
+    
+    .current-category-card :deep(.v-card-text) {
+        padding: 16px 12px;
+    }
+    
+    .stat-item {
+        padding: 8px;
+    }
 }
 </style>
