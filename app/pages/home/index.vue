@@ -154,7 +154,7 @@ const chartPalette = computed(() => {
         return [
             accent,
             accentStrong,
-             '#3BC550',
+            '#3BC550',
             '#1fdc75',
             '#10b85c',
             '#7afbb8',
@@ -320,7 +320,7 @@ const computeExpiryDate = (producto) => {
     let modo = frescura?.modo || producto?.frescura_modo;
     let fecha = frescura?.fecha || producto?.frescura_fecha;
     let dias = frescura?.dias || producto?.frescura_dias;
-    
+
     if (modo === 'fecha' && fecha) {
         const f = new Date(fecha);
         return Number.isNaN(f.getTime()) ? null : f;
@@ -333,7 +333,7 @@ const computeExpiryDate = (producto) => {
     // Fallback logic if no specific freshness info is found, matching original default behavior or returning null?
     // User wants it functional. If no data, it shouldn't expire immediately. 
     // Let's fallback to null so it doesn't show up as expiring unless configured.
-    return null; 
+    return null;
 }
 
 
@@ -383,32 +383,71 @@ const donutOptions = computed(() => ({
 
 const providerInvestments = computed(() => {
     const map = new Map()
-    productos.value.forEach((p) => {
-        const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'S/P'
+
+    // 1. Filtramos primero los productos que no tengan proveedor o cuyo proveedor esté eliminado
+    const productosFiltrados = productos.value.filter(p => {
+        const proveedor = p?.proveedor || p?.proveedor_objeto;
+        // Si el proveedor tiene deleted_at (soft delete de Laravel), lo excluimos
+        return proveedor && !proveedor.deleted_at;
+    });
+
+    productosFiltrados.forEach((p) => {
+        const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'Proveedor Desconocido'
         let kilos = Number(p?.kilogramos || p?.kilogramos_netos || p?.kilo || p?.stock || 0)
-        let desperdicio = Number(p?.desperdicio || p?.waste || p?.perdida || 0)
+        let desperdicio = Number(p?.desperdicio || 0)
         let netKg = Math.max(0, kilos - desperdicio)
+
         let precioCompra = Number(p?.precio_compra || 0)
         if (isProductoEnBs(p)) precioCompra = convertirBsAUsd(precioCompra)
+
         let inversion = netKg * precioCompra
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
-    return Array.from(map, ([name, value]) => ({ name, value })).slice(0, 8)
+
+    // 2. Convertimos a Array y limitamos decimales a 2 para evitar el error de la imagen
+    return Array.from(map, ([name, value]) => ({
+        name,
+        value: Number(value.toFixed(2)) // <--- Validación de decimales aquí
+    }))
+        .sort((a, b) => b.value - a.value) // Opcional: ordenar de mayor a menor inversión
+        .slice(0, 8)
 })
 
 const barSeries = computed(() => [{ name: 'Inversión $', data: providerInvestments.value.map(i => i.value) }])
+
 const barOptions = computed(() => ({
-    chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
-    plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-    xaxis: { categories: providerInvestments.value.map(i => i.name), labels: { style: { colors: chartTextColor.value } } },
+    chart: {
+        type: 'bar',
+        toolbar: { show: false },
+        background: 'transparent'
+    },
+    plotOptions: {
+        bar: {
+            borderRadius: 4,
+            horizontal: true,
+            dataLabels: { position: 'top' } // Muestra el número al final de la barra
+        }
+    },
+    dataLabels: {
+        enabled: true,
+        formatter: (val) => formatCurrency(val), // Usa tu formateador de USD
+        style: { colors: [chartTextColor.value] }
+    },
+    xaxis: {
+        categories: providerInvestments.value.map(i => i.name),
+        labels: {
+            style: { colors: chartTextColor.value },
+            formatter: (val) => formatCurrency(val)
+        }
+    },
     yaxis: { labels: { style: { colors: chartTextColor.value } } },
     colors: [chartPalette.value[0] || '#2aa876'],
     theme: { mode: isDark.value ? 'dark' : 'light' },
     grid: { borderColor: chartGridColor.value },
-    
+    tooltip: {
+        y: { formatter: (val) => formatCurrency(val) }
+    }
 }))
-
-// --- LISTAS DE ALERTAS ---
 
 const lowStockProducts = computed(() =>
     productos.value
@@ -682,6 +721,4 @@ const resumenTarjetas = computed(() => [
         width: 100%;
     }
 }
-
-
 </style>
