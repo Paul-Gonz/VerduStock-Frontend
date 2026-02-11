@@ -54,7 +54,7 @@
                             <v-select v-model="currentCategoryPage" :items="paginatedCategories" item-title="name"
                                 item-value="pageIndex" density="compact" variant="outlined" color="success"
                                 label="Cambiar categoría" style="max-width: 220px;" class="category-quick-select"
-                                hide-details prepend-inner-icon="mdi-filter">
+                                hide-details prepend-inner-icon="mdi-filter" @update:model-value="onCategoryChange">
                                 <template #item="{ props, item }">
                                     <v-list-item v-bind="props">
                                         <template #prepend>
@@ -86,45 +86,25 @@
                         <v-col cols="12">
                             <v-card class="stat-card current-category-card" rounded="lg" border>
                                 <v-card-text>
-                                    <!--<div class="d-flex align-center justify-space-between mb-4">
-                                        <div class="d-flex align-center ga-3">
-                                            <v-avatar color="success-lighten-4" size="64" class="emoji-avatar">
-                                                <span class="emoji-avatar__emoji">{{ currentCategory.emoji }}</span>
-                                            </v-avatar>
-                                            <div>
-                                                <div class="text-h6 font-weight-bold">{{ currentCategory.name }}</div>
-                                                <div class="text-caption text-medium-emphasis">
-                                                    {{ currentCategory.products }} producto(s)
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <v-chip color="success" variant="flat" size="large" class="mb-2">
-                                                Categoría actual
-                                            </v-chip>
-                                            <div class="text-caption text-medium-emphasis">
-                                                {{ formatCurrency(currentCategory.totalValue) }} en inventario
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <v-divider class="my-4"></v-divider>-->
-
                                     <v-row class="text-body-1">
                                         <v-col cols="6" md="3">
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Productos registrados</div>
-                                                <div class="text-h5 font-weight-bold">{{ currentCategory.products }}
+                                                <div class="text-h5 font-weight-bold">
+                                                    {{ currentCategory.products !== undefined ? currentCategory.products : 0 }}
                                                 </div>
                                             </div>
                                         </v-col>
                                         <v-col cols="6" md="3">
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Cantidad neta</div>
-                                                <div class="text-h5 font-weight-bold">{{ currentCategory.totalQty }}
+                                                <div class="text-h5 font-weight-bold">
+                                                    {{ currentCategory.totalQty || '0 kg' }}
                                                 </div>
-                                                <div class="text-caption text-error"
-                                                    v-if="currentCategory.totalDesperdicio !== '0.00 kg'">
+                                                <div class="text-caption text-error" 
+                                                     v-if="currentCategory.totalDesperdicio && 
+                                                            currentCategory.totalDesperdicio !== '0.00 kg' && 
+                                                            currentCategory.totalDesperdicio !== '0 kg'">
                                                     {{ currentCategory.totalDesperdicio }} desperdicio
                                                 </div>
                                             </div>
@@ -133,7 +113,7 @@
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Valor en venta</div>
                                                 <div class="text-h5 font-weight-bold">
-                                                    {{ formatCurrency(currentCategory.totalValue) }}
+                                                    {{ formatCurrency(currentCategory.totalValue || 0) }}
                                                 </div>
                                             </div>
                                         </v-col>
@@ -141,22 +121,19 @@
                                             <div class="stat-item">
                                                 <div class="text-medium-emphasis mb-1">Ganancia estimada</div>
                                                 <div class="text-h5 font-weight-bold text-success">
-                                                    {{ formatCurrency(currentCategory.profit) }}
+                                                    {{ formatCurrency(currentCategory.profit || 0) }}
                                                 </div>
                                             </div>
                                         </v-col>
                                     </v-row>
-
                                     <!-- Indicador de progreso de la paginación -->
                                     <div class="mt-6">
                                         <div class="d-flex justify-space-between mb-2">
                                             <div class="text-caption text-medium-emphasis">
-                                                Progreso: {{ currentCategoryPage + 1 }} / {{ paginatedCategories.length
-                                                }}
+                                                Progreso: {{ currentCategoryPage + 1 }} / {{ paginatedCategories.length }}
                                             </div>
                                             <div class="text-caption text-medium-emphasis">
-                                                {{ Math.round(((currentCategoryPage + 1) / paginatedCategories.length) *
-                                                    100) }}%
+                                                {{ Math.round(((currentCategoryPage + 1) / paginatedCategories.length) * 100) }}%
                                             </div>
                                         </div>
                                         <v-progress-linear
@@ -459,7 +436,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 import { navigateTo } from '#app'
@@ -488,7 +465,10 @@ const weightFormatter = new Intl.NumberFormat('es-EC', {
 })
 
 const formatCurrency = (value = 0) => currencyFormatter.format(Number(value) || 0)
-const formatWeight = (value = 0) => `${weightFormatter.format(Number(value) || 0)} kg`
+const formatWeight = (value = 0) => {
+    const numValue = Number(value) || 0
+    return `${weightFormatter.format(numValue)} kg`
+}
 
 // --- CONSTANTES Y ESTADOS ---
 const MAX_PRODUCTOS_PER_PAGE = 500
@@ -522,6 +502,9 @@ const showEmojiPicker = ref(false)
 const currentCategoryPage = ref(0)
 const currentProductPage = ref(1)
 const itemsPerPage = ref(ITEMS_PER_PAGE)
+
+// Variable para forzar actualización
+const forceRefreshKey = ref(0)
 
 // --- COMPUTED PROPERTIES ---
 const formTitle = computed(() => (categoriaEditando.value ? 'Actualizar categoría' : 'Registrar nueva categoría'))
@@ -602,11 +585,6 @@ const fetchCategorias = async () => {
             ...fetchConfig
         })
         categoriasRegistradas.value = response?.data || response || []
-        // Si es la primera vez que cargamos, seleccionar la primera categoría
-        if (categoriasRegistradas.value.length > 0 && currentCategoryPage.value === 0) {
-            // Asegurarnos de que la página actual sea válida
-            currentCategoryPage.value = Math.min(currentCategoryPage.value, categoriasRegistradas.value.length - 1)
-        }
     } catch (error) {
         if (error.status === 401) await navigateTo('/login')
         categoriasError.value = 'No se pudieron cargar las categorías.'
@@ -672,13 +650,26 @@ const submitCategory = async () => {
             ...fetchConfig
         })
 
-        await fetchCategorias()
+        await reloadAllData()
         cancelCreateDialog()
     } catch (error) {
         formError.value = error.data?.message || 'No se pudo guardar la categoría.'
     } finally {
         cargando.value = false
     }
+}
+
+// --- FUNCIÓN PARA RECARGAR TODOS LOS DATOS ---
+const reloadAllData = async () => {
+    // Incrementar la clave para forzar la actualización de computed properties
+    forceRefreshKey.value++
+    
+    // Recargar todos los datos
+    await Promise.all([
+        fetchCategorias(),
+        fetchProductos(),
+        fetchProveedores()
+    ])
 }
 
 // --- LÓGICA DE TRANSFORMACIÓN DE DATOS ---
@@ -726,6 +717,9 @@ const buildProductCard = (p, key) => {
 // --- COMPUTED PARA PAGINACIÓN POR CATEGORÍA ---
 
 const productosPorCategoriaMap = computed(() => {
+    // Incluir forceRefreshKey en la dependencia para forzar recálculo
+    forceRefreshKey.value
+    
     const map = new Map()
     productosRegistrados.value.forEach((p) => {
         const key = p?.categoria_id || p?.categoriaId || 'sin-categoria'
@@ -755,7 +749,7 @@ const executeDelete = async () => {
             ...fetchConfig
         })
 
-        await fetchCategorias()
+        await reloadAllData()
 
         // Si eliminamos la categoría actual, retroceder una página
         if (currentCategoryPage.value >= categoriasRegistradas.value.length) {
@@ -773,28 +767,40 @@ const executeDelete = async () => {
 }
 
 const mappedCategories = computed(() => {
+    // Incluir forceRefreshKey en la dependencia para forzar recálculo
+    forceRefreshKey.value
+    
     return categoriasRegistradas.value.map((cat, idx) => {
         const prods = productosPorCategoriaMap.value.get(cat.id) ?? []
 
-        // Calcular kilos netos totales
-        const totalKilosNetos = prods.reduce((s, p) => {
-            return s + extractKilos(p)
-        }, 0)
+        // Inicializar todas las variables a cero
+        let totalKilosNetos = 0
+        let totalDesperdicio = 0
+        let totalValue = 0
+        let profit = 0
 
-        // Calcular desperdicio total
-        const totalDesperdicio = prods.reduce((s, p) => {
-            return s + extractDesperdicio(p)
-        }, 0)
+        // Solo calcular si hay productos
+        if (prods.length > 0) {
+            // Calcular kilos netos totales
+            totalKilosNetos = prods.reduce((s, p) => {
+                return s + extractKilos(p)
+            }, 0)
 
-        // Calcular valor total usando kilos netos
-        const totalValue = prods.reduce((s, p) => {
-            const venta = extractPrecioVenta(p)
-            const kilosNetos = extractKilos(p)
-            return s + (kilosNetos * venta)
-        }, 0)
+            // Calcular desperdicio total
+            totalDesperdicio = prods.reduce((s, p) => {
+                return s + extractDesperdicio(p)
+            }, 0)
 
-        // Calcular ganancia total usando kilos netos
-        const profit = prods.reduce((s, p) => s + computeProductoProfit(p), 0)
+            // Calcular valor total usando kilos netos
+            totalValue = prods.reduce((s, p) => {
+                const venta = extractPrecioVenta(p)
+                const kilosNetos = extractKilos(p)
+                return s + (kilosNetos * venta)
+            }, 0)
+
+            // Calcular ganancia total usando kilos netos
+            profit = prods.reduce((s, p) => s + computeProductoProfit(p), 0)
+        }
 
         return {
             id: cat.id,
@@ -802,8 +808,8 @@ const mappedCategories = computed(() => {
             products: prods.length,
             totalQty: formatWeight(totalKilosNetos),
             totalDesperdicio: formatWeight(totalDesperdicio),
-            totalValue,
-            profit,
+            totalValue: totalValue,
+            profit: profit,
             emoji: getCategoriaEmoji(cat, idx),
             tag: cat.estado ?? 'Activa',
         }
@@ -811,6 +817,9 @@ const mappedCategories = computed(() => {
 })
 
 const paginatedCategories = computed(() => {
+    // Incluir forceRefreshKey en la dependencia
+    forceRefreshKey.value
+    
     return mappedCategories.value.map((cat, index) => ({
         ...cat,
         pageIndex: index
@@ -818,11 +827,39 @@ const paginatedCategories = computed(() => {
 })
 
 const currentCategory = computed(() => {
+    // Incluir forceRefreshKey en la dependencia
+    forceRefreshKey.value
+    
     if (paginatedCategories.value.length === 0) return null
-    return paginatedCategories.value[currentCategoryPage.value] || paginatedCategories.value[0]
+    
+    // Asegurarnos de que el índice sea válido
+    const safeIndex = Math.max(0, Math.min(currentCategoryPage.value, paginatedCategories.value.length - 1))
+    const category = paginatedCategories.value[safeIndex]
+    
+    // Si la categoría no tiene datos válidos, devolver valores por defecto
+    if (!category) {
+        const cat = categoriasRegistradas.value[safeIndex]
+        return {
+            id: cat?.id || null,
+            name: cat?.nombre || 'Sin nombre',
+            products: 0,
+            totalQty: '0 kg',
+            totalDesperdicio: '0 kg',
+            totalValue: 0,
+            profit: 0,
+            emoji: getCategoriaEmoji(cat, safeIndex),
+            tag: 'Activa',
+            pageIndex: safeIndex
+        }
+    }
+    
+    return category
 })
 
 const productsForCurrentCategory = computed(() => {
+    // Incluir forceRefreshKey en la dependencia
+    forceRefreshKey.value
+    
     if (!currentCategory.value) return []
     const catId = currentCategory.value.id
     const prods = productosPorCategoriaMap.value.get(catId) ?? []
@@ -830,6 +867,9 @@ const productsForCurrentCategory = computed(() => {
 })
 
 const filteredProducts = computed(() => {
+    // Incluir forceRefreshKey en la dependencia
+    forceRefreshKey.value
+    
     const term = productSearchQuery.value?.toLowerCase().trim()
     if (!term) return productsForCurrentCategory.value
 
@@ -849,34 +889,28 @@ const totalProductPages = computed(() => {
     return Math.ceil(filteredProducts.value.length / itemsPerPage.value)
 })
 
+// --- MANEJO DE CAMBIO DE CATEGORÍA ---
+const onCategoryChange = () => {
+    // Forzar recarga de datos cuando cambia la categoría
+    reloadAllData()
+    currentProductPage.value = 1
+    productSearchQuery.value = ''
+}
+
 // --- FUNCIONES DE NAVEGACIÓN ---
 const prevCategoryPage = () => {
     if (currentCategoryPage.value > 0) {
         currentCategoryPage.value--
-        currentProductPage.value = 1 // Resetear paginación de productos
-        productSearchQuery.value = '' // Limpiar búsqueda
+        onCategoryChange()
     }
 }
 
 const nextCategoryPage = () => {
     if (currentCategoryPage.value < paginatedCategories.value.length - 1) {
         currentCategoryPage.value++
-        currentProductPage.value = 1 // Resetear paginación de productos
-        productSearchQuery.value = '' // Limpiar búsqueda
+        onCategoryChange()
     }
 }
-
-const goToCategoryPage = (pageIndex) => {
-    currentCategoryPage.value = pageIndex
-    currentProductPage.value = 1
-    productSearchQuery.value = ''
-}
-
-// Watch para resetear paginación de productos cuando cambia la categoría
-watch(currentCategoryPage, () => {
-    currentProductPage.value = 1
-    productSearchQuery.value = ''
-})
 
 // Watch para resetear paginación de productos cuando se filtra
 watch(productSearchQuery, () => {
@@ -909,6 +943,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Los estilos permanecen iguales */
 .categoria-page {
     display: flex;
     flex-direction: column;
