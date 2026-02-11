@@ -384,15 +384,18 @@ const donutOptions = computed(() => ({
 const providerInvestments = computed(() => {
     const map = new Map()
 
-    // 1. Filtramos primero los productos que no tengan proveedor o cuyo proveedor esté eliminado
-    const productosFiltrados = productos.value.filter(p => {
+    productos.value.forEach((p) => {
+        // Intentamos obtener el proveedor de varias formas comunes en Eloquent
         const proveedor = p?.proveedor || p?.proveedor_objeto;
-        // Si el proveedor tiene deleted_at (soft delete de Laravel), lo excluimos
-        return proveedor && !proveedor.deleted_at;
-    });
 
-    productosFiltrados.forEach((p) => {
-        const name = p?.proveedor?.nombre || p?.proveedor_nombre || 'Proveedor Desconocido'
+        // REGLA: Si tiene proveedor y está eliminado, lo ignoramos.
+        // Si NO tiene proveedor (es null), lo agrupamos como 'Sin Proveedor'.
+        if (proveedor && proveedor.deleted_at) {
+            return;
+        }
+
+        const name = proveedor?.nombre || p?.proveedor_nombre || 'Proveedor no disponible'
+
         let kilos = Number(p?.kilogramos || p?.kilogramos_netos || p?.kilo || p?.stock || 0)
         let desperdicio = Number(p?.desperdicio || 0)
         let netKg = Math.max(0, kilos - desperdicio)
@@ -404,12 +407,12 @@ const providerInvestments = computed(() => {
         map.set(name, (map.get(name) ?? 0) + inversion)
     })
 
-    // 2. Convertimos a Array y limitamos decimales a 2 para evitar el error de la imagen
     return Array.from(map, ([name, value]) => ({
         name,
-        value: Number(value.toFixed(2)) // <--- Validación de decimales aquí
+        value: Number(value.toFixed(2))
     }))
-        .sort((a, b) => b.value - a.value) // Opcional: ordenar de mayor a menor inversión
+        .filter(i => i.value > 0) // Solo mostrar si hay inversión real
+        .sort((a, b) => b.value - a.value)
         .slice(0, 8)
 })
 
@@ -419,32 +422,66 @@ const barOptions = computed(() => ({
     chart: {
         type: 'bar',
         toolbar: { show: false },
-        background: 'transparent'
+        background: 'transparent',
+        // Añadimos margen izquierdo para que el nombre del proveedor no se corte
+        sparkline: { enabled: false }
     },
     plotOptions: {
         bar: {
-            borderRadius: 4,
+            borderRadius: 6, // Bordes más suaves
             horizontal: true,
-            dataLabels: { position: 'top' } // Muestra el número al final de la barra
+            barHeight: '45%', // <--- Esto evita que la barra ocupe todo el alto
+            dataLabels: {
+                position: 'top', // O 'bottom' si prefieres dentro de la barra
+            }
         }
     },
     dataLabels: {
         enabled: true,
-        formatter: (val) => formatCurrency(val), // Usa tu formateador de USD
-        style: { colors: [chartTextColor.value] }
+        textAnchor: 'start',
+        style: {
+            colors: [chartTextColor.value],
+            fontSize: '12px',
+            fontWeight: '600'
+        },
+        formatter: (val) => formatCurrency(val),
+        offsetX: 10, // Desplaza el texto a la derecha de la barra
     },
     xaxis: {
         categories: providerInvestments.value.map(i => i.name),
         labels: {
-            style: { colors: chartTextColor.value },
+            show: true,
+            style: {
+                colors: chartTextColor.value,
+                fontSize: '11px'
+            },
             formatter: (val) => formatCurrency(val)
+        },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+    },
+    yaxis: {
+        labels: {
+            style: {
+                colors: chartTextColor.value,
+                fontSize: '12px',
+                fontWeight: 500
+            }
         }
     },
-    yaxis: { labels: { style: { colors: chartTextColor.value } } },
     colors: [chartPalette.value[0] || '#2aa876'],
     theme: { mode: isDark.value ? 'dark' : 'light' },
-    grid: { borderColor: chartGridColor.value },
+    grid: {
+        borderColor: chartGridColor.value,
+        xaxis: { lines: { show: true } }, // Líneas verticales de fondo
+        yaxis: { lines: { show: false } }, // Quitar líneas horizontales
+        padding: {
+            left: 20,
+            right: 40 // Espacio para que el $9,00 no se pegue al borde
+        }
+    },
     tooltip: {
+        theme: isDark.value ? 'dark' : 'light',
         y: { formatter: (val) => formatCurrency(val) }
     }
 }))
