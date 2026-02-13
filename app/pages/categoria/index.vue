@@ -320,9 +320,9 @@
                                             height="55px" 
                                             location="top"
                                             style="
-                                                border: 1px solid rgba(var(--v-theme-on-surface), 0.38) !important; 
-                                                background-color: transparent !important; 
-                                                color: rgb(var(--v-theme-on-surface)) !important;
+                                                border: 0.7px solid rgba(var(--v-theme-on-surface), 0.38) !important;
+                                                background: #f5f5f5 !important;
+                                                color: rgb(var(--v-theme-on-)) !important;
                                                 min-width: 55px !important;
                                                 width: 55px !important;
                                             ">
@@ -339,17 +339,32 @@
                                                 @select="handleEmojiSelect" />
                                         </div>
                                     </ClientOnly>
-                                </v-menu>
-                                <div class="name-input-block__inputs">
-                                    <label class="text-caption font-weight-bold mb-1 d-block text-medium-emphasis">Nombre</label>
-                                    <v-select v-model="formulario.nombre" :items="categoryOptions"
-                                        placeholder="Selecciona una categoría" variant="outlined" density="comfortable"
-                                        class="name-field" :rules="[requiredRule]" color="success"
-                                        base-color="success" hide-details="auto"></v-select>
-                                    <v-textarea v-model="formulario.detalle" label="Descripción"
-                                        placeholder="Describe cómo usarás esta categoría" variant="outlined"
-                                        density="comfortable" rows="3" class="description-field mt-3" :counter="160"
-                                        :maxlength="160"></v-textarea>
+                                </v-menu><div class="name-input-block__inputs">
+                                    <v-select 
+                                        v-model="formulario.nombre" 
+                                        :items="categoryOptions"
+                                        label="Categoría"
+                                        placeholder="Selecciona una categoría" 
+                                        variant="outlined" 
+                                        density="comfortable"
+                                        class="name-field" 
+                                        :rules="[requiredRule]" 
+                                        color="success"
+                                        item-color="success"
+                                    ></v-select>
+                                    <v-textarea 
+                                        v-model="formulario.detalle" 
+                                        label="Descripción"
+                                        placeholder="Describe cómo usarás esta categoría" 
+                                        variant="outlined"
+                                        density="comfortable" 
+                                        rows="3" 
+                                        class="description-field mt-3" 
+                                        :counter="160"
+                                        :maxlength="160"
+                                        color="success"
+                                        base-color="success"
+                                    ></v-textarea>
                                 </div>
                             </div>
                         </div>
@@ -1051,7 +1066,7 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
+    gap: 1px;
 }
 
 .modal-shell__eyebrow {
@@ -1074,9 +1089,6 @@ onMounted(() => {
     font-size: 0.92rem;
 }
 
-.modal-shell__dismiss {
-    margin-top: -6px;
-}
 
 .modal-shell__divider {
     height: 1px;
@@ -1099,7 +1111,7 @@ onMounted(() => {
 .modal-shell__form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
     flex: 1;
     min-height: 0;
 }
@@ -1109,12 +1121,13 @@ onMounted(() => {
     flex-direction: column;
     gap: 18px;
     flex: 1;
-    min-height: 0;
     max-height: 100%;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
+    padding-top: 5px;    
     padding-right: 6px;
     padding-bottom: 6px;
+    padding-left: 4px;
 }
 
 .modal-shell__content::-webkit-scrollbar {
@@ -1293,7 +1306,7 @@ onMounted(() => {
     min-width: 58px;
     border-radius: 50% !important;
     border: 1px solid var(--app-border);
-    /* background: var(--app-surface) !important; Removed to allow transparency */
+    background-color: #e2e8f0;
     color: var(--app-text);
     font-size: 1.5rem;
     padding: 0;
@@ -1320,20 +1333,17 @@ onMounted(() => {
     gap: 10px;
 }
 
-.name-field,
-.description-field {
-    border-radius: 18px;
-}
 
 .name-field :deep(.v-field__input),
 .description-field :deep(.v-field__input) {
-    min-height: 56px;
+    min-height: 50px;
 }
 
 .name-field :deep(.v-field__outline),
 .description-field :deep(.v-field__outline) {
     border-width: 1.5px;
     border-color: var(--app-border);
+     border-radius: 14px;
 }
 
 .emoji-picker-surface {
@@ -1472,6 +1482,7 @@ onMounted(() => {
         padding: 8px;
     }
 }
+
 
 :global(.v-theme--light .bg-error-lighten-5) {
     background-color: #ffebee !important;
