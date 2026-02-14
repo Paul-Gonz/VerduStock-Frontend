@@ -308,16 +308,28 @@
                                 {{ formError }}
                             </v-alert>
                             <div class="name-input-block">
-                                <v-menu v-model="showEmojiPicker" :close-on-content-click="false" location="bottom"
+                                    <v-menu v-model="showEmojiPicker" :close-on-content-click="false" location="bottom"
                                     offset="8">
                                     <template #activator="{ props }">
-                                        <v-btn v-bind="props" class="emoji-selector emoji-selector--floating"
-                                            variant="flat" color="grey-lighten-4" elevation="0" size="large"
-                                            rounded="circle" height="55px" location="top">
-                                            <span v-if="formulario.emoji" class="emoji-selector__value">
+                                        <v-btn v-bind="props" 
+                                            class="emoji-selector-custom emoji-selector--floating"
+                                            variant="outlined" 
+                                            elevation="0" 
+                                            size="large"
+                                            rounded="circle" 
+                                            height="55px" 
+                                            location="top"
+                                            style="
+                                                border: 1px solid rgba(var(--v-theme-on-surface), 0.38) !important; 
+                                                background-color: transparent !important; 
+                                                color: rgb(var(--v-theme-on-surface)) !important;
+                                                min-width: 55px !important;
+                                                width: 55px !important;
+                                            ">
+                                            <span v-if="formulario.emoji" class="emoji-selector__value" style="font-size: 1.5rem !important;">
                                                 {{ formulario.emoji }}
                                             </span>
-                                            <v-icon v-else icon="mdi-plus" class="emoji-selector__icon"></v-icon>
+                                            <v-icon v-else icon="mdi-plus" size="24" :color="$vuetify.theme.current.dark ? 'white' : 'grey-darken-1'"></v-icon>
                                         </v-btn>
                                     </template>
                                     <ClientOnly>
@@ -329,13 +341,14 @@
                                     </ClientOnly>
                                 </v-menu>
                                 <div class="name-input-block__inputs">
-                                    <v-text-field v-model="formulario.nombre" label="Nombre"
-                                        placeholder="Ej. Vegetales hoja verde" variant="outlined" density="comfortable"
+                                    <label class="text-caption font-weight-bold mb-1 d-block text-medium-emphasis">Nombre</label>
+                                    <v-select v-model="formulario.nombre" :items="categoryOptions"
+                                        placeholder="Selecciona una categoría" variant="outlined" density="comfortable"
                                         class="name-field" :rules="[requiredRule]" color="success"
-                                        base-color="success"></v-text-field>
+                                        base-color="success" hide-details="auto"></v-select>
                                     <v-textarea v-model="formulario.detalle" label="Descripción"
                                         placeholder="Describe cómo usarás esta categoría" variant="outlined"
-                                        density="comfortable" rows="3" class="description-field" :counter="160"
+                                        density="comfortable" rows="3" class="description-field mt-3" :counter="160"
                                         :maxlength="160"></v-textarea>
                                 </div>
                             </div>
@@ -436,8 +449,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import EmojiPicker from 'vue3-emoji-picker'
+import { ref, computed, onMounted, watch, nextTick, defineAsyncComponent } from 'vue'
+const EmojiPicker = defineAsyncComponent(() => import('vue3-emoji-picker'))
 import 'vue3-emoji-picker/css'
 import { navigateTo } from '#app'
 
@@ -475,6 +488,15 @@ const MAX_PRODUCTOS_PER_PAGE = 500
 const HIGH_STOCK_THRESHOLD = 30
 const MEDIUM_STOCK_THRESHOLD = 10
 const ITEMS_PER_PAGE = 12
+
+const categoryOptions = [
+    'Frutas',
+    'Verduras/Hortalizas',
+    'Legumbres',
+    'Cereales',
+    'Frutos secos/Semillas',
+    'Aceites/Grasas vegetales',
+]
 
 const emojiFallbacks = ['🥬', '🍎', '🥕', '🌾', '🧺']
 const emojiDisabledGroups = ['smileys_people', 'animals_nature', 'activities', 'travel_places', 'objects', 'symbols', 'flags']
@@ -1271,7 +1293,7 @@ onMounted(() => {
     min-width: 58px;
     border-radius: 50% !important;
     border: 1px solid var(--app-border);
-    background: var(--app-surface) !important;
+    /* background: var(--app-surface) !important; Removed to allow transparency */
     color: var(--app-text);
     font-size: 1.5rem;
     padding: 0;

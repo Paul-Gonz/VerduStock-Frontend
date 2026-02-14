@@ -423,16 +423,15 @@ const barOptions = computed(() => ({
         type: 'bar',
         toolbar: { show: false },
         background: 'transparent',
-        // Añadimos margen izquierdo para que el nombre del proveedor no se corte
         sparkline: { enabled: false }
     },
     plotOptions: {
         bar: {
-            borderRadius: 6, // Bordes más suaves
+            borderRadius: 6,
             horizontal: true,
-            barHeight: '45%', // <--- Esto evita que la barra ocupe todo el alto
+            barHeight: '45%',
             dataLabels: {
-                position: 'top', // O 'bottom' si prefieres dentro de la barra
+                position: 'center', // Cambiado de 'top' a 'center'
             }
         }
     },
@@ -445,7 +444,8 @@ const barOptions = computed(() => ({
             fontWeight: '600'
         },
         formatter: (val) => formatCurrency(val),
-        offsetX: 10, // Desplaza el texto a la derecha de la barra
+        offsetX: 10,
+        // Eliminamos offsetY para que el centrado vertical sea automático
     },
     xaxis: {
         categories: providerInvestments.value.map(i => i.name),
@@ -473,11 +473,11 @@ const barOptions = computed(() => ({
     theme: { mode: isDark.value ? 'dark' : 'light' },
     grid: {
         borderColor: chartGridColor.value,
-        xaxis: { lines: { show: true } }, // Líneas verticales de fondo
-        yaxis: { lines: { show: false } }, // Quitar líneas horizontales
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } },
         padding: {
             left: 20,
-            right: 40 // Espacio para que el $9,00 no se pegue al borde
+            right: 40
         }
     },
     tooltip: {
