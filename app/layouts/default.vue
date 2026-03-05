@@ -1,140 +1,155 @@
 <template>
-    <v-app id="verdustock-app">
-        <v-navigation-drawer v-model="drawer" app width="292" class="verdus-nav" border="0" elevation="2">
-            <div class="nav-inner">
-                <div class="brand-block">
-                    <div class="brand-icon">
-                        <v-img src="/logo.png" alt="Logo" class="brand-logo" contain></v-img>
-                    </div>
-                    <div>
-                        <p class="brand-title">Disfruver</p>
-                        <p class="brand-subtitle">Del campo a tu casa</p>
-                    </div>
+  <div class="h-screen w-full flex bg-slate-50 text-slate-800 overflow-hidden font-sans">
+    
+    <!-- Sidebar -->
+    <aside 
+      class="w-64 flex flex-col bg-white border-r border-slate-200 transition-transform duration-300 z-20 shrink-0 shadow-sm"
+      :class="drawer ? 'translate-x-0' : '-translate-x-full fixed h-full'"
+    >
+      <div class="h-14 px-5 flex items-center gap-3 border-b border-slate-100 shrink-0">
+        <img src="/logo.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm" />
+        <div class="flex flex-col justify-center">
+          <h1 class="text-[15px] font-bold text-slate-800 leading-none">Disfruver</h1>
+          <p class="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-1">Del campo a tu casa</p>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+        <NuxtLink
+          v-for="item in menuItems"
+          :key="item.title"
+          :to="item.route"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium"
+          :class="isActive(item.route) ? 'bg-green-100/80 text-green-800' : 'text-slate-600 hover:bg-slate-50 hover:text-green-600'"
+        >
+          <!-- Nota: Sin Vuetify ni MDI importados tendras que cambiar "item.icon" (ej. mdi-home) por un archivo de icono o SVG literal si lo necesitas. Por ahora dejamos un icono basico SVG -->
+          <span 
+            class="flex items-center justify-center transition-colors"
+            :class="isActive(item.route) ? 'text-green-600' : 'text-slate-400'"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </span>
+          {{ item.title }}
+        </NuxtLink>
+      </nav>
+
+      <div class="py-4 border-t border-slate-100 text-center shrink-0">
+        <p class="text-[10px] text-slate-400 font-medium">Sistema de Gestión v1.0</p>
+        <p class="text-[9px] text-slate-300 mt-0.5">© 2026 LoopInf</p>
+      </div>
+    </aside>
+
+    <!-- Main Content wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 transition-transform">
+      
+      <!-- Top header -->
+      <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 shadow-sm relative">
+        
+        <div class="flex items-center gap-3">
+          <button @click="drawer = !drawer" class="p-1.5 -ml-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          
+          <h2 class="text-lg font-semibold text-slate-800 tracking-tight hidden sm:block">
+            {{ pageTitle }}
+          </h2>
+        </div>
+
+        <div class="flex items-center gap-3 sm:gap-5">
+          
+          <!-- Boton simple para simular Tasa BCV y Logout temporalmente sin Vuetify Menus -->
+          <div v-if="tasaDolar" class="relative hidden sm:flex flex-col items-end mr-2">
+            <button 
+              @click="showTasaDetails = !showTasaDetails" 
+              class="flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+            >
+              <span class="text-[9px] uppercase font-bold tracking-widest text-green-700 leading-none mb-0.5">Tasa BCV</span>
+              <span class="text-[13px] font-extrabold text-green-900 leading-none">{{ tasaTexto }}</span>
+            </button>
+
+            <!-- Menú Desplegable con Detalles de la Tasa -->
+            <div 
+              v-if="showTasaDetails" 
+              class="absolute top-full mt-2 right-0 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 animate-in fade-in slide-in-from-top-2"
+            >
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                  <span class="flex items-center justify-center bg-green-100 rounded-full p-1.5 text-green-700">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </span>
+                  <span class="font-bold text-slate-700 text-sm">Detalles de Tasa</span>
+                </div>
+                
+                <div class="flex justify-between items-center px-1">
+                  <span class="text-xs text-slate-500 font-medium whitespace-nowrap mr-2">Fuente:</span>
+                  <span class="text-[10px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-right">Banco Central de Venezuela</span>
+                </div>
+                
+                <div class="flex justify-between items-center px-1">
+                  <span class="text-xs text-slate-500 font-medium">Actualizado:</span>
+                  <span class="text-[11px] font-semibold text-slate-600 text-right">{{ tasaDolar.fechaActualizacion ? new Date(tasaDolar.fechaActualizacion).toLocaleString('es-VE') : 'N/A' }}</span>
                 </div>
 
-                <v-divider class="nav-divider"></v-divider>
-
-                <v-list nav class="nav-list" density="comfortable">
-                    <v-list-item v-for="item in menuItems" :key="item.title" :to="item.route" rounded="lg"
-                        class="menu-item" :class="{ 'menu-item--active': isActive(item.route) }">
-                        <template #prepend>
-                            <div class="menu-pill">
-                                <v-avatar :class="['menu-icon', { 'menu-icon--active': isActive(item.route) }]"
-                                    size="40">
-                                    <v-icon :icon="item.icon"></v-icon>
-                                </v-avatar>
-                                <span class="menu-text">{{ item.title }}</span>
-                            </div>
-                        </template>
-                    </v-list-item>
-                </v-list>
-
-                <div class="nav-footer">
-                    <p class="nav-version">Sistema de Gestión de Inventario v1.0</p>
-                    <p class="nav-copy">© 2026 LoopInf Venezuela</p>
-                </div>
+                <button @click="showTasaDetails = false" class="w-full mt-1 text-xs text-center text-slate-400 hover:text-slate-600 py-1 transition-colors">
+                  Cerrar
+                </button>
+              </div>
             </div>
-        </v-navigation-drawer>
+          </div>
 
-        <v-app-bar app flat class="verdus-app-bar" color="surface">
-            <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-            <v-toolbar-title class="font-weight-medium">
-                {{ pageTitle }}
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
+          <!-- Perfil/Logout -->
+          <div class="relative group">
+            <button class="p-0.5 rounded-full border-2 border-transparent hover:border-green-100 transition-all focus:outline-none bg-slate-50 text-green-600 overflow-hidden shadow-sm">
+               <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12q2.075 0 3.538-1.463Q17 9.075 17 7q0-2.075-1.462-3.538Q14.075 2 12 2T8.463 3.462Q7 5.075 7 7q0 2.075 1.463 3.537Q9.925 12 12 12Zm0 3q-3.575 0-7.312 1.838Q1 18.675 1 22h22q0-3.325-3.687-5.162Q15.575 15 12 15Z"/></svg>
+            </button>
 
-            <v-btn icon variant="text" class="theme-toggle" @click="toggleTheme">
-                <v-icon :icon="themeIcon"></v-icon>
-            </v-btn>
+            <!-- Dropdown basico CSS hover -->
+            <div class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl shadow-slate-200/50 border border-slate-100 py-1.5 hidden group-hover:block transition-all z-50">
+              <button @click="goToProfile" class="w-full text-left px-4 py-1.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-green-600 transition-colors">
+                Mi Perfil
+              </button>
+              <div class="border-t border-slate-50 my-1"></div>
+              <button @click="confirmLogout" class="w-full text-left px-4 py-1.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors">
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
 
-            <v-menu v-model="tasaMenu" location="bottom end" :close-on-content-click="false">
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" variant="text" class="rate-chip"
-                        :class="{ 'rate-chip--muted': tasaLoading || tasaError }" :ripple="false">
-                        <v-icon icon="mdi-currency-usd" size="18" class="rate-icon"></v-icon>
-                        <div>
-                            <p class="rate-label">TASA BCV DEL DIA</p>
-                            <p class="rate-value">{{ tasaTexto }}</p>
-                        </div>
-                    </v-btn>
-                </template>
-                <v-card class="rate-menu" rounded="lg" color="surface">
-                    <v-card-title class="rate-menu__title">Tasa BCV</v-card-title>
-                    <v-card-text class="rate-menu__body">
-                        <div class="rate-meta">
-                            <div class="rate-meta__row">
-                                <v-icon icon="mdi-calendar-clock" size="16"></v-icon>
-                                <span>Actualizado: {{ tasaFechaTexto }}</span>
-                            </div>
-                            <div class="rate-meta__row" v-if="tasaDolar?.fuente">
-                                <v-icon icon="mdi-database" size="16"></v-icon>
-                                <span>Fuente: Banco Central de Venezuela</span>
-                            </div>
-                        </div>
-                    </v-card-text>
-                </v-card>
-            </v-menu>
+        </div>
+      </header>
 
-            <v-menu>
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon class="mr-2">
-                        <v-badge dot color="success" bordered>
-                            <v-avatar color="success-lighten-4" size="36">
-                                <v-icon color="success" icon="mdi-account"></v-icon>
-                            </v-avatar>
-                        </v-badge>
-                    </v-btn>
-                </template>
-                <v-list density="compact">
-                    <v-list-item title="Mi Perfil" prepend-icon="mdi-account-circle-outline"
-                        @click="goToProfile"></v-list-item>
-                    <v-divider></v-divider>
-                    <v-list-item title="Cerrar Sesión" prepend-icon="mdi-logout" class="text-red"
-                        @click="confirmLogout"></v-list-item>
-                </v-list>
-            </v-menu>
-        </v-app-bar>
+      <!-- Page Content -->
+      <main class="flex-1 overflow-y-auto bg-slate-50 text-slate-800 scroll-smooth">
+        <slot />
+      </main>
+      
+    </div>
 
-        <v-main class="main-scroll">
-            <v-container fluid class="app-shell">
-                <slot />
-            </v-container>
-        </v-main>
+    <!-- Modal para Logout estilo original Tailwind -->
+    <BaseModal 
+      :isOpen="logoutDialog" 
+      title="Cerrar Sesión" 
+      variant="danger"
+      :loading="loggingOut"
+      @close="logoutDialog = false"
+      @confirm="logout"
+      confirmText="Cerrar Sesión"
+    >
+      <p class="text-gray-600 text-sm">¿Estás seguro de que deseas cerrar tu sesión?</p>
+    </BaseModal>
 
-        <v-dialog v-model="logoutDialog" max-width="400">
-            <v-card rounded="lg">
-                <v-card-title class="text-h6 font-weight-bold">
-                    <v-icon color="warning" class="mr-2">mdi-logout</v-icon>
-                    Cerrar Sesión
-                </v-card-title>
-                <v-card-text>
-                    ¿Estás seguro de que deseas cerrar la sesión?
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn variant="tonal" @click="logoutDialog = false">Cancelar</v-btn>
-                    <v-btn color="warning" @click="logout" :loading="loggingOut" variant="flat">
-                        Cerrar Sesión
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-
-        <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
-            {{ snackbar.message }}
-            <template v-slot:actions>
-                <v-btn variant="text" @click="snackbar.show = false">Cerrar</v-btn>
-            </template>
-        </v-snackbar>
-    </v-app>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import menuConfig from './menu.json'
 import { TasaDolarService } from '../utils/tasaDolar.js'
-import { useTheme } from 'vuetify'
 
 // Router y Route
 const route = useRoute()
@@ -150,16 +165,9 @@ const tasaTimer = ref(null)
 const tasaService = ref(null)
 const tasaLoading = ref(true)
 const tasaError = ref(false)
-const tasaMenu = ref(false)
-const theme = useTheme()
+  const showTasaDetails = ref(false)
+const isActive = (targetRoute) => route.path.startsWith(targetRoute)
 
-const snackbar = ref({
-    show: false,
-    message: '',
-    color: 'success'
-})
-
-// Título de página dinámico
 const pageTitle = computed(() => {
     const currentItem = menuItems.value.find(item => item.route === route.path)
     return currentItem ? currentItem.title : 'VerduStock'
@@ -190,39 +198,12 @@ const tasaTexto = computed(() => {
     return 'Sin datos'
 })
 
-const tasaFechaTexto = computed(() => {
-    if (!tasaDolar.value?.fechaActualizacion) return 'Sin fecha'
-    const date = new Date(tasaDolar.value.fechaActualizacion)
-    if (Number.isNaN(date.getTime())) return 'Sin fecha'
-    return date.toLocaleString('es-VE')
-})
-
-const themeIcon = computed(() => {
-    const current = theme.global.name.value
-    if (current === 'dark') return 'mdi-white-balance-sunny'
-    if (current === 'light') return 'mdi-weather-night'
-    return 'mdi-theme-light-dark'
-})
-
-
-// Métodos
-const isActive = (targetRoute) => route.path.startsWith(targetRoute)
-
-const showMessage = (message, color = 'success') => {
-    snackbar.value = { show: true, message, color }
-}
-
 const goToProfile = () => {
     router.push('/perfil')
 }
 
 const confirmLogout = () => {
     logoutDialog.value = true
-}
-
-const toggleTheme = () => {
-    const current = theme.global.name.value
-    theme.global.name.value = current === 'dark' ? 'light' : 'dark'
 }
 
 const logout = async () => {
@@ -238,14 +219,11 @@ const logout = async () => {
         })
 
         if (response?.success) {
-            showMessage('Sesión cerrada exitosamente')
-            setTimeout(() => router.push('/login'), 1500)
+            router.push('/login')
         }
     } catch (error) {
         if (error.status === 401 || error.status === 419) {
             router.push('/login')
-        } else {
-            showMessage('Error al cerrar sesión', 'error')
         }
     } finally {
         loggingOut.value = false
@@ -253,7 +231,6 @@ const logout = async () => {
     }
 }
 
-// Verificación de Auth inicial
 onMounted(async () => {
     try {
         const response = await $fetch('http://localhost:8000/check-auth', {
@@ -261,7 +238,7 @@ onMounted(async () => {
         })
         if (!response.authenticated) router.push('/login')
     } catch (e) {
-        router.push('/login')
+        // Silencioso o a login
     }
 })
 
@@ -287,260 +264,3 @@ onBeforeUnmount(() => {
     if (tasaTimer.value) clearInterval(tasaTimer.value)
 })
 </script>
-
-<style scoped>
-#verdustock-app {
-    font-family: 'Nunito', sans-serif;
-}
-
-
-.verdus-nav {
-    border-right: 1px solid var(--app-border) !important;
-    background: var(--app-surface) !important;
-    border-bottom: 1px solid var(--app-border) !important;
-}
-
-.nav-inner {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 17px;
-}
-
-.brand-block {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 5.6px;
-}
-
-.brand-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 15px;
-}
-
-.brand-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--app-text);
-    margin: 0;
-}
-
-.brand-subtitle {
-    font-size: 0.6rem;
-    color: var(--app-text-muted);
-    margin-bottom: 3.5px;
-    text-transform: uppercase;
-}
-
-.menu-item {
-    margin-top: 9px;
-    margin-bottom: 9px;
-    font-weight: 650;
-}
-
-.menu-pill {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.menu-text {
-    font-size: 0.95rem;
-    font-weight: 550;
-    color: var(--app-text);
-}
-
-.menu-icon {
-    background: transparent !important;
-    background: var(--app-surface-muted) !important;
-    color: var(--app-accent-strong);
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.menu-icon--active {
-    background: var(--app-accent-strong) !important;
-    color: #ffffff !important;
-    border-color: transparent;
-}
-
-.menu-item--active {
-    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-strong) 100%) !important;
-    color: white !important;
-}
-
-.menu-item--active .v-icon,
-.menu-item--active .menu-text {
-    color: white !important;
-}
-
-.menu-item--active .v-text {
-    color: white !important;
-}
-
-.nav-footer {
-    margin-top: auto;
-    font-size: 0.75rem;
-    color: var(--app-text-muted);
-    text-align: center;
-}
-
-.verdus-app-bar {
-    background: var(--app-surface) !important;
-    border-bottom: 1px solid var(--app-border) !important;
-    padding: 0 20px;
-    min-height: 62px;
-    display: flex;
-    align-items: center;
-}
-
-.verdus-app-bar :deep(.v-app-bar-nav-icon) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-}
-
-.verdus-app-bar :deep(.v-toolbar-title) {
-    display: flex;
-    align-items: center;
-    margin: 0;
-}
-
-.theme-toggle {
-    margin-right: 8px;
-    color: var(--app-text);
-}
-
-.rate-chip {
-    display: flex;
-    align-items: left;
-    gap: 8px;
-    padding: 8px 2px;
-    border-radius: 14px;
-    margin-right: 19px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-:deep(.rate-chip.v-btn) {
-    background: var(--app-chip-bg) !important;
-    border: 1px solid var(--app-chip-border) !important;
-    box-shadow: 0 6px 16px rgba(9, 94, 57, 0.1) !important;
-}
-
-:deep(.rate-chip.v-btn:hover) {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(9, 94, 57, 0.14) !important;
-}
-
-.rate-chip--muted {
-    opacity: 0.8;
-}
-
-.rate-icon {
-    color: var(--app-accent-strong);
-}
-
-.rate-label {
-    margin: 0;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--app-text-muted);
-}
-
-.rate-value {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--app-text);
-}
-
-.rate-menu {
-    min-width: 260px;
-    border: 1px solid var(--app-border);
-    box-shadow: 0 18px 40px rgba(7, 56, 34, 0.18);
-    background: var(--app-surface);
-}
-
-.rate-menu__title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--app-text);
-    padding-bottom: 0;
-}
-
-.rate-menu__body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 6px;
-}
-
-.rate-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: var(--app-surface-muted);
-    border-radius: 12px;
-    padding: 10px 12px;
-    color: var(--app-text-muted);
-    font-size: 0.78rem;
-}
-
-.rate-meta__row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.text-red {
-    color: #d32f2f !important;
-}
-
-.main-scroll {
-    height: 100vh;
-    overflow-y: auto;
-    background: var(--app-bg) !important;
-}
-
-:global(body, #__nuxt, .v-application) {
-    background: var(--app-bg) !important;
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-:global(.app-card) {
-    border-radius: 24px;
-    padding: 24px;
-    background: var(--app-surface);
-    border: 1px solid var(--app-border);
-    box-shadow: 0 10px 22px rgba(7, 56, 34, 0.08);
-}
-
-:global(.app-section) {
-    margin-bottom: 24px;
-}
-
-:global(.app-title) {
-    font-size: 1.8rem;
-    font-weight: 400;
-    color: var(--app-text);
-    margin: 0 0 12px;
-}
-
-:global(.v-btn:not(.v-btn--icon)) {
-    min-height: 44px;
-    border-radius: 14px;
-    padding-inline: 22px;
-    text-transform: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #ffffff !important;
-    background: linear-gradient(135deg, #0cc665 0%, #06a453 100%) !important;
-    box-shadow: 0 6px 16px rgba(6, 164, 83, 0.22);
-}
-</style>

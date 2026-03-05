@@ -1,39 +1,41 @@
 <template>
-    <v-container fluid class="dashboard-page">
-        <div class="dashboard-content">
-            <header class="hero-card app-card">
+    <div class="min-h-screen p-6 bg-gray-50">
+        <div class="max-w-7xl mx-auto flex flex-col gap-6">
+            <header class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center flex-wrap gap-4">
                 <div>
-                    <p class="hero-eyebrow">Dashboard</p>
-                    <h1 class="app-title">Control general del inventario</h1>
+                    <p class="uppercase tracking-widest text-xs text-gray-500 font-semibold">Dashboard</p>
+                    <h1 class="mt-1 text-2xl text-gray-900 font-semibold">Control general del inventario</h1>
                 </div>
-                <!-- <v-btn prepend-icon="mdi-upload">
-                    Exportar
-                </v-btn> -->
             </header>
 
-            <div v-if="loadingDashboard || dashboardError" class="feedback-stack">
-                <v-progress-linear v-if="loadingDashboard" color="success" indeterminate height="4" />
-                <v-alert v-if="dashboardError" type="error" variant="tonal" density="comfortable" border="start"
-                    border-color="error">
+            <div v-if="loadingDashboard || dashboardError" class="flex flex-col gap-3">
+                <div v-if="loadingDashboard" class="w-full bg-gray-200 h-1 overflow-hidden">
+                    <div class="bg-green-500 h-1 animate-pulse w-full"></div>
+                </div>
+                <div v-if="dashboardError" class="bg-red-50 text-red-700 p-4 rounded border-l-4 border-red-500 text-sm flex items-center">
                     {{ dashboardError }}
-                </v-alert>
+                </div>
             </div>
 
-            <section class="metrics-grid app-section">
-                <article v-for="card in resumenTarjetas" :key="card.title" class="stat-card app-card">
-                    <div class="stat-icon">
-                        <v-icon :icon="card.icon" color="success"></v-icon>
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <article v-for="card in resumenTarjetas" :key="card.title" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-4">
+                    <div class="w-11 h-11 rounded-2xl bg-green-100 text-green-600 flex items-center justify-center mb-1">
+                        <span class="w-6 h-6" v-html="card.icon"></span>
                     </div>
-                    <p class="stat-title">{{ card.title }}</p>
-                    <p class="stat-detail">{{ card.detail }}</p>
-                    <p class="stat-value">{{ card.value }}</p>
+                    <p class="text-[0.95rem] font-semibold text-gray-900">{{ card.title }}</p>
+                    <p class="text-sm text-gray-500">{{ card.detail }}</p>
+                    <p class="text-3xl font-semibold text-gray-900">{{ card.value }}</p>
                 </article>
             </section>
 
-            <section class="chart-grid app-section">
-                <article class="panel-card app-card">
-                    <div class="panel-heading">
-                        <v-icon icon="mdi-cube-outline" color="success"></v-icon>
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <article class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2.5 font-semibold text-gray-900 mb-3">
+                        <span class="text-green-600 w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                        </span>
                         <span>Distribución por Categoría</span>
                     </div>
                     <client-only>
@@ -41,9 +43,13 @@
                             :series="donutSeries" />
                     </client-only>
                 </article>
-                <article class="panel-card app-card">
-                    <div class="panel-heading">
-                        <v-icon icon="mdi-chart-bar" color="success"></v-icon>
+                <article class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2.5 font-semibold text-gray-900 mb-3">
+                        <span class="text-green-600 w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                            </svg>
+                        </span>
                         <span>Inversión por Proveedor</span>
                     </div>
                     <client-only>
@@ -53,62 +59,69 @@
                 </article>
             </section>
 
-            <section class="list-grid app-section">
-                <article class="list-card app-card danger">
-                    <div class="list-heading">
-                        <v-icon icon="mdi-alert" color="error"></v-icon>
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <article class="bg-red-50 p-6 rounded-xl shadow-sm border border-red-200 flex flex-col gap-4">
+                    <div class="flex items-center gap-2.5 font-semibold text-red-800">
+                        <span class="w-5 h-5 text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </span>
                         <span>Productos con Stock Bajo ({{ lowStockProducts.length }})</span>
                     </div>
-                    <div class="list-body scrollable-list">
+                    <div class="flex flex-col gap-4 max-h-80 overflow-y-auto pr-1">
                         <template v-if="lowStockProducts.length">
-                            <div v-for="item in lowStockProducts" :key="item.id" class="list-row">
+                            <div v-for="item in lowStockProducts" :key="item.id" class="bg-white/80 p-3.5 rounded-2xl border border-red-200 flex items-center justify-between gap-4">
                                 <div>
-                                    <p class="list-title">{{ item.name }}</p>
-                                    <p class="list-subtitle">{{ item.category }}</p>
+                                    <p class="text-[0.95rem] font-semibold text-gray-900">{{ item.name }}</p>
+                                    <p class="text-[0.78rem] text-gray-500">{{ item.category }}</p>
                                 </div>
-                                <div class="list-meta">
-                                    <p class="list-highlight">{{ item.stock }}</p>
-                                    <p class="list-label">Min: {{ item.minimum }}</p>
+                                <div class="text-right">
+                                    <p class="text-[0.95rem] font-semibold text-red-600">{{ item.stock }}</p>
+                                    <p class="text-[0.75rem] text-gray-500">Min: {{ item.minimum }}</p>
                                 </div>
                             </div>
                         </template>
-                        <p v-else-if="loadingDashboard" class="empty-state">Cargando inventario...</p>
-                        <p v-else class="empty-state">Todo el stock cumple con el umbral mínimo.</p>
+                        <p v-else-if="loadingDashboard" class="text-[0.85rem] text-gray-600">Cargando inventario...</p>
+                        <p v-else class="text-[0.85rem] text-gray-600">Todo el stock cumple con el umbral mínimo.</p>
                     </div>
                 </article>
-                <article class="list-card app-card warning">
-                    <div class="list-heading">
-                        <v-icon icon="mdi-timer-sand" color="orange"></v-icon>
+                <article class="bg-orange-50 p-6 rounded-xl shadow-sm border border-orange-200 flex flex-col gap-4">
+                    <div class="flex items-center gap-2.5 font-semibold text-orange-800">
+                        <span class="w-5 h-5 text-orange-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
                         <span>Productos por Vencer ({{ expiringProducts.length }})</span>
                     </div>
-                    <div class="list-body scrollable-list">
+                    <div class="flex flex-col gap-4 max-h-80 overflow-y-auto pr-1">
                         <template v-if="expiringProducts.length">
-                            <div v-for="item in expiringProducts" :key="item.id" class="list-row">
+                            <div v-for="item in expiringProducts" :key="item.id" class="bg-white/80 p-3.5 rounded-2xl border border-orange-200 flex items-center justify-between gap-4">
                                 <div>
-                                    <p class="list-title">{{ item.name }}</p>
-                                    <p class="list-subtitle">{{ item.category }}</p>
+                                    <p class="text-[0.95rem] font-semibold text-gray-900">{{ item.name }}</p>
+                                    <p class="text-[0.78rem] text-gray-500">{{ item.category }}</p>
                                 </div>
-                                <div class="list-meta">
-                                    <p class="list-highlight warning-text">{{ item.expiresIn }} día(s)</p>
-                                    <p class="list-label">{{ item.date }}</p>
+                                <div class="text-right">
+                                    <p class="text-[0.95rem] font-semibold text-orange-600">{{ item.expiresIn }} día(s)</p>
+                                    <p class="text-[0.75rem] text-gray-500">{{ item.date }}</p>
                                 </div>
                             </div>
                         </template>
-                        <p v-else-if="loadingDashboard" class="empty-state">Evaluando fechas estimadas...</p>
-                        <p v-else class="empty-state">No hay productos próximos a vencer.</p>
+                        <p v-else-if="loadingDashboard" class="text-[0.85rem] text-gray-600">Evaluando fechas estimadas...</p>
+                        <p v-else class="text-[0.85rem] text-gray-600">No hay productos próximos a vencer.</p>
                     </div>
                 </article>
             </section>
         </div>
-    </v-container>
+    </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
-import { useTheme } from 'vuetify'
+import { computed, defineAsyncComponent, onMounted, ref, watchEffect } from 'vue'
 import { navigateTo } from '#app'
 
-// --- CONFIGURACIÓN DE API (IDÉNTICA A PROVEEDORES) ---
+// --- CONFIGURACIÓN DE API ---
 const API_URL = 'http://localhost:8000'
 const fetchConfig = {
     credentials: 'include',
@@ -124,12 +137,10 @@ const Apexchart = import.meta.client
 
 const MAX_PRODUCTS_FOR_DASHBOARD = 500
 const LOW_STOCK_THRESHOLD_KG = 10
-const DEFAULT_SHELF_LIFE_DAYS = 7
 const EXPIRY_WARNING_DAYS = 7
 const ONE_DAY_MS = 1000 * 60 * 60 * 24
 const donutColors = ['#0ece78', '#6ee7b7', '#34d399', '#10b981', '#059669', '#65a30d']
 const STOCK_THRESHOLD_STORAGE_KEY = 'inventory.stockThresholds'
-const theme = useTheme()
 
 // --- FORMATEADORES ---
 const currencyFormatter = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' })
@@ -139,38 +150,11 @@ const integerFormatter = new Intl.NumberFormat('es-EC', { maximumFractionDigits:
 const formatCurrency = (val = 0) => currencyFormatter.format(Number(val) || 0)
 const formatKilograms = (val = 0) => `${kilosFormatter.format(Number(val) || 0)} kg`
 
-const isDark = computed(() => theme.global.current.value.dark)
+const isDark = computed(() => false)
 
-const getCssVar = (name, fallback) => {
-    if (!import.meta.client) return fallback
-    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-    return value || fallback
-}
-
-const chartPalette = computed(() => {
-    if (isDark.value) {
-        const accent = getCssVar('--app-accent', '#2be874')
-        const accentStrong = getCssVar('--app-accent-strong', '#0fcb62')
-        return [
-            accent,
-            accentStrong,
-            '#3BC550',
-            '#1fdc75',
-            '#10b85c',
-            '#7afbb8',
-            '#71E559'
-        ]
-    }
-    return donutColors
-})
-
-const chartTextColor = computed(() =>
-    getCssVar('--app-text', isDark.value ? '#ecfdf6' : '#0b2f1f')
-)
-
-const chartGridColor = computed(() =>
-    isDark.value ? 'rgba(236, 253, 246, 0.08)' : 'rgba(5, 59, 45, 0.08)'
-)
+const chartPalette = computed(() => donutColors)
+const chartTextColor = computed(() => '#0b2f1f')
+const chartGridColor = computed(() => 'rgba(5, 59, 45, 0.08)')
 
 // --- ESTADOS ---
 const productos = ref([])
@@ -197,19 +181,17 @@ const getLocalStockThreshold = (productoId) => {
     return Number.isFinite(value) && value >= 0 ? value : LOW_STOCK_THRESHOLD_KG
 }
 
-// --- LLAMADA A RUTA (AJUSTADA) ---
+// --- LLAMADA A RUTA ---
 const loadDashboardData = async () => {
     loadingDashboard.value = true
     dashboardError.value = ''
 
     try {
-        // Ejecutamos ambas peticiones con la configuración estable
         const [productosResponse, statsResponse] = await Promise.all([
             $fetch(`${API_URL}/productos?por_pagina=${MAX_PRODUCTS_FOR_DASHBOARD}`, fetchConfig),
             $fetch(`${API_URL}/productos/reporte/estadisticas`, fetchConfig),
         ])
 
-        // Normalización de datos
         productos.value = productosResponse?.data || productosResponse || []
         estadisticas.value = statsResponse?.estadisticas || {}
 
@@ -245,10 +227,9 @@ const getStockThreshold = (p) => {
 }
 
 const totalProductos = computed(() => Number(estadisticas.value?.total_productos) || productos.value.length)
-import { watchEffect } from 'vue'
+
 const gananciaPotencial = ref(0)
 watchEffect(() => {
-    // recalcula cada vez que productos o tasaDolar cambian
     gananciaPotencial.value = productos.value.reduce((acc, p) => {
         const kilos = getNetKilograms(p)
         let venta = Number(p?.precio_venta_kg || 0)
@@ -266,7 +247,6 @@ const categoryDistribution = computed(() => {
     productos.value.forEach((p) => {
         const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
         const kilos = getNetKilograms(p)
-        // Suma solo los kg netos
         map.set(name, (map.get(name) ?? 0) + kilos)
     })
     return Array.from(map, ([name, value]) => ({ name, value }))
@@ -274,12 +254,9 @@ const categoryDistribution = computed(() => {
 
 const totalCategoryKilos = computed(() => categoryDistribution.value.reduce((sum, item) => sum + item.value, 0))
 
-
-
 const isProductoEnBs = (p) => {
     if (p?.moneda === 'Bs' || p?.currency === 'Bs' || p?.moneda === 'VEF' || p?.currency === 'VEF' || p?.moneda === 'VES' || p?.currency === 'VES') return true;
     if (p?.detalle && typeof p.detalle === 'string' && (p.detalle.includes('VEF') || p.detalle.includes('Bs') || p.detalle.includes('VES'))) return true;
-    // Heurística: si el precio de compra o venta es mayor a $500 y menor a $1000000, probablemente está en Bs
     if ((Number(p?.precio_compra) > 500 && Number(p?.precio_compra) < 1000000) || (Number(p?.precio_venta_kg) > 500 && Number(p?.precio_venta_kg) < 1000000)) {
         return true;
     }
@@ -287,13 +264,10 @@ const isProductoEnBs = (p) => {
 }
 
 const convertirBsAUsd = (montoBs) => {
-    // getTasa debe estar definida en el archivo, si no, usa 1
     const tasa = typeof getTasa === 'function' ? getTasa() : 1;
     if (!tasa || tasa <= 0) return 0;
     return Number((Number(montoBs) / tasa).toFixed(2));
 }
-
-// --- LÓGICA DE VENCIMIENTO (COPIADA DE INVENTARIO PARA CONSISTENCIA) ---
 
 const parseDetalle = (detalle) => {
     if (!detalle || typeof detalle !== 'string') return { nota: '', frescura: null }
@@ -330,12 +304,8 @@ const computeExpiryDate = (producto) => {
         if (!base || Number.isNaN(base.getTime())) return null;
         return new Date(base.getTime() + Number(dias) * ONE_DAY_MS);
     }
-    // Fallback logic if no specific freshness info is found, matching original default behavior or returning null?
-    // User wants it functional. If no data, it shouldn't expire immediately. 
-    // Let's fallback to null so it doesn't show up as expiring unless configured.
     return null;
 }
-
 
 // --- CONFIGURACIÓN DE GRÁFICOS (APEX CHARTS) ---
 
@@ -385,14 +355,8 @@ const providerInvestments = computed(() => {
     const map = new Map()
 
     productos.value.forEach((p) => {
-        // Intentamos obtener el proveedor de varias formas comunes en Eloquent
         const proveedor = p?.proveedor || p?.proveedor_objeto;
-
-        // REGLA: Si tiene proveedor y está eliminado, lo ignoramos.
-        // Si NO tiene proveedor (es null), lo agrupamos como 'Sin Proveedor'.
-        if (proveedor && proveedor.deleted_at) {
-            return;
-        }
+        if (proveedor && proveedor.deleted_at) return;
 
         const name = proveedor?.nombre || p?.proveedor_nombre || 'Proveedor no disponible'
 
@@ -411,7 +375,7 @@ const providerInvestments = computed(() => {
         name,
         value: Number(value.toFixed(2))
     }))
-        .filter(i => i.value > 0) // Solo mostrar si hay inversión real
+        .filter(i => i.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, 8)
 })
@@ -431,7 +395,7 @@ const barOptions = computed(() => ({
             horizontal: true,
             barHeight: '45%',
             dataLabels: {
-                position: 'center', // Cambiado de 'top' a 'center'
+                position: 'center',
             }
         }
     },
@@ -445,7 +409,6 @@ const barOptions = computed(() => ({
         },
         formatter: (val) => formatCurrency(val),
         offsetX: 10,
-        // Eliminamos offsetY para que el centrado vertical sea automático
     },
     xaxis: {
         categories: providerInvestments.value.map(i => i.name),
@@ -500,6 +463,7 @@ const lowStockProducts = computed(() =>
         .slice(0, 6)
         .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(i.threshold) }))
 )
+
 const expiringProducts = computed(() =>
     productos.value
         .map(p => {
@@ -518,244 +482,12 @@ const expiringProducts = computed(() =>
         .sort((a, b) => a.expiresIn - b.expiresIn)
         .slice(0, 6)
 )
+
 const resumenTarjetas = computed(() => [
-    { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: 'mdi-leaf' },
-    { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: 'mdi-trending-up' },
-    { title: 'Por Vencer', value: expiringProducts.value.length, detail: `${EXPIRY_WARNING_DAYS} días límite`, icon: 'mdi-alert-decagram' },
-    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: 'Bajo minimo', icon: 'mdi-package-variant' },
+    { title: 'Total Productos', value: integerFormatter.format(totalProductos.value), detail: 'En catálogo', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>' },
+    { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>' },
+    { title: 'Por Vencer', value: expiringProducts.value.length, detail: `${EXPIRY_WARNING_DAYS} días límite`, icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>' },
+    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: 'Bajo minimo', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>' },
 ])
+
 </script>
-
-<style scoped>
-.dashboard-page {
-    min-height: 100vh;
-    padding: 10px 16px 48px;
-    background: var(--app-bg);
-}
-
-.dashboard-content {
-    max-width: 1180px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.hero-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.hero-card h1 {
-    margin: 2px 0 0;
-    font-size: 2rem;
-    color: var(--app-text);
-    font-weight: 600;
-}
-
-.hero-eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 0.3em;
-    font-size: 0.7rem;
-    color: var(--app-text-muted);
-    font-weight: 600;
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-}
-
-.stat-card {
-    display: grid;
-    gap: 1rem;
-}
-
-.stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--app-accent) 18%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 4px;
-}
-
-.stat-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--app-text);
-}
-
-.stat-detail {
-    font-size: 0.8rem;
-    color: var(--app-text-muted);
-}
-
-.stat-value {
-    font-size: 1.9rem;
-    font-weight: 600;
-    color: var(--app-text);
-}
-
-.chart-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1rem;
-}
-
-.panel-heading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: var(--app-text);
-    margin-bottom: 12px;
-}
-
-.list-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1rem;
-}
-
-.list-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.list-card.danger {
-    border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 28%, var(--app-border));
-    background: color-mix(in srgb, var(--app-surface) 88%, rgb(var(--v-theme-error)) 12%);
-}
-
-.list-card.warning {
-    border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 28%, var(--app-border));
-    background: color-mix(in srgb, var(--app-surface) 88%, rgb(var(--v-theme-warning)) 12%);
-}
-
-.list-heading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: inherit;
-}
-
-.list-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.scrollable-list {
-    max-height: 320px;
-    overflow-y: auto;
-    padding-right: 6px;
-}
-
-.scrollable-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scrollable-list::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--app-text) 25%, transparent);
-    border-radius: 999px;
-}
-
-.list-row {
-    padding: 14px 16px;
-    border-radius: 18px;
-    background: var(--app-surface);
-    border: 1px solid var(--app-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.list-card.danger .list-row {
-    background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-error)) 15%);
-    border-color: color-mix(in srgb, rgb(var(--v-theme-error)) 28%, var(--app-border));
-}
-
-:global(.v-theme--dark .list-card.danger .list-label) {
-    color: #f87171;
-}
-
-:global(.v-theme--dark .list-card.warning .list-label) {
-    color: #f8be71;
-}
-
-:global(.v-theme--dark .list-card.danger) {
-    border-color: #5f1218;
-    background: #3a0a0f;
-}
-
-:global(.v-theme--dark .list-card.danger .list-row) {
-    background: #4a0f15;
-    border-color: #5f1218;
-}
-
-.list-card.warning .list-row {
-    background: color-mix(in srgb, var(--app-surface) 85%, rgb(var(--v-theme-warning)) 15%);
-    border-color: color-mix(in srgb, rgb(var(--v-theme-warning)) 28%, var(--app-border));
-}
-
-.list-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--app-text);
-}
-
-.list-subtitle {
-    font-size: 0.78rem;
-    color: var(--app-text-muted);
-}
-
-.list-meta {
-    text-align: right;
-}
-
-.list-highlight {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: rgb(var(--v-theme-error));
-}
-
-.warning-text {
-    color: rgb(var(--v-theme-warning));
-}
-
-.list-label {
-    font-size: 0.75rem;
-    color: rgba(5, 59, 45, 0.6);
-}
-
-.feedback-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.empty-state {
-    font-size: 0.85rem;
-    color: rgba(5, 59, 45, 0.7);
-}
-
-@media (max-width: 640px) {
-    .hero-card {
-        padding: 20px;
-    }
-
-    .export-btn {
-        width: 100%;
-    }
-}
-</style>
