@@ -7,7 +7,7 @@
         v-if="searchable"
         v-model="search"
         :placeholder="_searchPlaceholder"
-        @search="$emit('search', search)"
+        @search="$emit('search', $event)"
       />
       <slot name="toolbar" />
     </div>

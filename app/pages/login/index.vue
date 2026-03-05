@@ -1,65 +1,88 @@
 <template>
-    <v-container fluid class="fill-height login-bg pa-0 v-theme--dark:bg-dark-login"
-        :class="[isDark ? 'dark-login' : '']">
-        <v-row no-gutters class="fill-height">
-            <v-col cols="12" md="6"
-                class="presentation-section d-none d-md-flex flex-column align-center justify-center text-white">
-                <div class="presentation-content text-center">
-                    <v-avatar color="white" size="100" class="elevation-10 mb-6">
-                        <v-icon color="success" size="60" icon="mdi-carrot"></v-icon>
-                    </v-avatar>
-                    <h1 class="text-h3 font-weight-bold mb-2">Disfruver</h1>
-                    <p class="text-h6 font-weight-medium text-success-lighten-3">
-                        ❝ Del campo a tu casa ❞
-                    </p>
+    <div class="flex min-h-screen bg-white dark:bg-gray-900">
+        <!-- Left Side: Presentation -->
+        <div class="hidden md:flex md:w-1/2 relative flex-col justify-center items-center text-white" 
+             style="background: linear-gradient(rgba(44, 62, 80, 0.85), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;">
+            <div class="relative z-10 p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center flex flex-col items-center">
+                <div class="bg-white rounded-full p-4 shadow-lg mb-6 flex items-center justify-center w-24 h-24">
+                     <i class="mdi mdi-carrot text-green-500 text-6xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold mb-2">Disfruver</h1>
+                <p class="text-xl font-medium text-green-300 mb-8">
+                    ❝ Del campo a tu casa ❞
+                </p>
 
-                    <div class="floating-veggies mt-10">
-                        <v-icon v-for="(item, i) in veggies" :key="i" :icon="item.icon" :color="item.color"
-                            class="veggie-icon mx-4" size="48"></v-icon>
+                <div class="flex justify-center flex-wrap gap-4 mt-2">
+                    <div v-for="(item, i) in veggies" :key="i" 
+                         class="veggie-icon w-14 h-14 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center transition-transform hover:scale-110 shadow-sm hover:shadow-xl">
+                        <i :class="['mdi', item.icon, 'text-4xl']" :style="{ color: item.color }"></i>
                     </div>
                 </div>
-            </v-col>
+            </div>
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 z-0 bg-repeat opacity-5" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6z\' fill=\'%23ffffff\' fill-opacity=\'1\'/%3E%3C/svg%3E');"></div>
+        </div>
 
-            <v-col cols="12" md="6" class="d-flex align-center justify-center login-form-col">
-                <v-card flat width="100%" max-width="450" class="pa-8">
-                    <div class="text-center mb-8">
-                        <h2 class="text-h4 font-weight-bold text-grey-darken-3">Iniciar Sesión</h2>
-                        <p class="text-grey">Accede a tu panel de control de inventario</p>
+        <!-- Right Side: Login Form -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-8 bg-white dark:bg-gray-800 shadow-2xl z-10">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Iniciar Sesión</h2>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Accede a tu panel de control de inventario</p>
+                </div>
+
+                <div v-if="errorMessage" class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+                    {{ errorMessage }}
+                </div>
+
+                <div v-if="successMessage" class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative">
+                    {{ successMessage }}
+                </div>
+
+                <form @submit.prevent="handleLogin" ref="loginForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nombre de Usuario</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="mdi mdi-account text-gray-400 text-xl"></i>
+                            </div>
+                            <input v-model="nombre" type="text" placeholder="Ingresa tu nombre de usuario" required
+                                :class="[
+                                    'w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors',
+                                    errors.nombre ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500'
+                                ]">
+                        </div>
+                        <p v-if="errors.nombre" class="text-red-500 text-xs italic mt-1">{{ errors.nombre }}</p>
                     </div>
 
-                    <v-alert v-if="errorMessage" type="error" class="mb-4" variant="tonal">
-                        {{ errorMessage }}
-                    </v-alert>
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="mdi mdi-lock text-gray-400 text-xl"></i>
+                            </div>
+                            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Ingresa tu contraseña" required
+                                :class="[
+                                    'w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors',
+                                    errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500'
+                                ]">
+                            <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none">
+                                <i :class="['mdi', showPassword ? 'mdi-eye-off' : 'mdi-eye', 'text-xl']"></i>
+                            </button>
+                        </div>
+                        <p v-if="errors.password" class="text-red-500 text-xs italic mt-1">{{ errors.password }}</p>
+                    </div>
 
-                    <v-alert v-if="successMessage" type="success" class="mb-4" variant="tonal">
-                        {{ successMessage }}
-                    </v-alert>
-
-                    <v-form @submit.prevent="handleLogin" ref="loginForm">
-                        <label class="text-subtitle-2 font-weight-bold mb-2 d-block">Nombre de Usuario</label>
-                        <v-text-field v-model="nombre" prepend-inner-icon="mdi-account" variant="outlined"
-                            placeholder="Ingresa tu nombre de usuario" rounded="lg" color="success"
-                            :error-messages="errors.nombre" required></v-text-field>
-
-                        <label class="text-subtitle-2 font-weight-bold mb-2 d-block">Contraseña</label>
-                        <v-text-field v-model="password" :type="showPassword ? 'text' : 'password'"
-                            prepend-inner-icon="mdi-lock" :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                            variant="outlined" placeholder="Ingresa tu contraseña" rounded="lg" color="success"
-                            @click:append-inner="showPassword = !showPassword" :error-messages="errors.password"
-                            required></v-text-field>
-                        <v-btn block color="success" size="x-large" type="submit"
-                            class="text-none font-weight-bold elevation-4" rounded="lg" :loading="loading"
-                            :disabled="loading">
-                            <v-icon start icon="mdi-login"></v-icon>
-                            Iniciar Sesión
-                        </v-btn>
-
-
-                    </v-form>
-                </v-card>
-            </v-col>
-        </v-row>
-    </v-container>
+                    <button type="submit" :disabled="loading"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i v-if="loading" class="mdi mdi-loading mdi-spin mr-2 text-xl"></i>
+                        <i v-else class="mdi mdi-login mr-2 text-xl"></i>
+                        {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -89,12 +112,8 @@ const debugAuth = async () => {
 }
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTheme } from 'vuetify'
-import { computed } from 'vue'
 
 const router = useRouter()
-const theme = useTheme()
-const isDark = computed(() => theme.global.current.value.dark)
 
 const nombre = ref('')
 const password = ref('')
@@ -109,11 +128,11 @@ const errors = ref({
 })
 
 const veggies = [
-    { icon: 'mdi-apple', color: 'red' },
-    { icon: 'mdi-food-apple', color: 'orange' },
-    { icon: 'mdi-chili-hot', color: 'red-accent-4' },
-    { icon: 'mdi-leaf', color: 'green-lighten-1' },
-    { icon: 'mdi-fruit-pineapple', color: 'yellow' }
+    { icon: 'mdi-apple', color: '#f44336' },
+    { icon: 'mdi-food-apple', color: '#ff9800' },
+    { icon: 'mdi-chili-hot', color: '#d50000' },
+    { icon: 'mdi-leaf', color: '#66bb6a' },
+    { icon: 'mdi-fruit-pineapple', color: '#ffeb3b' }
 ]
 
 definePageMeta({
@@ -224,145 +243,19 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-bg {
-    background: linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-muted) 100%);
-}
-
-.dark-login {
-    background: linear-gradient(135deg, #181c1b 0%, #232826 100%) !important;
-}
-
-.login-form-col {
-    background: var(--app-surface) !important;
-    transition: background 0.3s;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-}
-
-.v-theme--dark .login-form-col {
-    background: #232826 !important;
-    color: var(--app-text) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
-}
-
-.v-theme--dark .presentation-section {
-    background: linear-gradient(rgba(30, 40, 50, 0.92), rgba(30, 40, 50, 0.98)),
-        url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80');
-    background-size: cover;
-    background-position: center;
-}
-
-.v-theme--dark .presentation-content {
-    background: color-mix(in srgb, var(--app-surface) 30%, transparent);
-    border: 1px solid color-mix(in srgb, var(--app-text) 10%, transparent);
-}
-
-.v-theme--dark .veggie-icon {
-    background: color-mix(in srgb, var(--app-surface) 25%, transparent);
-}
-
-.v-theme--dark .v-card {
-    background: var(--app-surface) !important;
-    color: var(--app-text) !important;
-    border-color: var(--app-border) !important;
-}
-
-.presentation-section {
-    background: linear-gradient(rgba(44, 62, 80, 0.85), rgba(44, 62, 80, 0.9)),
-        url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80');
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-
-/* Efecto de patrón de fondo (SVG) */
-.presentation-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E");
-}
-
 .veggie-icon {
     animation: float 4s ease-in-out infinite;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    background: color-mix(in srgb, var(--app-surface) 15%, transparent);
-    padding: 10px;
-    box-sizing: content-box;
-    border-radius: 50%;
-    backdrop-filter: blur(5px);
 }
 
 /* Animaciones para cada vegetal con diferentes tiempos */
-.veggie-icon:nth-child(1) {
-    animation-delay: 0s;
-}
-
-.veggie-icon:nth-child(2) {
-    animation-delay: 0.5s;
-}
-
-.veggie-icon:nth-child(3) {
-    animation-delay: 1s;
-}
-
-.veggie-icon:nth-child(4) {
-    animation-delay: 1.5s;
-}
-
-.veggie-icon:nth-child(5) {
-    animation-delay: 2s;
-}
+.veggie-icon:nth-child(1) { animation-delay: 0s; }
+.veggie-icon:nth-child(2) { animation-delay: 0.5s; }
+.veggie-icon:nth-child(3) { animation-delay: 1s; }
+.veggie-icon:nth-child(4) { animation-delay: 1.5s; }
+.veggie-icon:nth-child(5) { animation-delay: 2s; }
 
 @keyframes float {
-
-    0%,
-    100% {
-        transform: translateY(0) rotate(0deg);
-    }
-
-    50% {
-        transform: translateY(-20px) rotate(5deg);
-    }
-}
-
-.gap-4 {
-    gap: 1rem;
-}
-
-/* Estilos adicionales para mejor visualización */
-.presentation-content {
-    position: relative;
-    z-index: 2;
-    padding: 2rem;
-    background: color-mix(in srgb, var(--app-text) 20%, transparent);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid color-mix(in srgb, var(--app-text) 18%, transparent);
-}
-
-.floating-veggies {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-/* Efecto hover en los iconos */
-.veggie-icon:hover {
-    transform: scale(1.1);
-    transition: transform 0.3s ease;
-    box-shadow: 0 10px 20px color-mix(in srgb, var(--app-text) 20%, transparent);
-}
-
-.v-theme--dark .login-form-col,
-.v-theme--dark .login-form-col h2,
-.v-theme--dark .login-form-col p,
-.v-theme--dark .login-form-col label {
-    color: #fff !important;
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
 }
 </style>

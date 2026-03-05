@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 export interface Category {
   id: number
@@ -21,6 +21,7 @@ export function useCategories() {
   const { api } = useApi()
 
   const categories = ref<Category[]>([])
+  const allCategoriesBase = ref<Category[]>([]) // Para buscar en el frontend temporalmente si deshacemos backend
   const trashedCategories = ref<Category[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -30,9 +31,11 @@ export function useCategories() {
   const page = ref(1)
   const pageSize = ref(100)
   const filter = ref('')
+  
+  // Debounce timeout reference
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
   // Manejo centralizado de errores de la API
-  // La redirección a /login la maneja el middleware auth.js — aquí solo exponemos el mensaje
   const handleError = (err: any, fallbackMsg: string) => {
     error.value = err?.data?.message ?? err?.message ?? fallbackMsg
   }
@@ -43,9 +46,10 @@ export function useCategories() {
     try {
       const res = await api<{ success: boolean; data: Category[]; meta?: { total: number } }>('/categorias', {
         method: 'GET',
-        query: { search: filter.value, page: page.value, per_page: pageSize.value }
+        query: { page: page.value, per_page: pageSize.value }
       })
-      categories.value = res?.data ?? []
+      allCategoriesBase.value = res?.data ?? []
+      applyFilter() // Aplicar filtro local si el backend no lo procesa
       total.value = res?.meta?.total ?? res?.data?.length ?? 0
     } catch (err: any) {
       handleError(err, 'No se pudieron cargar las categorías.')
@@ -53,6 +57,27 @@ export function useCategories() {
       loading.value = false
     }
   }
+
+  const applyFilter = () => {
+    if (!filter.value) {
+      categories.value = allCategoriesBase.value
+      return
+    }
+    const searchTerm = filter.value.toLowerCase()
+    categories.value = allCategoriesBase.value.filter(cat => 
+      cat.nombre.toLowerCase().includes(searchTerm) || 
+      (cat.detalle && cat.detalle.toLowerCase().includes(searchTerm))
+    )
+  }
+
+  // Watcher con debounce de 300ms sobre la variable de búsqueda
+  watch(filter, (newSearch) => {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    
+    searchTimeout = setTimeout(() => {
+      applyFilter()
+    }, 300)
+  })
 
   const createCategory = async (payload: Pick<Category, 'nombre' | 'detalle' | 'emoji'>) => {
     loading.value = true
@@ -110,7 +135,6 @@ export function useCategories() {
   const setFilter = (val: string) => {
     filter.value = val
     page.value = 1
-    fetchCategories()
   }
 
   const setPage = (val: number) => {
