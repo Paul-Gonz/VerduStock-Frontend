@@ -87,7 +87,7 @@
             <v-card rounded="xl">
                 <v-card-title class="pa-6 pb-0 d-flex justify-space-between align-center">
                     <span class="text-h5 font-weight-bold">{{ isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'
-                        }}</span>
+                    }}</span>
                     <v-btn icon="mdi-close" variant="text" @click="closeDialog"></v-btn>
                 </v-card-title>
                 <v-card-text class="pa-6">
@@ -95,7 +95,7 @@
                         <v-text-field v-model="form.nombre" label="Nombre *" variant="outlined" rounded="lg"
                             class="mb-2" :rules="[v => !!v || 'Campo requerido']"></v-text-field>
                         <v-text-field v-model="form.telefono" label="Teléfono" variant="outlined" rounded="lg"
-                            class="mb-2" prepend-inner-icon="mdi-phone"></v-text-field>
+                            type="number" class="mb-2" prepend-inner-icon="mdi-phone"></v-text-field>
                         <v-text-field v-model="form.direccion" label="Dirección" variant="outlined" rounded="lg"
                             class="mb-2" prepend-inner-icon="mdi-map-marker"></v-text-field>
                         <v-textarea v-model="form.detalle" label="Notas adicionales" variant="outlined" rounded="lg"
