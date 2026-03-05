@@ -50,7 +50,7 @@
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-sm font-medium text-gray-700">Teléfono</label>
-                        <input v-model="form.telefono" type="text"
+                        <input v-model="form.telefono" type="number"
                             class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-green-500" />
                     </div>
                     <div class="flex flex-col gap-1">
