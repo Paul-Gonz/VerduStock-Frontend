@@ -1,4 +1,4 @@
-```vue
+﻿```vue
 <template>
   <div class="inventario-page p-6">
     <div class="flex flex-col gap-4 mb-6">
@@ -7,7 +7,7 @@
         <div class="flex items-center gap-3">
           <NuxtLink
             to="/reportes"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-0"
           >
             <span class="mdi mdi-chart-box"></span>
             Reportes

@@ -9,13 +9,13 @@
             <p class="text-sm text-gray-500">Genera y descarga reportes en PDF</p>
           </div>
         </div>
-        <button 
+        <AppButton variant="primary" 
           @click="$router.push('/inventario')"
-          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          class="flex items-center gap-2       "
         >
           <span class="mdi mdi-arrow-left"></span>
           Volver al Inventario
-        </button>
+        </AppButton>
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
@@ -30,29 +30,29 @@
           </div>
           <div class="flex-grow flex flex-col gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
-              <select v-model="filtrosInventario.categoria_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por categoría</label>
+              <select v-model="filtrosInventario.categoria_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
                 <option :value="null">Todas las categorías</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por proveedor</label>
-              <select v-model="filtrosInventario.proveedor_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por proveedor</label>
+              <select v-model="filtrosInventario.proveedor_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-green-500">
                 <option :value="null">Todos los proveedores</option>
                 <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">{{ prov.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
           </div>
           <div class="pt-4 border-t border-gray-100">
-            <button 
+            <AppButton variant="primary" 
               @click="generarPDF('inventario-completo')" 
               :disabled="generandoPDF === 'inventario-completo'"
-              class="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              class="w-full flex items-center justify-center gap-2        disabled:opacity-50"
             >
               <span class="mdi mdi-file-pdf-box text-xl"></span>
               {{ generandoPDF === 'inventario-completo' ? 'Generando...' : 'Generar PDF' }}
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -67,22 +67,22 @@
           </div>
           <div class="flex-grow flex flex-col gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Umbral de stock bajo: {{ umbralStock }} kg</label>
-              <input type="range" v-model="umbralStock" min="1" max="50" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500 mt-2">
+              <label class="block text-sm  text-gray-700 mb-1">Umbral de stock bajo: {{ umbralStock }} kg</label>
+              <input type="range" v-model="umbralStock" min="1" max="50" step="0.5" class="w-full h-2 bg-gray-200  appearance-none cursor-pointer accent-red-500 mt-2">
               <p class="text-xs text-gray-500 mt-2">
                 Productos con stock neto (bruto - desperdicio) por debajo de este umbral
               </p>
             </div>
           </div>
           <div class="pt-4 border-t border-gray-100 mt-auto">
-            <button 
+            <AppButton variant="primary" 
               @click="generarPDF('stock-bajo')" 
               :disabled="generandoPDF === 'stock-bajo'"
-              class="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              class="w-full flex items-center justify-center gap-2        disabled:opacity-50"
             >
               <span class="mdi mdi-file-pdf-box text-xl"></span>
               {{ generandoPDF === 'stock-bajo' ? 'Generando...' : 'Generar PDF' }}
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -97,29 +97,29 @@
           </div>
           <div class="flex-grow flex flex-col gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
-              <select v-model="filtrosDesperdicios.categoria_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por categoría</label>
+              <select v-model="filtrosDesperdicios.categoria_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
                 <option :value="null">Todas las categorías</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por proveedor</label>
-              <select v-model="filtrosDesperdicios.proveedor_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por proveedor</label>
+              <select v-model="filtrosDesperdicios.proveedor_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
                 <option :value="null">Todos los proveedores</option>
                 <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">{{ prov.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
           </div>
           <div class="pt-4 border-t border-gray-100">
-            <button 
+            <AppButton variant="primary" 
               @click="generarPDF('reporte-desperdicios')" 
               :disabled="generandoPDF === 'reporte-desperdicios'"
-              class="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              class="w-full flex items-center justify-center gap-2        disabled:opacity-50"
             >
               <span class="mdi mdi-file-pdf-box text-xl"></span>
               {{ generandoPDF === 'reporte-desperdicios' ? 'Generando...' : 'Generar PDF' }}
-            </button>
+            </AppButton>
           </div>
         </div>
 
@@ -134,29 +134,29 @@
           </div>
           <div class="flex-grow flex flex-col gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
-              <select v-model="filtrosRentabilidad.categoria_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por categoría</label>
+              <select v-model="filtrosRentabilidad.categoria_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option :value="null">Todas las categorías</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por proveedor</label>
-              <select v-model="filtrosRentabilidad.proveedor_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label class="block text-sm  text-gray-700 mb-1">Filtrar por proveedor</label>
+              <select v-model="filtrosRentabilidad.proveedor_id" class="w-full border border-gray-300  px-3  bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option :value="null">Todos los proveedores</option>
                 <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">{{ prov.nombre || 'Sin nombre' }}</option>
               </select>
             </div>
           </div>
           <div class="pt-4 border-t border-gray-100">
-            <button 
+            <AppButton variant="primary" 
               @click="generarPDF('analisis-rentabilidad')" 
               :disabled="generandoPDF === 'analisis-rentabilidad'"
-              class="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              class="w-full flex items-center justify-center gap-2        disabled:opacity-50"
             >
               <span class="mdi mdi-file-pdf-box text-xl"></span>
               {{ generandoPDF === 'analisis-rentabilidad' ? 'Generando...' : 'Generar PDF' }}
-            </button>
+            </AppButton>
           </div>
         </div>
       </div>

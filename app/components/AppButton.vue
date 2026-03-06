@@ -2,7 +2,7 @@
   <button 
     :class="[
       buttonClasses, 
-      'inline-flex items-center justify-center font-medium py-2.5 px-5 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out border text-center disabled:opacity-50 disabled:cursor-not-allowed w-fit'
+      'inline-flex items-center justify-center font-medium py-2 px-4 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 ease-in-out border text-center disabled:opacity-50 disabled:cursor-not-allowed w-fit'
     ]" 
     @click="$emit('click')"
     :disabled="disabled || loading"

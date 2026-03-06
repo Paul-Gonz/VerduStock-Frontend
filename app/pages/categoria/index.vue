@@ -18,6 +18,14 @@
           class="flex-1"
           @search="setFilter"
         />
+        <button
+          @click="fetchCategories"
+          :disabled="loading"
+          class="bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors border border-green-200"
+        >
+          <span v-if="loading" class="w-4 h-4 border-2 border-green-700 border-t-transparent rounded-full animate-spin"></span>
+          <span>Actualizar</span>
+        </button>
       </div>
     </div>
 

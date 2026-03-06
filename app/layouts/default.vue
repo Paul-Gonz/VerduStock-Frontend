@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="h-screen w-full flex bg-slate-50 text-slate-800 overflow-hidden font-sans">
     
     <!-- Sidebar -->
@@ -65,8 +65,8 @@
 
       <div class="py-4 border-t border-slate-100 text-center shrink-0 whitespace-nowrap overflow-hidden">
         <div v-show="drawer">
-          <p class="text-[10px] text-slate-400 font-medium">Sistema de Gestión v1.0</p>
-          <p class="text-[9px] text-slate-300 mt-0.5">© 2026 LoopInf</p>
+          <p class="text-[10px] text-slate-400 font-medium">Sistema de GestiÃ³n v1.0</p>
+          <p class="text-[9px] text-slate-300 mt-0.5">Â© 2026 LoopInf</p>
         </div>
         <div v-show="!drawer">
           <p class="text-[10px] text-slate-400 font-bold mb-1">V 1.0</p>
@@ -95,19 +95,17 @@
         <div class="flex items-center gap-3 sm:gap-5">
           
           <!-- Boton simple para simular Tasa BCV y Logout temporalmente sin Vuetify Menus -->
-          <div v-if="tasaDolar" class="relative hidden sm:flex flex-col items-end mr-2">
-            <button 
-              @click="showTasaDetails = !showTasaDetails" 
-              class="flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+          <div v-if="tasaDolar" class="relative hidden sm:flex flex-col items-end mr-2 group">
+            <button
+              class="flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-lg transition-all shadow-sm focus:outline-none cursor-pointer"
             >
               <span class="text-[9px] uppercase font-bold tracking-widest text-green-700 leading-none mb-0.5">Tasa BCV</span>
               <span class="text-[13px] font-extrabold text-green-900 leading-none">{{ tasaTexto }}</span>
             </button>
 
-            <!-- Menú Desplegable con Detalles de la Tasa -->
-            <div 
-              v-if="showTasaDetails" 
-              class="absolute top-full mt-2 right-0 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 animate-in fade-in slide-in-from-top-2"
+            <!-- Menï¿½ Desplegable con Detalles de la Tasa -->
+            <div
+              class="absolute top-full mt-2 right-0 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible"
             >
               <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
@@ -126,22 +124,19 @@
                   <span class="text-xs text-slate-500 font-medium">Actualizado:</span>
                   <span class="text-[11px] font-semibold text-slate-600 text-right">{{ tasaDolar.fechaActualizacion ? new Date(tasaDolar.fechaActualizacion).toLocaleString('es-VE') : 'N/A' }}</span>
                 </div>
-
-                <button @click="showTasaDetails = false" class="w-full mt-1 text-xs text-center text-slate-400 hover:text-slate-600 py-1 transition-colors">
-                  Cerrar
-                </button>
               </div>
             </div>
           </div>
 
           <!-- Perfil/Logout -->
-          <div class="relative group">
-            <button class="p-0.5 rounded-full border-2 border-transparent hover:border-green-100 transition-all focus:outline-none bg-slate-50 text-green-600 overflow-hidden shadow-sm">
-               <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12q2.075 0 3.538-1.463Q17 9.075 17 7q0-2.075-1.462-3.538Q14.075 2 12 2T8.463 3.462Q7 5.075 7 7q0 2.075 1.463 3.537Q9.925 12 12 12Zm0 3q-3.575 0-7.312 1.838Q1 18.675 1 22h22q0-3.325-3.687-5.162Q15.575 15 12 15Z"/></svg>
-            </button>
+          <div class="relative">
+            <AppButton variant="secondary" class="!p-2 focus:!ring-0 focus:!border-gray-300" @click="profileMenuOpen = !profileMenuOpen">
+               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12q2.075 0 3.538-1.463Q17 9.075 17 7q0-2.075-1.462-3.538Q14.075 2 12 2T8.463 3.462Q7 5.075 7 7q0 2.075 1.463 3.537Q9.925 12 12 12Zm0 3q-3.575 0-7.312 1.838Q1 18.675 1 22h22q0-3.325-3.687-5.162Q15.575 15 12 15Z"/></svg>
+
+            </AppButton>
 
             <!-- Dropdown basico CSS hover -->
-            <div class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl shadow-slate-200/50 border border-slate-100 py-1.5 hidden group-hover:block transition-all z-50">
+            <div class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl shadow-slate-200/50 border border-slate-100 py-1.5 transition-all z-50" v-show="profileMenuOpen">
               <button @click="goToProfile" class="w-full text-left px-4 py-1.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-green-600 transition-colors">
                 Mi Perfil
               </button>
@@ -190,6 +185,7 @@ const router = useRouter()
 
 // Estados
 const drawer = ref(true)
+const profileMenuOpen = ref(false)
 const logoutDialog = ref(false)
 const loggingOut = ref(false)
 const menuItems = ref(menuConfig)
@@ -297,3 +293,7 @@ onBeforeUnmount(() => {
     if (tasaTimer.value) clearInterval(tasaTimer.value)
 })
 </script>
+
+
+
+
