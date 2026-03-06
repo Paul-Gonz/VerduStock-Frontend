@@ -3,41 +3,74 @@
     
     <!-- Sidebar -->
     <aside 
-      class="w-64 flex flex-col bg-white border-r border-slate-200 transition-transform duration-300 z-20 shrink-0 shadow-sm"
-      :class="drawer ? 'translate-x-0' : '-translate-x-full fixed h-full'"
+      class="flex flex-col bg-white border-r border-slate-200 transition-all duration-300 z-20 shrink-0 shadow-sm overflow-hidden"
+      :class="drawer ? 'w-64' : 'w-[72px]'"
     >
-      <div class="h-14 px-5 flex items-center gap-3 border-b border-slate-100 shrink-0">
-        <img src="/logo.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm" />
-        <div class="flex flex-col justify-center">
+      <div 
+        class="h-14 flex items-center border-b border-slate-100 shrink-0 transition-all duration-300"
+        :class="drawer ? 'px-5 gap-3' : 'px-0 justify-center'"
+      >
+        <img src="/logo.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm shrink-0" />
+        <div class="flex flex-col justify-center whitespace-nowrap" v-show="drawer">
           <h1 class="text-[15px] font-bold text-slate-800 leading-none">Disfruver</h1>
           <p class="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-1">Del campo a tu casa</p>
         </div>
       </div>
 
-      <nav class="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+      <nav class="flex-1 overflow-y-auto py-5 px-3 space-y-1 overflow-x-hidden mt-1">
         <NuxtLink
           v-for="item in menuItems"
           :key="item.title"
           :to="item.route"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium"
-          :class="isActive(item.route) ? 'bg-green-100/80 text-green-800' : 'text-slate-600 hover:bg-slate-50 hover:text-green-600'"
+          class="flex items-center rounded-lg transition-all text-sm font-medium whitespace-nowrap"
+          :class="[
+            isActive(item.route) ? 'bg-green-100/80 text-green-800' : 'text-slate-600 hover:bg-slate-50 hover:text-green-600',
+            drawer ? 'px-3 py-2.5 gap-3' : 'px-0 py-2.5 justify-center'
+          ]"
+          :title="!drawer ? item.title : ''"
         >
-          <!-- Nota: Sin Vuetify ni MDI importados tendras que cambiar "item.icon" (ej. mdi-home) por un archivo de icono o SVG literal si lo necesitas. Por ahora dejamos un icono basico SVG -->
+          <!-- Iconos Custom SVG basados en el nombre de item.icon -->
           <span 
-            class="flex items-center justify-center transition-colors"
+            class="flex items-center justify-center transition-colors shrink-0"
             :class="isActive(item.route) ? 'text-green-600' : 'text-slate-400'"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- mdi-home -->
+            <svg v-if="item.icon === 'mdi-home'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
+            <!-- mdi-food-apple / Inventario (Caja) -->
+            <svg v-else-if="item.icon === 'mdi-food-apple'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <!-- mdi-folder / Categoria -->
+            <svg v-else-if="item.icon === 'mdi-folder'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            <!-- mdi-truck / Proveedores -->
+            <svg v-else-if="item.icon === 'mdi-truck'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+            </svg>
+            <!-- mdi-account-group / Usuarios -->
+            <svg v-else-if="item.icon === 'mdi-account-group'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <!-- Default -->
+            <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2" />
+            </svg>
           </span>
-          {{ item.title }}
+          <span v-show="drawer">{{ item.title }}</span>
         </NuxtLink>
       </nav>
 
-      <div class="py-4 border-t border-slate-100 text-center shrink-0">
-        <p class="text-[10px] text-slate-400 font-medium">Sistema de Gestión v1.0</p>
-        <p class="text-[9px] text-slate-300 mt-0.5">© 2026 LoopInf</p>
+      <div class="py-4 border-t border-slate-100 text-center shrink-0 whitespace-nowrap overflow-hidden">
+        <div v-show="drawer">
+          <p class="text-[10px] text-slate-400 font-medium">Sistema de Gestión v1.0</p>
+          <p class="text-[9px] text-slate-300 mt-0.5">© 2026 LoopInf</p>
+        </div>
+        <div v-show="!drawer">
+          <p class="text-[10px] text-slate-400 font-bold mb-1">V 1.0</p>
+        </div>
       </div>
     </aside>
 
