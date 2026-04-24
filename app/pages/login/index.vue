@@ -1,11 +1,12 @@
 <template>
     <div class="flex min-h-screen bg-white dark:bg-gray-900">
         <!-- Left Side: Presentation -->
-        <div class="hidden md:flex md:w-1/2 relative flex-col justify-center items-center text-white" 
-             style="background: linear-gradient(rgba(44, 62, 80, 0.85), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;">
-            <div class="relative z-10 p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center flex flex-col items-center">
+        <div class="hidden md:flex md:w-1/2 relative flex-col justify-center items-center text-white"
+            style="background: linear-gradient(rgba(44, 62, 80, 0.85), rgba(44, 62, 80, 0.9)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center;">
+            <div
+                class="relative z-10 p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-center flex flex-col items-center">
                 <div class="bg-white rounded-full p-4 shadow-lg mb-6 flex items-center justify-center w-24 h-24">
-                     <i class="mdi mdi-carrot text-green-500 text-6xl"></i>
+                    <i class="mdi mdi-carrot text-green-500 text-6xl"></i>
                 </div>
                 <h1 class="text-4xl font-bold mb-2">Disfruver</h1>
                 <p class="text-xl font-medium text-green-300 mb-8">
@@ -13,14 +14,16 @@
                 </p>
 
                 <div class="flex justify-center flex-wrap gap-4 mt-2">
-                    <div v-for="(item, i) in veggies" :key="i" 
-                         class="veggie-icon w-14 h-14 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center transition-transform hover:scale-110 shadow-sm hover:shadow-xl">
+                    <div v-for="(item, i) in veggies" :key="i"
+                        class="veggie-icon w-14 h-14 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center transition-transform hover:scale-110 shadow-sm hover:shadow-xl">
                         <i :class="['mdi', item.icon, 'text-4xl']" :style="{ color: item.color }"></i>
                     </div>
                 </div>
             </div>
             <!-- Background Pattern -->
-            <div class="absolute inset-0 z-0 bg-repeat opacity-5" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6z\' fill=\'%23ffffff\' fill-opacity=\'1\'/%3E%3C/svg%3E');"></div>
+            <div class="absolute inset-0 z-0 bg-repeat opacity-5"
+                style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6z\' fill=\'%23ffffff\' fill-opacity=\'1\'/%3E%3C/svg%3E');">
+            </div>
         </div>
 
         <!-- Right Side: Login Form -->
@@ -31,17 +34,20 @@
                     <p class="text-gray-500 dark:text-gray-400 mt-2">Accede a tu panel de control de inventario</p>
                 </div>
 
-                <div v-if="errorMessage" class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+                <div v-if="errorMessage"
+                    class="mb-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
                     {{ errorMessage }}
                 </div>
 
-                <div v-if="successMessage" class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative">
+                <div v-if="successMessage"
+                    class="mb-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded relative">
                     {{ successMessage }}
                 </div>
 
                 <form @submit.prevent="handleLogin" ref="loginForm">
                     <div class="mb-4">
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nombre de Usuario</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nombre de
+                            Usuario</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="mdi mdi-account text-gray-400 text-xl"></i>
@@ -61,12 +67,13 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="mdi mdi-lock text-gray-400 text-xl"></i>
                             </div>
-                            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Ingresa tu contraseña" required
-                                :class="[
+                            <input v-model="password" :type="showPassword ? 'text' : 'password'"
+                                placeholder="Ingresa tu contraseña" required :class="[
                                     'w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors',
                                     errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500'
                                 ]">
-                            <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none">
+                            <button type="button" @click="showPassword = !showPassword"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none">
                                 <i :class="['mdi', showPassword ? 'mdi-eye-off' : 'mdi-eye', 'text-xl']"></i>
                             </button>
                         </div>
@@ -86,34 +93,11 @@
 </template>
 
 <script setup>
-const debugAuth = async () => {
-    try {
-        console.log('🔐 Verificando cookies...')
-        const cookies = document.cookie
-        console.log('Cookies actuales:', cookies)
-
-        // Verificar sesión Laravel
-        const response = await $fetch('http://localhost:8000/sanctum/csrf-cookie', {
-            credentials: 'include'
-        })
-        console.log('CSRF Cookie establecida:', response)
-
-        // Verificar autenticación
-        const authCheck = await $fetch('http://localhost:8000/check-auth', {
-            credentials: 'include'
-        })
-        console.log('Auth check:', authCheck)
-
-        return authCheck.authenticated
-    } catch (error) {
-        console.error('❌ Error en debugAuth:', error)
-        return false
-    }
-}
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const config = useRuntimeConfig() // Acceso a las variables de entorno de Nuxt
 
 const nombre = ref('')
 const password = ref('')
@@ -139,6 +123,32 @@ definePageMeta({
     layout: false,
 })
 
+const debugAuth = async () => {
+    try {
+        console.log('🔐 Verificando cookies...')
+        const cookies = document.cookie
+        console.log('Cookies actuales:', cookies)
+
+        // Usamos la base URL dinámica de Render
+        // Nota: Si sanctum/csrf-cookie no está bajo /api, Laravel podría fallar aquí.
+        // Si falla, ajusta la URL en Vercel o quita el /api de la variable.
+        const response = await $fetch(`${config.public.apiBase}/sanctum/csrf-cookie`, {
+            credentials: 'include'
+        })
+        console.log('CSRF Cookie establecida:', response)
+
+        const authCheck = await $fetch(`${config.public.apiBase}/check-auth`, {
+            credentials: 'include'
+        })
+        console.log('Auth check:', authCheck)
+
+        return authCheck.authenticated
+    } catch (error) {
+        console.error('❌ Error en debugAuth:', error)
+        return false
+    }
+}
+
 // Limpiar mensajes de error cuando el usuario escribe
 watch([nombre, password], () => {
     errorMessage.value = ''
@@ -146,7 +156,6 @@ watch([nombre, password], () => {
     errors.value.password = ''
 })
 
-// Verificar si hay mensajes de éxito en la URL (por ejemplo, después del registro)
 onMounted(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('registered')) {
@@ -155,41 +164,34 @@ onMounted(() => {
 })
 
 const handleLogin = async () => {
-    // Resetear errores
     errorMessage.value = ''
     errors.value = { nombre: '', password: '' }
     loading.value = true
 
-    console.log('Intentando login con:', {
-        nombre: nombre.value,
-        password: '***' // No mostrar contraseña real
-    })
+    console.log('Intentando login en:', `${config.public.apiBase}/login`)
 
     try {
-        // IMPORTANTE: Usa esta URL exacta (ajusta el puerto si es diferente)
-        const apiUrl = 'http://localhost:8000/login'
+        const apiUrl = `${config.public.apiBase}/login`
 
         const response = await $fetch(apiUrl, {
             method: 'POST',
-            credentials: 'include', // IMPORTANTE para cookies de sesión
+            credentials: 'include',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
+            body: {
                 nombre: nombre.value,
                 password: password.value,
                 remember: remember.value
-            })
+            }
         })
 
         console.log('Respuesta del backend:', response)
 
         if (response.success) {
             console.log('Login exitoso, redirigiendo...')
-
-            // Esperar un momento para que la sesión se establezca
             setTimeout(async () => {
                 await router.push('/home')
             }, 500)
@@ -198,43 +200,21 @@ const handleLogin = async () => {
         }
     } catch (error) {
         console.error('Error completo en login:', error)
-        console.error('Detalles del error:', {
-            status: error.status,
-            statusText: error.statusText,
-            data: error.data
-        })
 
-        // Mostrar información detallada del error
         if (error.status === 422) {
-            // Errores de validación
             if (error.data?.errors) {
                 const errorData = error.data.errors
-                if (errorData.nombre) {
-                    errors.value.nombre = Array.isArray(errorData.nombre)
-                        ? errorData.nombre.join(', ')
-                        : errorData.nombre
-                }
-                if (errorData.password) {
-                    errors.value.password = Array.isArray(errorData.password)
-                        ? errorData.password.join(', ')
-                        : errorData.password
-                }
-                if (!errors.value.nombre && !errors.value.password) {
-                    errorMessage.value = 'Datos de formulario inválidos'
-                }
+                if (errorData.nombre) errors.value.nombre = Array.isArray(errorData.nombre) ? errorData.nombre.join(', ') : errorData.nombre
+                if (errorData.password) errors.value.password = Array.isArray(errorData.password) ? errorData.password.join(', ') : errorData.password
             }
         } else if (error.status === 401) {
             errorMessage.value = 'Credenciales incorrectas. Verifica tu usuario y contraseña.'
-        } else if (error.status === 429) {
-            errorMessage.value = error.data?.message || 'Demasiados intentos. Por favor espera.'
         } else if (error.status === 419) {
             errorMessage.value = 'Token CSRF expirado. Por favor, recarga la página.'
-        } else if (error.status === 500) {
-            errorMessage.value = 'Error del servidor. Por favor, intenta más tarde.'
         } else if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-            errorMessage.value = 'Error de conexión. Verifica que el backend esté corriendo.'
+            errorMessage.value = 'Error de conexión con el servidor de VerduStock.'
         } else {
-            errorMessage.value = `Error: ${error.message || 'Error desconocido'}`
+            errorMessage.value = `Error: ${error.data?.message || error.message || 'Error desconocido'}`
         }
     } finally {
         loading.value = false
@@ -248,14 +228,35 @@ const handleLogin = async () => {
 }
 
 /* Animaciones para cada vegetal con diferentes tiempos */
-.veggie-icon:nth-child(1) { animation-delay: 0s; }
-.veggie-icon:nth-child(2) { animation-delay: 0.5s; }
-.veggie-icon:nth-child(3) { animation-delay: 1s; }
-.veggie-icon:nth-child(4) { animation-delay: 1.5s; }
-.veggie-icon:nth-child(5) { animation-delay: 2s; }
+.veggie-icon:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.veggie-icon:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.veggie-icon:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.veggie-icon:nth-child(4) {
+    animation-delay: 1.5s;
+}
+
+.veggie-icon:nth-child(5) {
+    animation-delay: 2s;
+}
 
 @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(5deg); }
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
 }
 </style>
