@@ -18,8 +18,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:8000',
-      laravelUrl: 'http://localhost:8000'
+      apiBase: process.env.NUXT_PUBLIC_API_URL,
     }
   },
   devtools: { enabled: true }
