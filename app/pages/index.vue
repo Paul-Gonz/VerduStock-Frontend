@@ -1,11 +1,9 @@
 <template>
-    <div>Redirigiendo...</div>
 </template>
 
 <script setup>
-onMounted(() => {
-    navigateTo('/login')
-})
+await navigateTo('/login')
+
 definePageMeta({
     layout: false,
 })

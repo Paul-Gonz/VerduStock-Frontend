@@ -97,7 +97,6 @@ import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-// Usamos el composable maestro y la cookie para el token
 const { api } = useApi()
 const token = useCookie('auth_token', {
     maxAge: 60 * 60 * 24 * 7, // 1 semana
@@ -116,22 +115,35 @@ const errors = ref({
     password: ''
 })
 
+const veggies = [
+    { icon: 'mdi-carrot', color: '#fb923c' },    // Naranja
+    { icon: 'mdi-leaf', color: '#4ade80' },      // Verde
+    { icon: 'mdi-corn', color: '#facc15' },      // Amarillo
+    { icon: 'mdi-chili-hot', color: '#f87171' }, // Rojo
+    { icon: 'mdi-mushrooms', color: '#e5e7eb' },  // Blanco/Gris
+    { icon: 'mdi-food-apple', color: '#fb7185' }  // Rosa/Rojo
+]
+
 definePageMeta({
     layout: false,
 })
 
-// Limpiar mensajes de error cuando el usuario escribe
-watch([nombre, password], () => {
-    errorMessage.value = ''
-    errors.value.nombre = ''
-    errors.value.password = ''
-})
-
+// Si ya tiene token, lo mandamos al home de una vez
 onMounted(() => {
+    if (token.value) {
+        router.push('/home')
+    }
+
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('registered')) {
         successMessage.value = '¡Registro exitoso! Por favor inicia sesión.'
     }
+})
+
+watch([nombre, password], () => {
+    errorMessage.value = ''
+    errors.value.nombre = ''
+    errors.value.password = ''
 })
 
 const handleLogin = async () => {
@@ -140,7 +152,6 @@ const handleLogin = async () => {
     loading.value = true
 
     try {
-        // Usamos 'api' que ya sabe dónde está el backend
         const response = await api('/login', {
             method: 'POST',
             body: {
@@ -150,31 +161,29 @@ const handleLogin = async () => {
             }
         })
 
-        // Si Laravel nos devuelve el token
         if (response.success && response.token) {
-            console.log('Login exitoso con Token')
-
-            // 1. Guardamos el token en la cookie
+            // Guardamos el token ANTES de movernos
             token.value = response.token
 
-            // 2. Redirigimos al home
+            // Un pequeño delay o nextTick asegura que la cookie se asiente
+            await nextTick()
             router.push('/home')
         } else {
             errorMessage.value = response.message || 'Error en el login'
         }
     } catch (error) {
-        console.error('Error en login:', error)
-
+        // Si el useApi global ya maneja el 401 redirigiendo, 
+        // aquí solo nos preocupamos por mostrar el mensaje si no redirigió
         if (error.status === 422) {
-            if (error.data?.errors) {
-                const errorData = error.data.errors
-                if (errorData.nombre) errors.value.nombre = Array.isArray(errorData.nombre) ? errorData.nombre.join(', ') : errorData.nombre
-                if (errorData.password) errors.value.password = Array.isArray(errorData.password) ? errorData.password.join(', ') : errorData.password
+            const errorData = error.data?.errors
+            if (errorData) {
+                errors.value.nombre = errorData.nombre?.[0] || ''
+                errors.value.password = errorData.password?.[0] || ''
             }
         } else if (error.status === 401) {
-            errorMessage.value = 'Credenciales incorrectas. Verifica tu usuario y contraseña.'
+            errorMessage.value = 'Usuario o contraseña incorrectos.'
         } else {
-            errorMessage.value = 'Error de conexión con el servidor de VerduStock.'
+            errorMessage.value = 'No hay conexión con el servidor. Intenta más tarde.'
         }
     } finally {
         loading.value = false
@@ -184,39 +193,23 @@ const handleLogin = async () => {
 
 <style scoped>
 .veggie-icon {
-    animation: float 4s ease-in-out infinite;
+    animation: float 3s ease-in-out infinite;
 }
 
-/* Animaciones para cada vegetal con diferentes tiempos */
-.veggie-icon:nth-child(1) {
-    animation-delay: 0s;
-}
-
-.veggie-icon:nth-child(2) {
-    animation-delay: 0.5s;
-}
-
-.veggie-icon:nth-child(3) {
-    animation-delay: 1s;
-}
-
-.veggie-icon:nth-child(4) {
+/* Desfase para que no todos suban y bajen al mismo tiempo */
+.veggie-icon:nth-child(even) {
     animation-delay: 1.5s;
-}
-
-.veggie-icon:nth-child(5) {
-    animation-delay: 2s;
 }
 
 @keyframes float {
 
     0%,
     100% {
-        transform: translateY(0) rotate(0deg);
+        transform: translateY(0);
     }
 
     50% {
-        transform: translateY(-20px) rotate(5deg);
+        transform: translateY(-10px);
     }
 }
 </style>

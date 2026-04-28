@@ -169,56 +169,29 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const { api } = useApi()
-const config = useRuntimeConfig()
-const API_URL = config.public.apiBase
+// Ya no necesitamos API_URL porque api() ya la conoce
 
 // Estados
 const categorias = ref([])
 const proveedores = ref([])
 
 // Filtros
-const filtrosInventario = ref({
-  categoria_id: null,
-  proveedor_id: null,
-  estado_stock: null
-})
-const filtrosRentabilidad = ref({
-  categoria_id: null,
-  proveedor_id: null
-})
-const filtrosDesperdicios = ref({
-  categoria_id: null,
-  proveedor_id: null
-})
+const filtrosInventario = ref({ categoria_id: null, proveedor_id: null, estado_stock: null })
+const filtrosRentabilidad = ref({ categoria_id: null, proveedor_id: null })
+const filtrosDesperdicios = ref({ categoria_id: null, proveedor_id: null })
 const umbralStock = ref(10)
 
-// Loading states
 const generandoPDF = ref(null)
 
-// Configuración de fetch
-// (Removido fetchConfig viejo, ahora usamos ap())
+// --- MÉTODOS DE API ---
 
-// Métodos de API
 const fetchCategorias = async () => {
   try {
-    const response = await api('/categorias', {
-      method: 'GET',
-      params: { per_page: 100 }
-    })
-
-    // Ajustar según la respuesta de Laravel
-    if (response && typeof response === 'object') {
-      if (response.data && Array.isArray(response.data)) {
-        categorias.value = response.data
-      } else if (Array.isArray(response)) {
-        categorias.value = response
-      } else if (response.categorias) {
-        categorias.value = response.categorias
-      }
-    }
+    const response = await api('/categorias', { params: { per_page: 100 } })
+    categorias.value = response?.data || response || []
   } catch (error) {
     console.error('Error cargando categorías:', error)
   }
@@ -226,21 +199,8 @@ const fetchCategorias = async () => {
 
 const fetchProveedores = async () => {
   try {
-    const response = await api('/proveedores', {
-      method: 'GET',
-      params: { per_page: 100 }
-    })
-
-    // Ajustar según la respuesta de Laravel
-    if (response && typeof response === 'object') {
-      if (response.data && Array.isArray(response.data)) {
-        proveedores.value = response.data
-      } else if (Array.isArray(response)) {
-        proveedores.value = response
-      } else if (response.proveedores) {
-        proveedores.value = response.proveedores
-      }
-    }
+    const response = await api('/proveedores', { params: { per_page: 100 } })
+    proveedores.value = response?.data || response || []
   } catch (error) {
     console.error('Error cargando proveedores:', error)
   }
@@ -250,55 +210,47 @@ const generarPDF = async (tipo) => {
   generandoPDF.value = tipo
 
   try {
-    let url = `${API_URL}/reportes/${tipo}`
-    const params = new URLSearchParams()
+    const queryParams = {}
 
     // Función para manejar filtros
-    const agregarFiltro = (categoriaId, proveedorId) => {
-      if (categoriaId && categoriaId !== 'all') params.append('categoria_id', categoriaId)
-      if (proveedorId && proveedorId !== 'all') params.append('proveedor_id', proveedorId)
+    const aplicarFiltros = (filtro) => {
+      if (filtro.categoria_id && filtro.categoria_id !== 'all') queryParams.categoria_id = filtro.categoria_id
+      if (filtro.proveedor_id && filtro.proveedor_id !== 'all') queryParams.proveedor_id = filtro.proveedor_id
     }
 
-    switch (tipo) {
-      case 'inventario-completo':
-        agregarFiltro(filtrosInventario.value.categoria_id, filtrosInventario.value.proveedor_id)
-        break
-
-      case 'stock-bajo':
-        params.append('umbral', umbralStock.value)
-        // También podemos aplicar filtros si se desea
-        agregarFiltro(filtrosInventario.value.categoria_id, filtrosInventario.value.proveedor_id)
-        break
-
-      case 'reporte-desperdicios':
-        agregarFiltro(filtrosDesperdicios.value.categoria_id, filtrosDesperdicios.value.proveedor_id)
-        break
-
-      case 'analisis-rentabilidad':
-        agregarFiltro(filtrosRentabilidad.value.categoria_id, filtrosRentabilidad.value.proveedor_id)
-        break
+    // Lógica de parámetros según el tipo
+    if (tipo === 'inventario-completo') aplicarFiltros(filtrosInventario.value)
+    if (tipo === 'stock-bajo') {
+      queryParams.umbral = umbralStock.value
+      aplicarFiltros(filtrosInventario.value)
     }
+    if (tipo === 'reporte-desperdicios') aplicarFiltros(filtrosDesperdicios.value)
+    if (tipo === 'analisis-rentabilidad') aplicarFiltros(filtrosRentabilidad.value)
 
-    if (params.toString()) {
-      url += `?${params.toString()}`
-    }
+    // HACEMOS LA PETICIÓN POR EL MOTOR API (Para incluir el Token)
+    const response = await api(`/reportes/${tipo}`, {
+      method: 'GET',
+      params: queryParams,
+      responseType: 'blob' // <--- IMPORTANTE: Recibimos el archivo binario
+    })
 
-    console.log('Generando PDF desde:', url)
-
-    // Abrir PDF en nueva pestaña
+    // CREAMOS UN LINK TEMPORAL PARA ABRIR EL PDF
+    const blob = new Blob([response], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
     window.open(url, '_blank')
+
+    // Opcional: Liberar memoria después de un rato
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000)
 
   } catch (error) {
     console.error('Error generando PDF:', error)
-    alert('Error al generar el PDF: ' + error.message)
+    alert('No se pudo generar el PDF. Verifica que el servidor esté respondiendo.')
   } finally {
     generandoPDF.value = null
   }
 }
 
-// Lifecycle
 onMounted(() => {
-  console.log('Componente Reportes montado')
   fetchCategorias()
   fetchProveedores()
 })
