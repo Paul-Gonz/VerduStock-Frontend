@@ -1,7 +1,6 @@
 <template>
   <div class="h-screen w-full flex bg-slate-50 text-slate-800 overflow-hidden font-sans">
 
-    <!-- Sidebar -->
     <aside
       class="flex flex-col bg-white border-r border-slate-200 transition-all duration-300 z-20 shrink-0 shadow-sm overflow-hidden"
       :class="drawer ? 'w-64' : 'w-18'">
@@ -20,39 +19,32 @@
             isActive(item.route) ? 'bg-green-100/80 text-green-800' : 'text-slate-600 hover:bg-slate-50 hover:text-green-600',
             drawer ? 'px-3 py-2.5 gap-3' : 'px-0 py-2.5 justify-center'
           ]" :title="!drawer ? item.title : ''">
-          <!-- Iconos Custom SVG basados en el nombre de item.icon -->
           <span class="flex items-center justify-center transition-colors shrink-0"
             :class="isActive(item.route) ? 'text-green-600' : 'text-slate-400'">
-            <!-- mdi-home -->
             <svg v-if="item.icon === 'mdi-home'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <!-- mdi-food-apple / Inventario (Caja) -->
             <svg v-else-if="item.icon === 'mdi-food-apple'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <!-- mdi-folder / Categoria -->
             <svg v-else-if="item.icon === 'mdi-folder'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <!-- mdi-truck / Proveedores -->
             <svg v-else-if="item.icon === 'mdi-truck'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
             </svg>
-            <!-- mdi-account-group / Usuarios -->
             <svg v-else-if="item.icon === 'mdi-account-group'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            <!-- Default -->
             <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <circle cx="12" cy="12" r="10" stroke-width="2" />
             </svg>
@@ -72,10 +64,8 @@
       </div>
     </aside>
 
-    <!-- Main Content wrapper -->
     <div class="flex-1 flex flex-col min-w-0 transition-transform">
 
-      <!-- Top header -->
       <header
         class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 shadow-sm relative">
 
@@ -94,7 +84,6 @@
 
         <div class="flex items-center gap-3 sm:gap-5">
 
-          <!-- Boton simple para simular Tasa BCV y Logout temporalmente sin Vuetify Menus -->
           <div v-if="tasaDolar" class="relative hidden sm:flex flex-col items-end mr-2">
             <button @click="showTasaDetails = !showTasaDetails"
               class="flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/30">
@@ -103,7 +92,6 @@
               <span class="text-[13px] font-extrabold text-green-900 leading-none">{{ tasaTexto }}</span>
             </button>
 
-            <!-- Menú Desplegable con Detalles de la Tasa -->
             <div v-if="showTasaDetails"
               class="absolute top-full mt-2 right-0 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 animate-in fade-in slide-in-from-top-2">
               <div class="flex flex-col gap-2">
@@ -116,20 +104,16 @@
                   </span>
                   <span class="font-bold text-slate-700 text-sm">Detalles de Tasa</span>
                 </div>
-
                 <div class="flex justify-between items-center px-1">
                   <span class="text-xs text-slate-500 font-medium whitespace-nowrap mr-2">Fuente:</span>
                   <span
-                    class="text-[10px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-right">Banco
-                    Central de Venezuela</span>
+                    class="text-[10px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-right">BCV</span>
                 </div>
-
                 <div class="flex justify-between items-center px-1">
                   <span class="text-xs text-slate-500 font-medium">Actualizado:</span>
                   <span class="text-[11px] font-semibold text-slate-600 text-right">{{ tasaDolar.fechaActualizacion ?
                     new Date(tasaDolar.fechaActualizacion).toLocaleString('es-VE') : 'N/A' }}</span>
                 </div>
-
                 <button @click="showTasaDetails = false"
                   class="w-full mt-1 text-xs text-center text-slate-400 hover:text-slate-600 py-1 transition-colors">
                   Cerrar
@@ -138,42 +122,44 @@
             </div>
           </div>
 
-          <!-- Perfil/Logout -->
-          <div class="relative group">
-            <button
-              class="p-0.5 rounded-full border-2 border-transparent hover:border-green-100 transition-all focus:outline-none bg-slate-50 text-green-600 overflow-hidden shadow-sm">
+          <div class="relative" ref="profileMenuRef">
+            <button @click="toggleProfileMenu"
+              class="p-0.5 rounded-full border-2 transition-all focus:outline-none bg-slate-50 text-green-600 overflow-hidden shadow-sm"
+              :class="showProfileMenu ? 'border-green-200 ring-2 ring-green-100' : 'border-transparent hover:border-green-100'">
               <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   d="M12 12q2.075 0 3.538-1.463Q17 9.075 17 7q0-2.075-1.462-3.538Q14.075 2 12 2T8.463 3.462Q7 5.075 7 7q0 2.075 1.463 3.537Q9.925 12 12 12Zm0 3q-3.575 0-7.312 1.838Q1 18.675 1 22h22q0-3.325-3.687-5.162Q15.575 15 12 15Z" />
               </svg>
             </button>
 
-            <!-- Dropdown basico CSS hover -->
-            <div
-              class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl shadow-slate-200/50 border border-slate-100 py-1.5 hidden group-hover:block transition-all z-50">
-              <button @click="goToProfile"
-                class="w-full text-left px-4 py-1.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-green-600 transition-colors">
-                Mi Perfil
-              </button>
-              <div class="border-t border-slate-50 my-1"></div>
-              <button @click="confirmLogout"
-                class="w-full text-left px-4 py-1.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors">
-                Cerrar Sesión
-              </button>
-            </div>
+            <transition enter-active-class="transition duration-100 ease-out"
+              enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100"
+              leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100"
+              leave-to-class="transform scale-95 opacity-0">
+              <div v-if="showProfileMenu"
+                class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl shadow-slate-200/50 border border-slate-100 py-1.5 z-50">
+                <button @click="goToProfile"
+                  class="w-full text-left px-4 py-1.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-green-600 transition-colors">
+                  Mi Perfil
+                </button>
+                <div class="border-t border-slate-50 my-1"></div>
+                <button @click="confirmLogout"
+                  class="w-full text-left px-4 py-1.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors">
+                  Cerrar Sesión
+                </button>
+              </div>
+            </transition>
           </div>
 
         </div>
       </header>
 
-      <!-- Page Content -->
       <main class="flex-1 overflow-y-auto bg-slate-50 text-slate-800 scroll-smooth">
         <slot />
       </main>
 
     </div>
 
-    <!-- Modal para Logout estilo original Tailwind -->
     <BaseModal :isOpen="logoutDialog" title="Cerrar Sesión" variant="danger" :loading="loggingOut"
       @close="logoutDialog = false" @confirm="logout" confirmText="Cerrar Sesión">
       <p class="text-gray-600 text-sm">¿Estás seguro de que deseas cerrar tu sesión?</p>
@@ -202,6 +188,26 @@ const logoutDialog = ref(false)
 const loggingOut = ref(false)
 const menuItems = ref(menuConfig)
 const showTasaDetails = ref(false)
+
+// --- ESTADOS PARA EL MENÚ DE PERFIL (NUEVO) ---
+const showProfileMenu = ref(false)
+const profileMenuRef = ref(null)
+
+const toggleProfileMenu = () => {
+  showProfileMenu.value = !showProfileMenu.value
+}
+
+// Cerrar menú si se hace clic fuera
+const closeMenusOnClickOutside = (event) => {
+  // Cerrar perfil
+  if (profileMenuRef.value && !profileMenuRef.value.contains(event.target)) {
+    showProfileMenu.value = false
+  }
+  // Opcional: Cerrar detalles de tasa si haces clic fuera (si lo deseas)
+  // if (showTasaDetails.value && !event.target.closest('.tasa-container')) {
+  //   showTasaDetails.value = false
+  // }
+}
 
 // Estados de la Tasa Dólar
 const tasaDolar = ref(null)
@@ -244,47 +250,48 @@ const tasaTexto = computed(() => {
 })
 
 // --- ACCIONES DE USUARIO ---
-const goToProfile = () => router.push('/perfil')
-const confirmLogout = () => { logoutDialog.value = true }
+const goToProfile = () => {
+  showProfileMenu.value = false
+  router.push('/perfil')
+}
+
+const confirmLogout = () => {
+  showProfileMenu.value = false
+  logoutDialog.value = true
+}
 
 // Logout actualizado para limpiar todo
 const logout = async () => {
   loggingOut.value = true
   try {
-    // Intentamos avisar al backend para invalidar el token
     await api('/logout', { method: 'POST' })
   } catch (error) {
     console.warn("No se pudo invalidar el token en el servidor, limpiando localmente...")
   } finally {
-    // PASE LO QUE PASE, borramos la llave local y mandamos al login
     token.value = null
     loggingOut.value = false
     logoutDialog.value = false
-    // Forzamos recarga para limpiar cualquier estado residual
     window.location.href = '/login'
   }
 }
 
 // --- VALIDACIÓN DE SESIÓN (CHECK AUTH) ---
 onMounted(async () => {
-  // 1. Si no hay token físico en la cookie, rebote inmediato
+  // Agregar listener para clicks externos
+  document.addEventListener('click', closeMenusOnClickOutside)
+
   if (!token.value) {
     router.push('/login')
     return
   }
 
   try {
-    // 2. Intentamos verificar el token con el servidor
     const response = await api('/check-auth')
-
-    // Si el servidor responde y dice explícitamente que no vales, te sacamos
     if (response && response.authenticated === false) {
       token.value = null
       router.push('/login')
     }
   } catch (e) {
-    // 3. Si hay un error de red o 500 (Render despertando), NO te sacamos.
-    // Esto evita el bucle de redirección si el servidor tarda en responder.
     console.warn("Verificación de auth en espera (servidor ocupado o red lenta).")
   }
 })
@@ -308,11 +315,12 @@ onMounted(async () => {
   }
 
   await cargarTasa()
-  // Actualizar cada 5 minutos
   tasaTimer.value = setInterval(cargarTasa, 5 * 60 * 1000)
 })
 
 onBeforeUnmount(() => {
+  // Limpiar listeners y timers
+  document.removeEventListener('click', closeMenusOnClickOutside)
   if (tasaTimer.value) clearInterval(tasaTimer.value)
 })
 </script>
