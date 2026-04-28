@@ -84,40 +84,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-
-// 1. Usamos el motor central
-const { api } = useApi()
-
-const form = ref({ id: '', nombre: '' })
-const loading = ref(false)
-const errorMessage = ref('')
-
-const fetchProfile = async () => {
-    loading.value = true
-    errorMessage.value = ''
-    try {
-        // El motor ya sabe la URL base y lleva el token en el Header
-        const res = await api('/usuarios/profile/me', {
-            method: 'GET'
-        })
-
-        // Normalizamos la respuesta según lo que mande Laravel
-        const user = res?.data || res?.user || res
-
-        form.value.id = user.id || '---'
-        form.value.nombre = user.nombre || user.name || 'Sin nombre'
-
-    } catch (e) {
-        errorMessage.value = 'No se pudo cargar la información del perfil.'
-        console.error('Error en Profile:', e)
-        // Nota: Si es 401, useApi ya te redirigió al login automáticamente
-    } finally {
-        loading.value = false
-    }
-}
+const { perfil, loading, error, fetchMyProfile } = usePerfil()
 
 onMounted(() => {
-    fetchProfile()
+    fetchMyProfile()
 })
 </script>
+
+<template>
+    <div v-if="loading">Cargando...</div>
+    <div v-else-if="error">{{ error }}</div>
+    <div v-else-if="perfil">
+        <input v-model="perfil.nombre" readonly />
+    </div>
+</template>
