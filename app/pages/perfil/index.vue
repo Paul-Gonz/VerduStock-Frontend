@@ -30,50 +30,28 @@
                         </svg>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                    <div v-if="perfil" class="grid grid-cols-1 sm:grid-cols-12 gap-4">
                         <div class="sm:col-span-4 md:col-span-3 space-y-1">
                             <label class="block text-sm font-medium text-gray-700">ID</label>
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                    </svg>
-                                </div>
-                                <input v-model="form.id" type="text" readonly
-                                    class="pl-10 block w-full rounded-lg border border-gray-300 bg-gray-50 text-gray-500 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-sm cursor-default" />
+                                <input :value="perfil.id" type="text" readonly
+                                    class="pl-3 block w-full rounded-lg border border-gray-300 bg-gray-50 text-gray-500 py-2 px-3 focus:outline-none sm:text-sm cursor-default" />
                             </div>
                         </div>
 
                         <div class="sm:col-span-8 md:col-span-9 space-y-1">
                             <label class="block text-sm font-medium text-gray-700">Nombre de usuario</label>
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <input v-model="form.nombre" type="text" readonly
-                                    class="pl-10 block w-full rounded-lg border border-gray-300 bg-gray-50 text-gray-500 py-2 px-3 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 sm:text-sm cursor-default" />
+                                <input :value="perfil.nombre" type="text" readonly
+                                    class="pl-3 block w-full rounded-lg border border-gray-300 bg-gray-50 text-gray-500 py-2 px-3 focus:outline-none sm:text-sm cursor-default" />
                             </div>
                         </div>
+                    </div>
 
-                        <div v-if="errorMessage" class="col-span-1 sm:col-span-12">
-                            <div class="rounded-lg bg-red-50 p-4 border border-red-200 flex items-start">
-                                <div class="shrink-0">
-                                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-red-800">{{ errorMessage }}</h3>
-                                </div>
+                    <div v-if="error" class="mt-4 col-span-12">
+                        <div class="rounded-lg bg-red-50 p-4 border border-red-200 flex items-start">
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
                             </div>
                         </div>
                     </div>
@@ -90,11 +68,3 @@ onMounted(() => {
     fetchMyProfile()
 })
 </script>
-
-<template>
-    <div v-if="loading">Cargando...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else-if="perfil">
-        <input v-model="perfil.nombre" readonly />
-    </div>
-</template>
