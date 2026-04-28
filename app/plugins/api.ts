@@ -1,9 +1,9 @@
 // plugins/api.js (o .ts)
 export default defineNuxtPlugin(() => {
     const config = useRuntimeConfig()
-    
+
     const api = $fetch.create({
-        baseURL: config.public.apiBase || 'http://localhost:8000', // Ajusta tu URL de Laravel
+        baseURL: config.public.apiBase, // Ajusta tu URL de Laravel
         credentials: 'include', // Importante para cookies de sesión
         headers: {
             'Accept': 'application/json',
@@ -22,7 +22,7 @@ export default defineNuxtPlugin(() => {
             }
         }
     })
-    
+
     return {
         provide: {
             api
