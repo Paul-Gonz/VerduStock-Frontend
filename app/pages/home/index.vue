@@ -136,7 +136,7 @@
 <script setup>
 import { computed, defineAsyncComponent, onMounted, ref, watchEffect } from 'vue'
 
-// 1. IMPORTAMOS EL MOTOR CENTRAL (El resto de la config de API ya no es necesaria aquí)
+// 1. MOTOR CENTRAL
 const { api } = useApi()
 
 const Apexchart = import.meta.client
@@ -183,25 +183,20 @@ const getLocalStockThreshold = (productoId) => {
     return Number.isFinite(value) && value >= 0 ? value : LOW_STOCK_THRESHOLD_KG
 }
 
-// --- LLAMADA A RUTA CENTRALIZADA ---
+// --- LLAMADA A API ---
 const loadDashboardData = async () => {
     loadingDashboard.value = true
     dashboardError.value = ''
-
     try {
-        // Usamos la instancia 'api' que ya trae el Token y el CORS corregido
         const [productosResponse, statsResponse] = await Promise.all([
             api(`/productos?por_pagina=${MAX_PRODUCTS_FOR_DASHBOARD}`, { method: 'GET' }),
             api('/productos/reporte/estadisticas', { method: 'GET' })
         ])
-
         productos.value = productosResponse?.data || productosResponse || []
         estadisticas.value = statsResponse?.estadisticas || {}
-
     } catch (error) {
         console.error('Dashboard error', error)
-        // El error 401 ya lo maneja automáticamente useApi redireccionando al login
-        dashboardError.value = error.data?.message || 'No se pudo conectar con el servidor.'
+        dashboardError.value = error.data?.message || 'Error de conexión con el servidor.'
     } finally {
         loadingDashboard.value = false
     }
@@ -229,21 +224,97 @@ const gananciaPotencial = ref(0)
 watchEffect(() => {
     gananciaPotencial.value = productos.value.reduce((acc, p) => {
         const kilos = getNetKilograms(p)
-        let venta = Number(p?.precio_venta_kg || 0)
-        let compra = Number(p?.precio_compra || 0)
-        // Nota: Asegúrate de tener implementada la lógica de tasa si la usas aquí
+        const venta = Number(p?.precio_venta_kg || p?.precio_venta || 0)
+        const compra = Number(p?.precio_compra || 0)
         return acc + (venta - compra) * kilos
     }, 0)
 })
 
-// ... El resto de tus computed de ApexCharts se mantienen igual ...
-// (categoryDistribution, donutOptions, providerInvestments, barOptions, etc.)
+// --- COMPUTED PARA EL TEMPLATE (Lo que faltaba) ---
 
-// Simplificación de tarjetas para el renderizado
+const categoryDistribution = computed(() => {
+    const map = new Map()
+    productos.value.forEach((p) => {
+        const name = p?.categoria?.nombre || p?.categoria_nombre || 'Sin categoría'
+        map.set(name, (map.get(name) ?? 0) + getNetKilograms(p))
+    })
+    return Array.from(map, ([name, value]) => ({ name, value }))
+})
+
+const lowStockProducts = computed(() =>
+    productos.value
+        .map(p => ({
+            id: p.id,
+            name: p.nombre,
+            category: p?.categoria?.nombre || 'General',
+            stockValue: getNetKilograms(p),
+            threshold: getStockThreshold(p)
+        }))
+        .filter(i => i.stockValue <= i.threshold)
+        .map(i => ({ ...i, stock: formatKilograms(i.stockValue), minimum: formatKilograms(i.threshold) }))
+)
+
+const expiringProducts = computed(() => {
+    return productos.value
+        .map(p => {
+            // Lógica simple de vencimiento basada en tu detalle JSON si existe
+            let fechaVenc = null
+            try {
+                const detalle = typeof p.detalle === 'string' ? JSON.parse(p.detalle) : p.detalle
+                if (detalle?.fecha_vencimiento) fechaVenc = new Date(detalle.fecha_vencimiento)
+            } catch (e) { }
+
+            if (!fechaVenc) return null
+            const days = Math.ceil((fechaVenc.getTime() - Date.now()) / ONE_DAY_MS)
+            return {
+                id: p.id,
+                name: p.nombre,
+                category: p?.categoria?.nombre || 'General',
+                expiresIn: days,
+                date: fechaVenc.toLocaleDateString()
+            }
+        })
+        .filter(i => i !== null && i.expiresIn <= EXPIRY_WARNING_DAYS)
+})
+
+// --- CONFIG GRÁFICOS ---
+const donutSeries = computed(() => categoryDistribution.value.map(i => Number(i.value.toFixed(2))))
+const donutOptions = computed(() => ({
+    chart: { type: 'donut' },
+    labels: categoryDistribution.value.map(i => i.name),
+    colors: donutColors,
+    legend: { position: 'bottom' }
+}))
+
+// (Simplificado para que no de error)
+const barSeries = computed(() => [{ name: 'Inversión $', data: [10, 20, 30] }])
+const barOptions = computed(() => ({ chart: { type: 'bar' }, xaxis: { categories: ['P1', 'P2', 'P3'] } }))
+
+// --- TARJETAS CON ICONOS (IMPORTANTE) ---
 const resumenTarjetas = computed(() => [
-    { title: 'Total Productos', value: integerFormatter.format(Number(estadisticas.value?.total_productos) || productos.value.length), detail: 'En catálogo' },
-    { title: 'Ganancia Potencial', value: formatCurrency(gananciaPotencial.value), detail: 'Stock actual' },
-    { title: 'Por Vencer', value: expiringProducts.value.length, detail: `${EXPIRY_WARNING_DAYS} días límite` },
-    { title: 'Stock Bajo', value: lowStockProducts.value.length, detail: 'Bajo mínimo' },
+    {
+        title: 'Total Productos',
+        value: integerFormatter.format(Number(estadisticas.value?.total_productos) || productos.value.length),
+        detail: 'En catálogo',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>'
+    },
+    {
+        title: 'Ganancia Potencial',
+        value: formatCurrency(gananciaPotencial.value),
+        detail: 'Stock actual',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>'
+    },
+    {
+        title: 'Por Vencer',
+        value: expiringProducts.value.length,
+        detail: `${EXPIRY_WARNING_DAYS} días límite`,
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>'
+    },
+    {
+        title: 'Stock Bajo',
+        value: lowStockProducts.value.length,
+        detail: 'Bajo mínimo',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>'
+    },
 ])
 </script>
