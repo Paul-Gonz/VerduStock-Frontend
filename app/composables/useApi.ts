@@ -1,5 +1,3 @@
-import { url } from "inspector/promises";
-
 export const useApi = () => {
     const config = useRuntimeConfig()
     const token = useCookie('auth_token')
@@ -18,15 +16,6 @@ export const useApi = () => {
             }
 
             options.headers = headers;
-
-            // Consol log para depuración: muestra la URL y si el token se inyectó correctamente
-            // es temporal, eliminar antes de entregar el producto
-            console.log('🚀 Petición saliente a:', options.baseURL + '' + url)
-            if (token.value) {
-                console.log('✅ Token inyectado:', token.value.substring(0, 10) + '...')
-            } else {
-                console.warn('❌ No hay token en la cookie')
-            }
         },
         async onResponseError({ response }) {
             if (response.status === 401) {
