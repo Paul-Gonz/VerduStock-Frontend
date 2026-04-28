@@ -97,7 +97,12 @@ import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const config = useRuntimeConfig() // Acceso a las variables de entorno de Nuxt
+// Usamos el composable maestro y la cookie para el token
+const { api } = useApi()
+const token = useCookie('auth_token', {
+    maxAge: 60 * 60 * 24 * 7, // 1 semana
+    path: '/'
+})
 
 const nombre = ref('')
 const password = ref('')
@@ -111,57 +116,9 @@ const errors = ref({
     password: ''
 })
 
-const veggies = [
-    { icon: 'mdi-apple', color: '#f44336' },
-    { icon: 'mdi-food-apple', color: '#ff9800' },
-    { icon: 'mdi-chili-hot', color: '#d50000' },
-    { icon: 'mdi-leaf', color: '#66bb6a' },
-    { icon: 'mdi-fruit-pineapple', color: '#ffeb3b' }
-]
-
 definePageMeta({
     layout: false,
 })
-
-const debugAuth = async () => {
-    try {
-        console.log('🔐 Verificando cookies...')
-        const cookies = document.cookie
-        console.log('Cookies actuales:', cookies)
-
-        // Usamos la base URL dinámica de Render
-        // Nota: Si sanctum/csrf-cookie no está bajo /api, Laravel podría fallar aquí.
-        // Si falla, ajusta la URL en Vercel o quita el /api de la variable.
-        const apiUrl1 = `${config.public.apiBase}/sanctum/csrf-cookie`
-        const response = await $fetch(apiUrl1, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        console.log('CSRF Cookie establecida:', response)
-
-        const apiUrl2 = `${config.public.apiBase}/check-auth`
-        const authCheck = await $fetch(apiUrl2, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        console.log('Auth check:', authCheck)
-
-        return authCheck.authenticated
-    } catch (error) {
-        console.error('❌ Error en debugAuth:', error)
-        return false
-    }
-}
 
 // Limpiar mensajes de error cuando el usuario escribe
 watch([nombre, password], () => {
@@ -182,19 +139,10 @@ const handleLogin = async () => {
     errors.value = { nombre: '', password: '' }
     loading.value = true
 
-    console.log('Intentando login en:', `${config.public.apiBase}/login`)
-
     try {
-        const apiUrl = `${config.public.apiBase}/login`
-
-        const response = await $fetch(apiUrl, {
+        // Usamos 'api' que ya sabe dónde está el backend
+        const response = await api('/login', {
             method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
             body: {
                 nombre: nombre.value,
                 password: password.value,
@@ -202,18 +150,20 @@ const handleLogin = async () => {
             }
         })
 
-        console.log('Respuesta del backend:', response)
+        // Si Laravel nos devuelve el token
+        if (response.success && response.token) {
+            console.log('Login exitoso con Token')
 
-        if (response.success) {
-            console.log('Login exitoso, redirigiendo...')
-            setTimeout(async () => {
-                await router.push('/home')
-            }, 500)
+            // 1. Guardamos el token en la cookie
+            token.value = response.token
+
+            // 2. Redirigimos al home
+            router.push('/home')
         } else {
             errorMessage.value = response.message || 'Error en el login'
         }
     } catch (error) {
-        console.error('Error completo en login:', error)
+        console.error('Error en login:', error)
 
         if (error.status === 422) {
             if (error.data?.errors) {
@@ -223,12 +173,8 @@ const handleLogin = async () => {
             }
         } else if (error.status === 401) {
             errorMessage.value = 'Credenciales incorrectas. Verifica tu usuario y contraseña.'
-        } else if (error.status === 419) {
-            errorMessage.value = 'Token CSRF expirado. Por favor, recarga la página.'
-        } else if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-            errorMessage.value = 'Error de conexión con el servidor de VerduStock.'
         } else {
-            errorMessage.value = `Error: ${error.data?.message || error.message || 'Error desconocido'}`
+            errorMessage.value = 'Error de conexión con el servidor de VerduStock.'
         }
     } finally {
         loading.value = false
