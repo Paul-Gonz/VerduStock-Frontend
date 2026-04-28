@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 
-const config = useRuntimeConfig()
-
 export function useUsuarios() {
+    const { api } = useApi() // Usamos el motor centralizado
+
     const usuarios = ref<any[]>([])
     const loading = ref(false)
     const saving = ref(false)
@@ -14,15 +14,8 @@ export function useUsuarios() {
         loading.value = true
         errorMessage.value = ''
         try {
-            const apiUrl = `${config.public.apiBase}/usuarios/`
-            const data: any = await $fetch(apiUrl, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            const data: any = await api('/usuarios', {
+                method: 'GET'
             })
             usuarios.value = Array.isArray(data) ? data : (data?.data || [])
         } catch (error: any) {
@@ -40,8 +33,9 @@ export function useUsuarios() {
         errorMessage.value = ''
 
         try {
-            let apiUrl = `${config.public.apiBase}/usuarios/`
             let method: 'POST' | 'PUT' = 'POST'
+            let endpoint = '/usuarios'
+
             let payload: any = {
                 nombre: form.nombre,
                 password: form.password,
@@ -49,8 +43,7 @@ export function useUsuarios() {
             }
 
             if (id) {
-                // Editar usuario existente
-                apiUrl = `${config.public.apiBase}/usuarios/${id}`
+                endpoint = `/usuarios/${id}`
                 method = 'PUT'
                 payload.current_password = form.current_password || undefined
 
@@ -60,14 +53,8 @@ export function useUsuarios() {
                 }
             }
 
-            const response: any = await $fetch(apiUrl, {
+            const response: any = await api(endpoint, {
                 method,
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: payload
             })
 
@@ -79,7 +66,7 @@ export function useUsuarios() {
             if (error.response?.status === 422) {
                 const mistakes = error.response._data?.errors || {}
                 const errorMsg = Object.values(mistakes).flat().join(', ')
-                errorMessage.value = errorMsg || 'Error de validación de los datos proporcionados.'
+                errorMessage.value = errorMsg || 'Error de validación.'
                 return { success: false, message: errorMessage.value }
             }
 
@@ -95,15 +82,8 @@ export function useUsuarios() {
         deleteError.value = ''
 
         try {
-            const apiUrl = `${config.public.apiBase}/usuarios/${id}`
-            const response = await $fetch(apiUrl, {
+            await api(`/usuarios/${id}`, {
                 method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: {
                     current_password: currentPassword
                 }

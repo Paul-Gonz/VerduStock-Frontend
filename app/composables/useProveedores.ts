@@ -1,8 +1,9 @@
 import { ref } from 'vue'
 
-const config = useRuntimeConfig()
-
 export function useProveedores() {
+    // Inyectamos el motor central
+    const { api } = useApi()
+
     const proveedores = ref<any[]>([])
     const loading = ref(false)
     const saving = ref(false)
@@ -11,19 +12,12 @@ export function useProveedores() {
     const fetchProveedores = async () => {
         loading.value = true
         try {
-            const apiUrl = `${config.public.apiBase}/proveedores`
-            const data: any = await $fetch(apiUrl, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            const data: any = await api('/proveedores', {
+                method: 'GET'
             })
             proveedores.value = Array.isArray(data) ? data : (data.data || [])
         } catch (e) {
-            console.error('Error al cargar datos', e)
+            console.error('Error al cargar proveedores:', e)
         } finally {
             loading.value = false
         }
@@ -34,21 +28,15 @@ export function useProveedores() {
 
         saving.value = true
         try {
-            const apiUrl = isEditing ? `${config.public.apiBase}/proveedores/${form.id}` : `${config.public.apiBase}/proveedores`
-            await $fetch(apiUrl, {
+            const url = isEditing ? `/proveedores/${form.id}` : '/proveedores'
+            await api(url, {
                 method: isEditing ? 'PUT' : 'POST',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: form
             })
             await fetchProveedores()
             return true
         } catch (e) {
-            console.error('Error al guardar', e)
+            console.error('Error al guardar proveedor:', e)
             return false
         } finally {
             saving.value = false
@@ -59,20 +47,13 @@ export function useProveedores() {
         if (!id) return false
         deleting.value = true
         try {
-            const apiUrl = `${config.public.apiBase}/proveedores/${id}`
-            await $fetch(apiUrl, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            await api(`/proveedores/${id}`, {
+                method: 'DELETE'
             })
             await fetchProveedores()
             return true
         } catch (e) {
-            console.error('Error eliminando', e)
+            console.error('Error eliminando proveedor:', e)
             return false
         } finally {
             deleting.value = false

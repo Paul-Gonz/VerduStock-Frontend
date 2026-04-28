@@ -12,17 +12,12 @@ export interface Category {
   productos_count?: number
 }
 
-/**
- * Composable centralizado para el módulo Categorías.
- * Usa `useApi` para consumir la URL base configurada en nuxt.config (runtimeConfig).
- * Maneja automáticamente errores 401 redirigiendo al login.
- */
 export function useCategories() {
+  // Usamos el motor centralizado
   const { api } = useApi()
 
   const categories = ref<Category[]>([])
-  const allCategoriesBase = ref<Category[]>([]) // Para buscar en el frontend temporalmente si deshacemos backend
-  const trashedCategories = ref<Category[]>([])
+  const allCategoriesBase = ref<Category[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const total = ref(0)
@@ -31,14 +26,31 @@ export function useCategories() {
   const page = ref(1)
   const pageSize = ref(100)
   const filter = ref('')
-  
-  // Debounce timeout reference
+
   let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-  // Manejo centralizado de errores de la API
   const handleError = (err: any, fallbackMsg: string) => {
     error.value = err?.data?.message ?? err?.message ?? fallbackMsg
   }
+
+  const applyFilter = () => {
+    if (!filter.value) {
+      categories.value = allCategoriesBase.value
+      return
+    }
+    const searchTerm = filter.value.toLowerCase()
+    categories.value = allCategoriesBase.value.filter(cat =>
+      cat.nombre.toLowerCase().includes(searchTerm) ||
+      (cat.detalle && cat.detalle.toLowerCase().includes(searchTerm))
+    )
+  }
+
+  watch(filter, () => {
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => applyFilter(), 300)
+  })
+
+  // --- MÉTODOS DE API ---
 
   const fetchCategories = async () => {
     loading.value = true
@@ -49,7 +61,7 @@ export function useCategories() {
         query: { page: page.value, per_page: pageSize.value }
       })
       allCategoriesBase.value = res?.data ?? []
-      applyFilter() // Aplicar filtro local si el backend no lo procesa
+      applyFilter()
       total.value = res?.meta?.total ?? res?.data?.length ?? 0
     } catch (err: any) {
       handleError(err, 'No se pudieron cargar las categorías.')
@@ -58,35 +70,13 @@ export function useCategories() {
     }
   }
 
-  const applyFilter = () => {
-    if (!filter.value) {
-      categories.value = allCategoriesBase.value
-      return
-    }
-    const searchTerm = filter.value.toLowerCase()
-    categories.value = allCategoriesBase.value.filter(cat => 
-      cat.nombre.toLowerCase().includes(searchTerm) || 
-      (cat.detalle && cat.detalle.toLowerCase().includes(searchTerm))
-    )
-  }
-
-  // Watcher con debounce de 300ms sobre la variable de búsqueda
-  watch(filter, (newSearch) => {
-    if (searchTimeout) clearTimeout(searchTimeout)
-    
-    searchTimeout = setTimeout(() => {
-      applyFilter()
-    }, 300)
-  })
-
   const createCategory = async (payload: Pick<Category, 'nombre' | 'detalle' | 'emoji'>) => {
     loading.value = true
     error.value = null
     try {
       await api('/categorias', {
         method: 'POST',
-        body: payload,
-        headers: { 'Content-Type': 'application/json' },
+        body: payload
       })
       await fetchCategories()
     } catch (err: any) {
@@ -103,8 +93,7 @@ export function useCategories() {
     try {
       await api(`/categorias/${id}`, {
         method: 'PUT',
-        body: payload,
-        headers: { 'Content-Type': 'application/json' },
+        body: payload
       })
       await fetchCategories()
     } catch (err: any) {
@@ -120,7 +109,7 @@ export function useCategories() {
     error.value = null
     try {
       await api(`/categorias/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       })
       await fetchCategories()
     } catch (err: any) {
@@ -131,20 +120,8 @@ export function useCategories() {
     }
   }
 
-
-  const setFilter = (val: string) => {
-    filter.value = val
-    page.value = 1
-  }
-
-  const setPage = (val: number) => {
-    page.value = val
-    fetchCategories()
-  }
-
   return {
     categories,
-    trashedCategories,
     loading,
     error,
     total,
@@ -155,7 +132,7 @@ export function useCategories() {
     createCategory,
     updateCategory,
     deleteCategory,
-    setFilter,
-    setPage,
+    setFilter: (val: string) => { filter.value = val; page.value = 1 },
+    setPage: (val: number) => { page.value = val; fetchCategories() }
   }
 }
