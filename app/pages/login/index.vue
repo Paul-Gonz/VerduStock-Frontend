@@ -116,12 +116,12 @@ const errors = ref({
 })
 
 const veggies = [
-    { icon: 'mdi-carrot', color: '#fb923c' },    // Naranja
-    { icon: 'mdi-leaf', color: '#4ade80' },      // Verde
-    { icon: 'mdi-corn', color: '#facc15' },      // Amarillo
-    { icon: 'mdi-chili-hot', color: '#f87171' }, // Rojo
-    { icon: 'mdi-mushrooms', color: '#e5e7eb' },  // Blanco/Gris
-    { icon: 'mdi-food-apple', color: '#fb7185' }  // Rosa/Rojo
+    { icon: 'mdi-carrot', color: '#fb923c' },
+    { icon: 'mdi-leaf', color: '#4ade80' },
+    { icon: 'mdi-corn', color: '#facc15' },
+    { icon: 'mdi-chili-hot', color: '#f87171' },
+    { icon: 'mdi-mushroom', color: '#e5e7eb' },
+    { icon: 'mdi-food-apple', color: '#fb7185' }
 ]
 
 definePageMeta({
