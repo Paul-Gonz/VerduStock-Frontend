@@ -1,67 +1,39 @@
 // middleware/auth.js
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    console.log(`Middleware ejecutándose: ${from.path} -> ${to.path}`)
+    if (process.server) return
 
     const config = useRuntimeConfig()
 
-    // Rutas públicas
+    // Rutas que no requieren autenticación
     const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/api-test']
 
     if (publicRoutes.includes(to.path)) {
-        console.log(`Ruta pública: ${to.path}`)
         return
     }
 
     try {
-        console.log('Verificando autenticación...')
-        console.log('Cookies actuales:', document.cookie)
-
-        // Hacer una prueba de sesión primero
-        const apiUrl1 = `${config.public.apiBase}/session-test`
-        const sessionTest = await $fetch(apiUrl1, {
+        // Verificamos el estado de la sesión en el servidor de Render
+        const response = await $fetch(`${config.public.apiBase}/check-auth`, {
             method: 'GET',
-            credentials: 'include',
+            credentials: 'include', // Vital para enviar las cookies de sesión
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).catch(err => {
-            console.error('Error en session-test:', err)
-            return null
-        })
-
-        console.log('Resultado session-test:', sessionTest)
-
-        // Ahora verificar autenticación
-        const apiUrl2 = `${config.public.apiBase}/check-auth`
-        const response = await $fetch(apiUrl2, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
 
-        console.log('Respuesta check-auth:', response)
-
+        // Si el backend dice que no estás autenticado, directo al login
         if (!response.authenticated) {
-            console.log('No autenticado, redirigiendo a login')
+            console.warn('Sesión no válida, redirigiendo...')
             return navigateTo('/login')
         }
 
-        console.log('Autenticado, permitiendo acceso')
-        return
+        // Si llegamos aquí, todo bien. El usuario puede entrar.
+        console.log('Autenticación confirmada')
 
     } catch (error) {
-        console.error('Error en middleware:', error)
-        console.error('Detalles:', {
-            status: error.status,
-            message: error.message
-        })
-
+        console.error('Error de conexión en el middleware:', error.message)
+        // Si hay un error de red o el servidor responde mal, mejor mandarlo al login por seguridad
         return navigateTo('/login')
     }
 })
