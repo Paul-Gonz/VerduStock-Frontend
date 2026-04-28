@@ -27,7 +27,7 @@
               <p class="text-sm text-gray-500">Listado completo de todos los productos con desperdicios</p>
             </div>
           </div>
-          <div class="flex-grow flex flex-col gap-4">
+          <div class="grow flex flex-col gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
               <select v-model="filtrosInventario.categoria_id"
@@ -66,7 +66,7 @@
               <p class="text-sm text-gray-500">Productos que necesitan reposición urgente</p>
             </div>
           </div>
-          <div class="flex-grow flex flex-col gap-4">
+          <div class="grow flex flex-col gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Umbral de stock bajo: {{ umbralStock }}
                 kg</label>
@@ -96,7 +96,7 @@
               <p class="text-sm text-gray-500">Análisis de productos con pérdidas por desperdicio</p>
             </div>
           </div>
-          <div class="flex-grow flex flex-col gap-4">
+          <div class="grow flex flex-col gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
               <select v-model="filtrosDesperdicios.categoria_id"
@@ -135,7 +135,7 @@
               <p class="text-sm text-gray-500">Margen de ganancia por producto</p>
             </div>
           </div>
-          <div class="flex-grow flex flex-col gap-4">
+          <div class="grow flex flex-col gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por categoría</label>
               <select v-model="filtrosRentabilidad.categoria_id"

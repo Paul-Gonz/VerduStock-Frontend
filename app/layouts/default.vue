@@ -4,7 +4,7 @@
     <!-- Sidebar -->
     <aside
       class="flex flex-col bg-white border-r border-slate-200 transition-all duration-300 z-20 shrink-0 shadow-sm overflow-hidden"
-      :class="drawer ? 'w-64' : 'w-[72px]'">
+      :class="drawer ? 'w-64' : 'w-18'">
       <div class="h-14 flex items-center border-b border-slate-100 shrink-0 transition-all duration-300"
         :class="drawer ? 'px-5 gap-3' : 'px-0 justify-center'">
         <img src="/logo.png" alt="Logo" class="w-8 h-8 object-contain drop-shadow-sm shrink-0" />
@@ -188,7 +188,7 @@ import { useRoute, useRouter } from 'vue-router'
 import menuConfig from './menu.json'
 import { TasaDolarService } from '../utils/tasaDolar.js'
 
-// Usamos tu nuevo composable y la cookie del token
+// 1. Usamos el composable maestro y la cookie del token
 const { api } = useApi()
 const token = useCookie('auth_token')
 
@@ -196,25 +196,29 @@ const token = useCookie('auth_token')
 const route = useRoute()
 const router = useRouter()
 
-// Estados
+// Estados del Sidebar y UI
 const drawer = ref(true)
 const logoutDialog = ref(false)
 const loggingOut = ref(false)
 const menuItems = ref(menuConfig)
+const showTasaDetails = ref(false)
+
+// Estados de la Tasa Dólar
 const tasaDolar = ref(null)
 const tasaTimer = ref(null)
 const tasaService = ref(null)
 const tasaLoading = ref(true)
 const tasaError = ref(false)
-const showTasaDetails = ref(false)
+
 const isActive = (targetRoute) => route.path.startsWith(targetRoute)
 
+// Título dinámico de la página
 const pageTitle = computed(() => {
   const currentItem = menuItems.value.find(item => item.route === route.path)
   return currentItem ? currentItem.title : 'VerduStock'
 })
 
-// ... Mantén el formateador y los computed de la tasa igual ...
+// --- LÓGICA DE LA TASA BCV ---
 const tasaFormatter = new Intl.NumberFormat('es-VE', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -222,8 +226,15 @@ const tasaFormatter = new Intl.NumberFormat('es-VE', {
 
 const tasaDisplay = computed(() => {
   if (!tasaDolar.value) return ''
-  const candidates = [tasaDolar.value.venta, tasaDolar.value.promedio, tasaDolar.value.compra]
-  const tasa = candidates.map(v => Number(v)).find(v => Number.isFinite(v) && v > 0)
+  const candidates = [
+    tasaDolar.value.venta,
+    tasaDolar.value.promedio,
+    tasaDolar.value.compra
+  ]
+  const tasa = candidates
+    .map((value) => Number(value))
+    .find((value) => Number.isFinite(value) && value > 0)
+
   return tasa > 0 ? `Bs ${tasaFormatter.format(tasa)}` : ''
 })
 
@@ -232,46 +243,58 @@ const tasaTexto = computed(() => {
   return tasaLoading.value ? 'Cargando...' : 'Sin datos'
 })
 
+// --- ACCIONES DE USUARIO ---
 const goToProfile = () => router.push('/perfil')
-const confirmLogout = () => logoutDialog.value = true
+const confirmLogout = () => { logoutDialog.value = true }
 
-// --- LOGOUT ACTUALIZADO ---
+// Logout actualizado para limpiar todo
 const logout = async () => {
   loggingOut.value = true
   try {
-    // Intentamos avisar al backend para que invalide el token
+    // Intentamos avisar al backend para invalidar el token
     await api('/logout', { method: 'POST' })
   } catch (error) {
-    console.warn("Error al revocar token, limpiando localmente...")
+    console.warn("No se pudo invalidar el token en el servidor, limpiando localmente...")
   } finally {
+    // PASE LO QUE PASE, borramos la llave local y mandamos al login
     token.value = null
     loggingOut.value = false
     logoutDialog.value = false
-    router.push('/login')
+    // Forzamos recarga para limpiar cualquier estado residual
+    window.location.href = '/login'
   }
 }
 
-// --- CHECK AUTH ACTUALIZADO ---
+// --- VALIDACIÓN DE SESIÓN (CHECK AUTH) ---
 onMounted(async () => {
+  // 1. Si no hay token físico en la cookie, rebote inmediato
   if (!token.value) {
     router.push('/login')
     return
   }
 
   try {
-    // useApi ya inyecta el token automáticamente
+    // 2. Intentamos verificar el token con el servidor
     const response = await api('/check-auth')
-    if (!response.authenticated) throw new Error()
+
+    // Si el servidor responde y dice explícitamente que no vales, te sacamos
+    if (response && response.authenticated === false) {
+      token.value = null
+      router.push('/login')
+    }
   } catch (e) {
-    token.value = null
-    router.push('/login')
+    // 3. Si hay un error de red o 500 (Render despertando), NO te sacamos.
+    // Esto evita el bucle de redirección si el servidor tarda en responder.
+    console.warn("Verificación de auth en espera (servidor ocupado o red lenta).")
   }
 })
 
-// ... Mantén la lógica de la Tasa Dolar igual ...
+// --- INICIALIZACIÓN DE TASA DÓLAR ---
 onMounted(async () => {
   if (!import.meta.client) return
+
   tasaService.value = window?.TasaDolar || new TasaDolarService()
+
   const cargarTasa = async () => {
     try {
       const data = await tasaService.value.obtenerTasa('oficial')
@@ -283,7 +306,9 @@ onMounted(async () => {
       tasaLoading.value = false
     }
   }
+
   await cargarTasa()
+  // Actualizar cada 5 minutos
   tasaTimer.value = setInterval(cargarTasa, 5 * 60 * 1000)
 })
 
