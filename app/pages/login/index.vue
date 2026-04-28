@@ -197,7 +197,7 @@ const handleLogin = async () => {
 }
 
 .veggie-icon:nth-child(even) {
-    animation-delay: 2s;
+    animation-delay: 1.5s;
 }
 
 @keyframes float {
