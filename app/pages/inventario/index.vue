@@ -5,32 +5,21 @@
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Inventario de Productos</h1>
         <div class="flex items-center gap-3">
-          <NuxtLink
-            to="/reportes"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
+          <NuxtLink to="/reportes"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
             <span class="mdi mdi-chart-box"></span>
             Reportes
           </NuxtLink>
-          <button 
-            @click="openModal()" 
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
+          <button @click="openModal()"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             Nuevo Producto
           </button>
         </div>
       </div>
 
       <div class="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <BaseSearch 
-          v-model="searchQuery" 
-          placeholder="Buscar por nombre o proveedor..." 
-          class="flex-1"
-        />
-        <select
-          v-model="filterCondition"
-          class="border border-gray-300 rounded-lg px-4 py-2 bg-white outline-none"
-        >
+        <BaseSearch v-model="searchQuery" placeholder="Buscar por nombre o proveedor..." class="flex-1" />
+        <select v-model="filterCondition" class="border border-gray-300 rounded-lg px-4 py-2 bg-white outline-none">
           <option value="todos">Todos los estados</option>
           <option value="por_vencer">Por vencer (7 días)</option>
           <option value="vencidos">Vencidos</option>
@@ -39,19 +28,15 @@
       </div>
 
       <!-- Actions Toolbar -->
-      <div v-if="selectedIds.size > 0" class="hidden gap-3 items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
+      <div v-if="selectedIds.size > 0"
+        class="hidden gap-3 items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
         <span class="text-blue-800 font-medium px-2">{{ selectedIds.size }} seleccionado(s)</span>
-        <button 
-          v-if="selectedIds.size === 1"
-          @click="handleEditSelected" 
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
+        <button v-if="selectedIds.size === 1" @click="handleEditSelected"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           Editar Seleccionado
         </button>
-        <button 
-          @click="handleBulkDelete" 
-          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
+        <button @click="handleBulkDelete"
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           Eliminar Seleccionados ({{ selectedIds.size }})
         </button>
       </div>
@@ -59,14 +44,8 @@
 
     <!-- Main Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable
-        :columns="columns"
-        :rows="tableRows"
-        :searchable="false"
-        :loading="loading"
-        :selectable="false"
-        emptyText="No se encontraron productos"
-      >
+      <BaseTable :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false"
+        emptyText="No se encontraron productos">
         <template #precio_venta="{ value }">
           ${{ Number(value).toFixed(2) }}
         </template>
@@ -78,34 +57,43 @@
         </template>
         <template #stock_actual="{ value, row }">
           <div v-if="editingStockId === row.id" class="flex items-center gap-1">
-            <span class="text-slate-700 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType === 'add' ? '+' : '-' }}</span>
-            <input 
-              type="number" 
-              v-model="stockAdjustmentValue" 
-              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 rounded outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 text-center" 
-              min="0.1" 
-              step="0.1"
-              autofocus 
-              @keyup.enter="submitStockAdjust(row)" 
-              @keyup.esc="cancelStockAdjust()"
-              :disabled="stockAdjustLoading"
-            />
-            <button v-if="!stockAdjustLoading" @click.stop="submitStockAdjust(row)" class="text-slate-500 hover:text-green-600 p-0.5 rounded transition-colors" title="Confirmar">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span class="text-slate-700 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType ===
+              'add' ? '+' : '-' }}</span>
+            <input type="number" v-model="stockAdjustmentValue"
+              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 rounded outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 text-center"
+              min="0.1" step="0.1" autofocus @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust()"
+              :disabled="stockAdjustLoading" />
+            <button v-if="!stockAdjustLoading" @click.stop="submitStockAdjust(row)"
+              class="text-slate-500 hover:text-green-600 p-0.5 rounded transition-colors" title="Confirmar">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             </button>
-            <button v-if="!stockAdjustLoading" @click.stop="cancelStockAdjust()" class="text-slate-400 hover:text-red-500 p-0.5 rounded transition-colors" title="Cancelar">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button v-if="!stockAdjustLoading" @click.stop="cancelStockAdjust()"
+              class="text-slate-400 hover:text-red-500 p-0.5 rounded transition-colors" title="Cancelar">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <span v-if="stockAdjustLoading" class="w-3 h-3 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
+            <span v-if="stockAdjustLoading"
+              class="w-3 h-3 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
           <div v-else class="flex items-center gap-1.5 whitespace-nowrap">
             <span class="text-slate-700 font-medium">{{ value }} kg</span>
             <div class="flex items-center opacity-40 hover:opacity-100 transition-opacity">
-              <button @click.stop="openStockAdjust(row, 'add')" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5" title="Sumar stock">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <button @click.stop="openStockAdjust(row, 'add')"
+                class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5"
+                title="Sumar stock">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
               </button>
-              <button @click.stop="openStockAdjust(row, 'subtract')" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5" title="Restar stock">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+              <button @click.stop="openStockAdjust(row, 'subtract')"
+                class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5"
+                title="Restar stock">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+                </svg>
               </button>
             </div>
           </div>
@@ -119,33 +107,30 @@
         <template #ganancia_total="{ value }">
           <span class="text-green-600 font-medium">${{ Number(value).toFixed(2) }}</span>
         </template>
-        
+
         <template #fecha_registro="{ value }">
           {{ formatDate(value) }}
         </template>
         <template #fecha_vencimiento="{ value }">
-            <span :class="{ 'text-red-500 font-bold': isExpired(value), 'text-yellow-600 font-medium': isExpiring(value) }">
-                {{ value && value !== 'N/A' ? formatDate(value) : 'No aplica' }}
-            </span>
+          <span
+            :class="{ 'text-red-500 font-bold': isExpired(value), 'text-yellow-600 font-medium': isExpiring(value) }">
+            {{ value && value !== 'N/A' ? formatDate(value) : 'No aplica' }}
+          </span>
         </template>
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">
-            <button
-              @click.stop="openModal(row)"
-              class="text-blue-600 hover:text-blue-800 p-1 transition-colors"   
-              title="Editar"
-            >
+            <button @click.stop="openModal(row)" class="text-blue-600 hover:text-blue-800 p-1 transition-colors"
+              title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button
-              @click.stop="deleteSingle(row)"
-              class="text-red-600 hover:text-red-800 p-1 transition-colors disabled:opacity-50"
-              title="Eliminar"
-            >
+            <button @click.stop="deleteSingle(row)"
+              class="text-red-600 hover:text-red-800 p-1 transition-colors disabled:opacity-50" title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
           </div>
@@ -153,104 +138,120 @@
       </BaseTable>
     </div>
 
-    <BaseModal
-      :isOpen="isModalOpen"
-      @close="closeModal"
-      :title="isEditing ? 'Editar Producto' : 'Nuevo Producto'"
-      maxWidth="max-w-[700px]"
-    >
+    <BaseModal :isOpen="isModalOpen" @close="closeModal" :title="isEditing ? 'Editar Producto' : 'Nuevo Producto'"
+      maxWidth="max-w-[700px]">
       <div class="p-4">
         <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex flex-col gap-1 col-span-2">
-                  <label class="text-sm font-medium text-gray-700">Nombre del producto</label>     
-                  <input v-model="formData.nombre" type="text" required class="border border-gray-300 rounded-lg px-3 py-2" />
-              </div>
-              
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Categoría</label> 
-                  <select v-model="formData.categoria_id" required class="border border-gray-300 rounded-lg px-3 py-2">
-                    <option value="" disabled>Seleccione una categoría</option>
-                    <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
-                      {{ cat.nombre }}
-                    </option>
-                  </select>
-              </div>
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Proveedor</label>  
-                  <select v-model="formData.proveedor_id" required class="border border-gray-300 rounded-lg px-3 py-2">
-                    <option value="" disabled>Seleccione un proveedor</option>
-                    <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
-                      {{ prov.nombre }}
-                    </option>
-                  </select>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1 col-span-2">
+              <label class="text-sm font-medium text-gray-700">Nombre del producto</label>
+              <input v-model="formData.nombre" type="text" required
+                class="border border-gray-300 rounded-lg px-3 py-2" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Categoría</label>
+              <select v-model="formData.categoria_id" required class="border border-gray-300 rounded-lg px-3 py-2">
+                <option value="" disabled>Seleccione una categoría</option>
+                <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+                  {{ cat.nombre }}
+                </option>
+              </select>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Proveedor</label>
+              <select v-model="formData.proveedor_id" required class="border border-gray-300 rounded-lg px-3 py-2">
+                <option value="" disabled>Seleccione un proveedor</option>
+                <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
+                  {{ prov.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Stock Mínimo</label>
+              <input v-model="formData.stock_minimo" type="number" step="0.01" required
+                class="border border-gray-300 rounded-lg px-3 py-2" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Cantidad Comprada (Kg) <span
+                  class="text-xs text-gray-400 font-normal">Bruto</span></label>
+              <input v-model="cantidadBruta" type="number" step="0.01" required
+                class="border border-gray-300 rounded-lg px-3 py-2" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Desperdicio (Kg) <span
+                  class="text-xs text-blue-500 font-normal cursor-pointer"
+                  title="Auto-calculado al 5% pero puedes ajustarlo">(~5%)</span></label>
+              <input v-model="desperdicioKg" type="number" step="0.01"
+                class="border border-gray-300 rounded-lg px-3 py-2 bg-yellow-50" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Stock Inicial (Kg) <span
+                  class="text-xs text-gray-400 font-normal">Neto</span></label>
+              <input v-model="formData.kilogramos" type="number" step="0.01" required readonly
+                class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-blue-700">Stock Actual (Kg)</label>
+              <input v-model="formData.stock_actual" type="number" step="0.01" required
+                class="border border-blue-300 rounded-lg px-3 py-2 bg-blue-50 focus:ring-blue-500" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Costo Total Compra ($)</label>
+              <input v-model="costoTotalCompra" type="number" step="0.01" required
+                class="border border-gray-300 rounded-lg px-3 py-2" placeholder="Pago total al proveedor" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Precio de Compra por Kg ($)</label>
+              <input v-model="formData.precio_compra" type="number" step="0.01" required readonly
+                class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">Precio Venta por Kg ($)</label>
+              <input v-model="formData.precio_venta_kg" type="number" step="0.01" required
+                class="border border-gray-300 rounded-lg px-3 py-2" />
+            </div>
+
+            <div class="flex flex-col gap-2 col-span-2 mt-2">
+              <label class="text-sm font-medium text-gray-700 border-b pb-1">Vencimiento</label>
+              <div class="flex gap-4 items-center">
+                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" v-model="vencimientoMode" value="Días" class="accent-green-600" /> Días
+                </label>
+                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" v-model="vencimientoMode" value="Calendario" class="accent-green-600" />
+                  Calendario
+                </label>
+                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                  <input type="radio" v-model="vencimientoMode" value="No aplica" class="accent-green-600" /> No aplica
+                </label>
               </div>
 
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Stock Mínimo</label>
-                  <input v-model="formData.stock_minimo" type="number" step="0.01" required class="border border-gray-300 rounded-lg px-3 py-2" />
+              <div v-if="vencimientoMode === 'Días'" class="mt-1">
+                <input v-model.number="vencimientoDias" type="number" min="1" placeholder="Cantidad de días"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2" />
               </div>
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Cantidad Comprada (Kg) <span class="text-xs text-gray-400 font-normal">Bruto</span></label>
-                  <input v-model="cantidadBruta" type="number" step="0.01" required class="border border-gray-300 rounded-lg px-3 py-2" />
-              </div>
-
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Desperdicio (Kg) <span class="text-xs text-blue-500 font-normal cursor-pointer" title="Auto-calculado al 5% pero puedes ajustarlo">(~5%)</span></label>
-                  <input v-model="desperdicioKg" type="number" step="0.01" class="border border-gray-300 rounded-lg px-3 py-2 bg-yellow-50" />
-              </div>
-              <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-gray-700">Stock Inicial (Kg) <span class="text-xs text-gray-400 font-normal">Neto</span></label>
-                  <input v-model="formData.kilogramos" type="number" step="0.01" required readonly class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
-              </div>                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-blue-700">Stock Actual (Kg)</label>
-                    <input v-model="formData.stock_actual" type="number" step="0.01" required class="border border-blue-300 rounded-lg px-3 py-2 bg-blue-50 focus:ring-blue-500" />
-                </div>
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Costo Total Compra ($)</label>
-                  <input v-model="costoTotalCompra" type="number" step="0.01" required class="border border-gray-300 rounded-lg px-3 py-2" placeholder="Pago total al proveedor" />
-              </div>
-
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Precio de Compra por Kg ($)</label>
-                  <input v-model="formData.precio_compra" type="number" step="0.01" required readonly class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
-              </div>
-              
-              <div class="flex flex-col gap-1">
-                  <label class="text-sm font-medium text-gray-700">Precio Venta por Kg ($)</label>
-                  <input v-model="formData.precio_venta_kg" type="number" step="0.01" required class="border border-gray-300 rounded-lg px-3 py-2" />
-              </div>
-              
-              <div class="flex flex-col gap-2 col-span-2 mt-2">
-                  <label class="text-sm font-medium text-gray-700 border-b pb-1">Vencimiento</label>
-                  <div class="flex gap-4 items-center">
-                    <label class="flex items-center gap-1 text-sm cursor-pointer">
-                      <input type="radio" v-model="vencimientoMode" value="Días" class="accent-green-600" /> Días
-                    </label>
-                    <label class="flex items-center gap-1 text-sm cursor-pointer">
-                      <input type="radio" v-model="vencimientoMode" value="Calendario" class="accent-green-600" /> Calendario
-                    </label>
-                    <label class="flex items-center gap-1 text-sm cursor-pointer">
-                      <input type="radio" v-model="vencimientoMode" value="No aplica" class="accent-green-600" /> No aplica
-                    </label>
-                  </div>
-                  
-                  <div v-if="vencimientoMode === 'Días'" class="mt-1">
-                    <input v-model.number="vencimientoDias" type="number" min="1" placeholder="Cantidad de días" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                  </div>
-                  <div v-else-if="vencimientoMode === 'Calendario'" class="mt-1">
-                    <input v-model="vencimientoFecha" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                  </div>
+              <div v-else-if="vencimientoMode === 'Calendario'" class="mt-1">
+                <input v-model="vencimientoFecha" type="date"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2" />
               </div>
             </div>
+          </div>
         </form>
       </div>
 
       <template #footer>
         <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
-          <button type="button" @click="closeModal" class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
-          <button @click="handleSubmit" :disabled="formLoading" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
-            <span v-if="formLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <button type="button" @click="closeModal"
+            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+          <button @click="handleSubmit" :disabled="formLoading"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
+            <span v-if="formLoading"
+              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             {{ isEditing ? 'Actualizar' : 'Guardar' }}
           </button>
         </div>
@@ -286,7 +287,7 @@ const vencimientoMode = ref('No aplica')
 const vencimientoDias = ref<number | null>(null)
 const vencimientoFecha = ref('')
 
-  const initialFormState = { id: '', nombre: '', categoria_id: '', proveedor_id: '', stock_minimo: '', kilogramos: '', stock_actual: '', precio_compra: '', precio_venta_kg: '', fecha_vencimiento: '' }
+const initialFormState = { id: '', nombre: '', categoria_id: '', proveedor_id: '', stock_minimo: '', kilogramos: '', stock_actual: '', precio_compra: '', precio_venta_kg: '', fecha_vencimiento: '' }
 const formData = ref({ ...initialFormState })
 const costoTotalCompra = ref<number | ''>('')
 
@@ -310,10 +311,10 @@ watch([() => cantidadBruta.value, () => desperdicioKg.value], ([bruta, desp]) =>
   const b = Number(bruta || 0)
   const d = Number(desp || 0)
   if (b >= d) {
-      const net = (Number((b - d).toFixed(2))).toString()
-      formData.value.kilogramos = net
-      if (!isEditing.value) formData.value.stock_actual = net
-    } else {
+    const net = (Number((b - d).toFixed(2))).toString()
+    formData.value.kilogramos = net
+    if (!isEditing.value) formData.value.stock_actual = net
+  } else {
     formData.value.kilogramos = ''
     if (!isEditing.value) formData.value.stock_actual = ''
   }
@@ -349,17 +350,17 @@ const columns = [
 const loadDependencies = async () => {
   try {
     const { api } = useApi()
-    
+
     // Usamos el hook useApi para manejar cookies y headers correctamente
     const [cats, provs] = await Promise.all([
       api('/categorias').catch(() => []),
       api('/proveedores').catch(() => [])
     ])
-    
+
     const extractData = (res: any) => {
-        if (Array.isArray(res)) return res;
-        if (res && Array.isArray(res.data)) return res.data;
-        return [];
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.data)) return res.data;
+      return [];
     };
 
     categorias.value = extractData(cats)
@@ -426,15 +427,15 @@ const formatDate = (dateString: string) => {
 }
 
 const isExpired = (dateString: string) => {
-    if (!dateString || dateString === 'N/A') return false
-    return new Date(dateString) < new Date()
+  if (!dateString || dateString === 'N/A') return false
+  return new Date(dateString) < new Date()
 }
 const isExpiring = (dateString: string) => {
-    if (!dateString || dateString === 'N/A') return false
-    const now = new Date()
-    const exp = new Date(dateString)
-    const diff = exp.getTime() - now.getTime()
-    return diff > 0 && diff <= (7 * 24 * 60 * 60 * 1000)
+  if (!dateString || dateString === 'N/A') return false
+  const now = new Date()
+  const exp = new Date(dateString)
+  const diff = exp.getTime() - now.getTime()
+  return diff > 0 && diff <= (7 * 24 * 60 * 60 * 1000)
 }
 
 const openModal = (row: any = null) => {
@@ -442,25 +443,25 @@ const openModal = (row: any = null) => {
   if (row) {
     isEditing.value = true
     formData.value = {
-        id: row.id,
-        nombre: row.nombre,
-        categoria_id: row.raw?.categoria_id || row.categoria_id || '',
-        proveedor_id: row.raw?.proveedor_id || row.proveedor_id || '',
-        stock_minimo: row.stock_minimo,
-        kilogramos: row.cantidad_disponible,          stock_actual: row.stock_actual !== undefined ? row.stock_actual : row.cantidad_disponible,        precio_compra: row.precio_compra,
-        precio_venta_kg: row.precio_venta,
-        fecha_vencimiento: '' // Computed below
+      id: row.id,
+      nombre: row.nombre,
+      categoria_id: row.raw?.categoria_id || row.categoria_id || '',
+      proveedor_id: row.raw?.proveedor_id || row.proveedor_id || '',
+      stock_minimo: row.stock_minimo,
+      kilogramos: row.cantidad_disponible, stock_actual: row.stock_actual !== undefined ? row.stock_actual : row.cantidad_disponible, precio_compra: row.precio_compra,
+      precio_venta_kg: row.precio_venta,
+      fecha_vencimiento: '' // Computed below
     }
-    
+
     const rawDesperdicio = Number(row.raw?.desperdicio) || 0
     cantidadBruta.value = Number(row.cantidad_disponible) + rawDesperdicio
     desperdicioKg.value = rawDesperdicio
-    
+
     // Calcular costo total inverso para el pre-llenado si es edición
-    costoTotalCompra.value = row.cantidad_disponible && row.precio_compra 
+    costoTotalCompra.value = row.cantidad_disponible && row.precio_compra
       ? Number((Number(row.cantidad_disponible) * Number(row.precio_compra)).toFixed(2))
       : ''
-    
+
     const dbFecha = row.fecha_vencimiento && row.fecha_vencimiento !== 'N/A' ? row.fecha_vencimiento : null
     if (dbFecha) {
       vencimientoMode.value = 'Calendario'
@@ -511,7 +512,7 @@ const handleSubmit = async () => {
   formLoading.value = true
   try {
     const fn_vencimiento = calculateFechaVencimiento()
-    
+
     // Obtener detalles previos si es una edición
     let detalleOriginal = {}
     if (isEditing.value) {
@@ -521,13 +522,13 @@ const handleSubmit = async () => {
         catch (e) { }
       }
     }
-    
+
     // Asignar nueva fecha de vencimiento a los detalles
-      const detalleObj = { 
-        ...detalleOriginal, 
-        fecha_vencimiento: fn_vencimiento,
-        stock_actual: formData.value.stock_actual
-      }
+    const detalleObj = {
+      ...detalleOriginal,
+      fecha_vencimiento: fn_vencimiento,
+      stock_actual: formData.value.stock_actual
+    }
 
     const payload: any = {
       ...formData.value,
@@ -541,7 +542,7 @@ const handleSubmit = async () => {
     } else {
       await createProducto(payload)
     }
-    
+
     closeModal()
     await fetchProductos()
   } catch (error) {
@@ -571,47 +572,46 @@ const cancelStockAdjust = () => {
 
 const submitStockAdjust = async (row: any) => {
   if (!stockAdjustmentValue.value || Number(stockAdjustmentValue.value) <= 0) return
-  
+
   stockAdjustLoading.value = true
   try {
-     const raw = row.raw
-     let detalleOriginal = {}
-     if (typeof raw.detalle === 'string') {
-        try { detalleOriginal = JSON.parse(raw.detalle) } catch (e) {}
-     } else if (raw.detalle) {
-        detalleOriginal = { ...raw.detalle }
-     }
-     
-     const val = Number(stockAdjustmentValue.value)
-     const currentStock = Number(row.stock_actual) || Number(row.cantidad_disponible)
-     const newStock = stockAdjustmentType.value === 'add' ? currentStock + val : currentStock - val
+    const raw = row.raw
+    let detalleOriginal = {}
+    if (typeof raw.detalle === 'string') {
+      try { detalleOriginal = JSON.parse(raw.detalle) } catch (e) { }
+    } else if (raw.detalle) {
+      detalleOriginal = { ...raw.detalle }
+    }
 
-     const detalleObj = {
-       ...detalleOriginal,
-       stock_actual: newStock
-     }
-     
-     // Construimos el payload de actualización excluyendo el read-only stock_actual de la forma original
-     const payload: any = {
-        nombre: raw.nombre,
-        categoria_id: raw.categoria_id,
-        proveedor_id: raw.proveedor_id,
-        stock_minimo: raw.stock_minimo,
-        kilogramos: raw.kilogramos,
-        precio_compra: raw.precio_compra,
-        precio_venta_kg: raw.precio_venta_kg,
-        desperdicio: raw.desperdicio,
-        detalle: JSON.stringify(detalleObj)
-     }
-     
-     await updateProducto(row.id, payload)
-     await fetchProductos()
-     cancelStockAdjust()
-  } catch(error) {
-     console.error('Error al actualizar inventario', error)
+    const val = Number(stockAdjustmentValue.value)
+    const currentStock = Number(row.stock_actual) || Number(row.cantidad_disponible)
+    const newStock = stockAdjustmentType.value === 'add' ? currentStock + val : currentStock - val
+
+    const detalleObj = {
+      ...detalleOriginal,
+      stock_actual: newStock
+    }
+
+    // Construimos el payload de actualización excluyendo el read-only stock_actual de la forma original
+    const payload: any = {
+      nombre: raw.nombre,
+      categoria_id: raw.categoria_id,
+      proveedor_id: raw.proveedor_id,
+      stock_minimo: raw.stock_minimo,
+      kilogramos: raw.kilogramos,
+      precio_compra: raw.precio_compra,
+      precio_venta_kg: raw.precio_venta_kg,
+      desperdicio: raw.desperdicio,
+      detalle: JSON.stringify(detalleObj)
+    }
+
+    await updateProducto(row.id, payload)
+    await fetchProductos()
+    cancelStockAdjust()
+  } catch (error) {
+    console.error('Error al actualizar inventario', error)
   } finally {
-     stockAdjustLoading.value = false
+    stockAdjustLoading.value = false
   }
 }
 </script>
-`
