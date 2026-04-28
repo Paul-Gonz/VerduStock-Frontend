@@ -196,9 +196,8 @@ const handleLogin = async () => {
     animation: float 3s ease-in-out infinite;
 }
 
-/* Desfase para que no todos suban y bajen al mismo tiempo */
 .veggie-icon:nth-child(even) {
-    animation-delay: 1.5s;
+    animation-delay: 2s;
 }
 
 @keyframes float {
