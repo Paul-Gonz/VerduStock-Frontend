@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 
-const API_URL = 'http://localhost:8000/productos'
+const config = useRuntimeConfig()
+const API_URL = `${config.public.apiBase}/productos`
 
 export function useProducts() {
     const productos = ref<any[]>([])
@@ -8,19 +9,19 @@ export function useProducts() {
     const searchQuery = ref('')
     const filterCondition = ref('todos') // Can be 'todos', 'por_vencer', 'vencidos', 'stock_bajo'
 
-    const fetchConfig = {
-        credentials: 'include' as RequestCredentials,
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json'
-        }
-    }
-
     const fetchProductos = async () => {
         loading.value = true
         try {
-            const response: any = await $fetch(API_URL, fetchConfig)
+            const apiUrl = `${config.public.apiBase}/productos`
+            const response: any = await $fetch(apiUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
             // Handle if laravel returns data wrapped in data property
             productos.value = (Array.isArray(response.data) ? response.data : (response?.data?.data || response || [])); if (!Array.isArray(productos.value)) productos.value = [];
         } catch (error) {
@@ -32,9 +33,15 @@ export function useProducts() {
 
     const createProducto = async (payload: any) => {
         try {
-            const response: any = await $fetch(API_URL, {
+            const apiUrl = `${config.public.apiBase}/productos`
+            const response: any = await $fetch(apiUrl, {
                 method: 'POST',
-                ...fetchConfig,
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: payload
             })
             await fetchProductos()
@@ -47,9 +54,15 @@ export function useProducts() {
 
     const updateProducto = async (id: number, payload: any) => {
         try {
-            const response: any = await $fetch(`${API_URL}/${id}`, {
+            const apiUrl = `${config.public.apiBase}/productos/${id}`
+            const response: any = await $fetch(apiUrl, {
                 method: 'PUT',
-                ...fetchConfig,
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: payload
             })
             await fetchProductos()
@@ -62,9 +75,15 @@ export function useProducts() {
 
     const deleteProducto = async (id: number) => {
         try {
-            await $fetch(`${API_URL}/${id}`, {
+            const apiUrl = `${config.public.apiBase}/productos/${id}`
+            await $fetch(apiUrl, {
                 method: 'DELETE',
-                ...fetchConfig
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             await fetchProductos()
         } catch (error) {
@@ -76,10 +95,10 @@ export function useProducts() {
     const tableRows = computed(() => {
         let filtered = productos.value.filter(p => {
             const provName = p.proveedor_nombre || p.proveedor?.nombre || p.proveedores?.nombre || ''
-            const matchesSearch = 
+            const matchesSearch =
                 (p.nombre || '').toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                 provName.toLowerCase().includes(searchQuery.value.toLowerCase())
-            
+
             if (!matchesSearch) return false
 
             let detalleObj = p.detalle || {}
@@ -91,9 +110,9 @@ export function useProducts() {
             const expiryDateStr = detalleObj.fecha_vencimiento
             const isVencido = expiryDateStr && new Date(expiryDateStr) < now
             // Por vencer: within 7 days
-            const isPorVencer = expiryDateStr && new Date(expiryDateStr) > now && 
+            const isPorVencer = expiryDateStr && new Date(expiryDateStr) > now &&
                 (new Date(expiryDateStr).getTime() - now.getTime()) < (7 * 24 * 60 * 60 * 1000)
-            
+
             // Get threshold from localStorage if available, or fallback to default
             let stockThresholds: Record<string, number> = {}
             if (typeof window !== 'undefined') {
@@ -102,7 +121,7 @@ export function useProducts() {
                 } catch { stockThresholds = {} }
             }
             const stockMinimo = stockThresholds[p.id] || p.stock_minimo || 5
-            
+
             const stockActualParaFiltro = detalleObj.stock_actual !== undefined ? Number(detalleObj.stock_actual) : Number(p.kilogramos || 0)
             const isStockBajo = stockActualParaFiltro <= stockMinimo
 

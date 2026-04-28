@@ -132,13 +132,27 @@ const debugAuth = async () => {
         // Usamos la base URL dinámica de Render
         // Nota: Si sanctum/csrf-cookie no está bajo /api, Laravel podría fallar aquí.
         // Si falla, ajusta la URL en Vercel o quita el /api de la variable.
-        const response = await $fetch(`${config.public.apiBase}/sanctum/csrf-cookie`, {
-            credentials: 'include'
+        const apiUrl1 = `${config.public.apiBase}/sanctum/csrf-cookie`
+        const response = await $fetch(apiUrl1, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         console.log('CSRF Cookie establecida:', response)
 
-        const authCheck = await $fetch(`${config.public.apiBase}/check-auth`, {
-            credentials: 'include'
+        const apiUrl2 = `${config.public.apiBase}/check-auth`
+        const authCheck = await $fetch(apiUrl2, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         console.log('Auth check:', authCheck)
 

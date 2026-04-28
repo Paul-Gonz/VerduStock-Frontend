@@ -1,5 +1,7 @@
 import { ref } from 'vue'
 
+const config = useRuntimeConfig()
+
 export function useUsuarios() {
     const usuarios = ref<any[]>([])
     const loading = ref(false)
@@ -12,17 +14,20 @@ export function useUsuarios() {
         loading.value = true
         errorMessage.value = ''
         try {
-            const data: any = await $fetch('http://localhost:8000/usuarios/', {
+            const apiUrl = `${config.public.apiBase}/usuarios/`
+            const data: any = await $fetch(apiUrl, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             usuarios.value = Array.isArray(data) ? data : (data?.data || [])
         } catch (error: any) {
             console.error('Error fetching users:', error)
-            errorMessage.value = error.response?.status === 401 
+            errorMessage.value = error.response?.status === 401
                 ? 'No autorizado. Por favor inicie sesión nuevamente.'
                 : 'Error al cargar los usuarios. Por favor, intente nuevamente.'
         } finally {
@@ -35,7 +40,7 @@ export function useUsuarios() {
         errorMessage.value = ''
 
         try {
-            let url = 'http://localhost:8000/usuarios/'
+            let apiUrl = `${config.public.apiBase}/usuarios/`
             let method: 'POST' | 'PUT' = 'POST'
             let payload: any = {
                 nombre: form.nombre,
@@ -45,7 +50,7 @@ export function useUsuarios() {
 
             if (id) {
                 // Editar usuario existente
-                url = `http://localhost:8000/usuarios/${id}`
+                apiUrl = `${config.public.apiBase}/usuarios/${id}`
                 method = 'PUT'
                 payload.current_password = form.current_password || undefined
 
@@ -55,28 +60,29 @@ export function useUsuarios() {
                 }
             }
 
-const response: any = await $fetch(url, {
+            const response: any = await $fetch(apiUrl, {
                 method,
-                body: payload,
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: payload
             })
 
             await fetchUsers()
             return { success: true, message: response.message || 'Operación exitosa' }
         } catch (error: any) {
             console.error('Error guardando usuario:', error)
-            
+
             if (error.response?.status === 422) {
                 const mistakes = error.response._data?.errors || {}
                 const errorMsg = Object.values(mistakes).flat().join(', ')
                 errorMessage.value = errorMsg || 'Error de validación de los datos proporcionados.'
                 return { success: false, message: errorMessage.value }
             }
-            
+
             errorMessage.value = error.response?._data?.message || 'Error al guardar el usuario'
             return { success: false, message: errorMessage.value }
         } finally {
@@ -89,12 +95,14 @@ const response: any = await $fetch(url, {
         deleteError.value = ''
 
         try {
-            const response = await $fetch(`http://localhost:8000/usuarios/${id}`, {
+            const apiUrl = `${config.public.apiBase}/usuarios/${id}`
+            const response = await $fetch(apiUrl, {
                 method: 'DELETE',
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: {
                     current_password: currentPassword
