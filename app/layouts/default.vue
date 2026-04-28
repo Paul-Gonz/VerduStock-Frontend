@@ -188,7 +188,9 @@ import { useRoute, useRouter } from 'vue-router'
 import menuConfig from './menu.json'
 import { TasaDolarService } from '../utils/tasaDolar.js'
 
-const config = useRuntimeConfig()
+// Usamos tu nuevo composable y la cookie del token
+const { api } = useApi()
+const token = useCookie('auth_token')
 
 // Router y Route
 const route = useRoute()
@@ -212,6 +214,7 @@ const pageTitle = computed(() => {
   return currentItem ? currentItem.title : 'VerduStock'
 })
 
+// ... Mantén el formateador y los computed de la tasa igual ...
 const tasaFormatter = new Intl.NumberFormat('es-VE', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -219,77 +222,53 @@ const tasaFormatter = new Intl.NumberFormat('es-VE', {
 
 const tasaDisplay = computed(() => {
   if (!tasaDolar.value) return ''
-  const candidates = [
-    tasaDolar.value.venta,
-    tasaDolar.value.promedio,
-    tasaDolar.value.compra
-  ]
-  const tasa = candidates
-    .map((value) => Number(value))
-    .find((value) => Number.isFinite(value) && value > 0)
-  if (!Number.isFinite(tasa) || tasa <= 0) return ''
-  return `Bs ${tasaFormatter.format(tasa)}`
+  const candidates = [tasaDolar.value.venta, tasaDolar.value.promedio, tasaDolar.value.compra]
+  const tasa = candidates.map(v => Number(v)).find(v => Number.isFinite(v) && v > 0)
+  return tasa > 0 ? `Bs ${tasaFormatter.format(tasa)}` : ''
 })
 
 const tasaTexto = computed(() => {
   if (tasaDisplay.value) return tasaDisplay.value
-  if (tasaLoading.value) return 'Cargando...'
-  return 'Sin datos'
+  return tasaLoading.value ? 'Cargando...' : 'Sin datos'
 })
 
-const goToProfile = () => {
-  router.push('/perfil')
-}
+const goToProfile = () => router.push('/perfil')
+const confirmLogout = () => logoutDialog.value = true
 
-const confirmLogout = () => {
-  logoutDialog.value = true
-}
-
+// --- LOGOUT ACTUALIZADO ---
 const logout = async () => {
   loggingOut.value = true
   try {
-    const apiUrl = `${config.public.apiBase}/logout`
-    const response = await $fetch(apiUrl, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-
-    if (response?.success) {
-      router.push('/login')
-    }
+    // Intentamos avisar al backend para que invalide el token
+    await api('/logout', { method: 'POST' })
   } catch (error) {
-    if (error.status === 401 || error.status === 419) {
-      router.push('/login')
-    }
+    console.warn("Error al revocar token, limpiando localmente...")
   } finally {
+    token.value = null
     loggingOut.value = false
     logoutDialog.value = false
+    router.push('/login')
   }
 }
 
+// --- CHECK AUTH ACTUALIZADO ---
 onMounted(async () => {
+  if (!token.value) {
+    router.push('/login')
+    return
+  }
+
   try {
-    const apiUrl = `${config.public.apiBase}/check-auth`
-    const response = await $fetch(apiUrl, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    if (!response.authenticated) router.push('/login')
+    // useApi ya inyecta el token automáticamente
+    const response = await api('/check-auth')
+    if (!response.authenticated) throw new Error()
   } catch (e) {
-    // Silencioso o a login
+    token.value = null
+    router.push('/login')
   }
 })
 
+// ... Mantén la lógica de la Tasa Dolar igual ...
 onMounted(async () => {
   if (!import.meta.client) return
   tasaService.value = window?.TasaDolar || new TasaDolarService()
