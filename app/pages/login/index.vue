@@ -192,7 +192,16 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-@keyframes wave {
+.veggie-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Desfase para que no todos suban y bajen al mismo tiempo */
+.veggie-icon:nth-child(even) {
+    animation-delay: 1.5s;
+}
+
+@keyframes float {
 
     0%,
     100% {
@@ -200,38 +209,7 @@ const handleLogin = async () => {
     }
 
     50% {
-        transform: translateY(-15px);
-        /* Altura de la oscilación */
+        transform: translateY(-10px);
     }
-}
-
-.veggie-icon {
-    /* Aplicamos la animación: 2 segundos de duración, infinita y suave */
-    animation: wave 2s ease-in-out infinite;
-}
-
-/* Aplicamos el retraso escalonado a cada icono (del 1 al 6) */
-.veggie-icon:nth-child(1) {
-    animation-delay: 0.0s;
-}
-
-.veggie-icon:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.veggie-icon:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-.veggie-icon:nth-child(4) {
-    animation-delay: 0.6s;
-}
-
-.veggie-icon:nth-child(5) {
-    animation-delay: 0.8s;
-}
-
-.veggie-icon:nth-child(6) {
-    animation-delay: 1.0s;
 }
 </style>
