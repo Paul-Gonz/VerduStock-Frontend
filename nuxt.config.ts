@@ -23,7 +23,9 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      title: 'Disfruver - Gestión de Inventario',
       link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/logo.ico' },
         { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css' }
       ]
     }
