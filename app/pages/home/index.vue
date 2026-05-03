@@ -287,8 +287,8 @@ const donutOptions = computed(() => ({
 }))
 
 // (Simplificado para que no de error)
-const barSeries = computed(() => [{ name: 'Inversión $', data: [10, 20, 30] }])
-const barOptions = computed(() => ({ chart: { type: 'bar' }, xaxis: { categories: ['P1', 'P2', 'P3'] } }))
+const barSeries = computed(() => [{ name: 'Inversión $', data: [10, 20, 30, 40] }])
+const barOptions = computed(() => ({ chart: { type: 'bar' }, xaxis: { categories: ['P1', 'P2', 'P3', 'P4'] } }))
 
 // --- TARJETAS CON ICONOS (IMPORTANTE) ---
 const resumenTarjetas = computed(() => [
