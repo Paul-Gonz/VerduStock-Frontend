@@ -4,11 +4,15 @@
         "route": "/home",
         "icon": "mdi-home"
     },
-    
     {
         "title": "Inventario",
         "route": "/inventario",
         "icon": "mdi-food-apple"
+    },
+    {
+        "title": "Gastos",
+        "route": "/gastos",
+        "icon": "mdi-cash"
     },
     {
         "title": "Categoria",
@@ -19,8 +23,7 @@
         "title": "Proveedores",
         "route": "/proveedores",
         "icon": "mdi-truck"
-    }
-    ,
+    },
     {
         "title": "Usuarios",
         "route": "/usuarios",
