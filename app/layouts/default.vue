@@ -21,33 +21,46 @@
           ]" :title="!drawer ? item.title : ''">
           <span class="flex items-center justify-center transition-colors shrink-0"
             :class="isActive(item.route) ? 'text-green-600' : 'text-slate-400'">
+
             <svg v-if="item.icon === 'mdi-home'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
+
             <svg v-else-if="item.icon === 'mdi-food-apple'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
+
+            <svg v-else-if="item.icon === 'mdi-cash'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+
             <svg v-else-if="item.icon === 'mdi-folder'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
+
             <svg v-else-if="item.icon === 'mdi-truck'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
             </svg>
+
             <svg v-else-if="item.icon === 'mdi-account-group'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
+
             <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <circle cx="12" cy="12" r="10" stroke-width="2" />
             </svg>
+
           </span>
           <span v-show="drawer">{{ item.title }}</span>
         </NuxtLink>
@@ -174,22 +187,18 @@ import { useRoute, useRouter } from 'vue-router'
 import menuConfig from './menu.json'
 import { TasaDolarService } from '../utils/tasaDolar.js'
 
-// 1. Usamos el composable maestro y la cookie del token
 const { api } = useApi()
 const token = useCookie('auth_token')
 
-// Router y Route
 const route = useRoute()
 const router = useRouter()
 
-// Estados del Sidebar y UI
 const drawer = ref(true)
 const logoutDialog = ref(false)
 const loggingOut = ref(false)
 const menuItems = ref(menuConfig)
 const showTasaDetails = ref(false)
 
-// --- ESTADOS PARA EL MENÚ DE PERFIL (NUEVO) ---
 const showProfileMenu = ref(false)
 const profileMenuRef = ref(null)
 
@@ -197,19 +206,12 @@ const toggleProfileMenu = () => {
   showProfileMenu.value = !showProfileMenu.value
 }
 
-// Cerrar menú si se hace clic fuera
 const closeMenusOnClickOutside = (event) => {
-  // Cerrar perfil
   if (profileMenuRef.value && !profileMenuRef.value.contains(event.target)) {
     showProfileMenu.value = false
   }
-  // Opcional: Cerrar detalles de tasa si haces clic fuera (si lo deseas)
-  // if (showTasaDetails.value && !event.target.closest('.tasa-container')) {
-  //   showTasaDetails.value = false
-  // }
 }
 
-// Estados de la Tasa Dólar
 const tasaDolar = ref(null)
 const tasaTimer = ref(null)
 const tasaService = ref(null)
@@ -218,13 +220,11 @@ const tasaError = ref(false)
 
 const isActive = (targetRoute) => route.path.startsWith(targetRoute)
 
-// Título dinámico de la página
 const pageTitle = computed(() => {
   const currentItem = menuItems.value.find(item => item.route === route.path)
   return currentItem ? currentItem.title : 'VerduStock'
 })
 
-// --- LÓGICA DE LA TASA BCV ---
 const tasaFormatter = new Intl.NumberFormat('es-VE', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -249,7 +249,6 @@ const tasaTexto = computed(() => {
   return tasaLoading.value ? 'Cargando...' : 'Sin datos'
 })
 
-// --- ACCIONES DE USUARIO ---
 const goToProfile = () => {
   showProfileMenu.value = false
   router.push('/perfil')
@@ -260,7 +259,6 @@ const confirmLogout = () => {
   logoutDialog.value = true
 }
 
-// Logout actualizado para limpiar todo
 const logout = async () => {
   loggingOut.value = true
   try {
@@ -275,9 +273,7 @@ const logout = async () => {
   }
 }
 
-// --- VALIDACIÓN DE SESIÓN (CHECK AUTH) ---
 onMounted(async () => {
-  // Agregar listener para clicks externos
   document.addEventListener('click', closeMenusOnClickOutside)
 
   if (!token.value) {
@@ -296,7 +292,6 @@ onMounted(async () => {
   }
 })
 
-// --- INICIALIZACIÓN DE TASA DÓLAR ---
 onMounted(async () => {
   if (!import.meta.client) return
 
@@ -319,7 +314,6 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  // Limpiar listeners y timers
   document.removeEventListener('click', closeMenusOnClickOutside)
   if (tasaTimer.value) clearInterval(tasaTimer.value)
 })
