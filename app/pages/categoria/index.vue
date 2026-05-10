@@ -33,29 +33,29 @@
         empty-text="No hay categorías registradas aún.">
         <!-- ID -->
         <template #id="{ value }">
-          <span class="font-semibold text-gray-600">#{{ value }}</span>
+          <span class="font-semibold text-gray-600 dark:text-slate-400">#{{ value }}</span>
         </template>
 
         <!-- Nombre -->
         <template #nombre="{ value, row }">
-          <span class="font-medium text-gray-900">{{ row.emoji }} {{ value }}</span>
+          <span class="font-medium text-gray-900 dark:text-slate-200">{{ row.emoji }} {{ value }}</span>
         </template>
 
         <!-- Descripción -->
         <template #detalle="{ value }">
-          <span class="text-gray-500 text-sm line-clamp-1">{{ value || '—' }}</span>
+          <span class="text-gray-500 dark:text-slate-400 text-sm line-clamp-1">{{ value || '—' }}</span>
         </template>
 
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">
-            <button @click="onEdit(row)" class="text-blue-600 hover:text-blue-800 p-1 transition-colors" title="Editar">
+            <button @click="onEdit(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors" title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
             <button @click="onDelete(row)" :disabled="loading"
-              class="text-red-600 hover:text-red-800 p-1 transition-colors disabled:opacity-50" title="Eliminar">
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors disabled:opacity-50" title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -74,7 +74,7 @@
           <div class="flex gap-3 items-end relative">
             <div class="relative">
               <button type="button" @click="showEmojiPicker = !showEmojiPicker"
-                class="w-11 h-11 shrink-0 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-green-500 hover:text-green-500 transition-colors bg-gray-50 text-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="w-11 h-11 shrink-0 rounded-full border-2 border-dashed border-gray-300 dark:border-slate-600 flex items-center justify-center text-gray-400 dark:text-slate-500 hover:border-green-500 dark:hover:border-green-400 hover:text-green-500 dark:hover:text-green-400 transition-colors bg-gray-50 dark:bg-slate-800/50 text-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
                 title="Seleccionar Emoji">
                 <div class="flex items-center justify-center w-full h-full leading-none rounded-full"
                   :class="!formData.emoji ? 'pb-1' : ''">
@@ -84,7 +84,7 @@
               </button>
 
               <div v-if="showEmojiPicker"
-                class="absolute z-50 top-12 left-0 shadow-xl rounded-lg border border-gray-100 bg-white">
+                class="absolute z-50 top-12 left-0 shadow-xl rounded-lg border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <ClientOnly>
                   <EmojiPicker :native="true"
                     :disabled-groups="['smileys_people', 'animals_nature', 'activities', 'travel_places', 'objects', 'symbols', 'flags']"
@@ -94,24 +94,24 @@
             </div>
 
             <div class="flex flex-col gap-1 flex-1">
-              <label class="text-sm font-medium text-gray-700">Nombre</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Nombre</label>
               <input v-model="formData.nombre" type="text" required placeholder="Ej. Frutas"
-                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+                class="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" />
             </div>
           </div>
 
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-gray-700">Descripción</label>
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Descripción</label>
             <textarea v-model="formData.detalle" rows="3" placeholder="Breve detalle de la categoría..."
-              class="border border-gray-300 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
           </div>
         </form>
       </div>
 
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="closeFormModal"
-            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
           <button @click="submitForm" :disabled="loading"
             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="loading"
@@ -125,16 +125,16 @@
     <!-- Modal Delete -->
     <BaseModal :isOpen="isDeleteModalOpen" title="Eliminar Categoría" @close="isDeleteModalOpen = false">
       <div class="p-4">
-        <p class="text-sm text-gray-600">
-          ¿Estás seguro de que deseas eliminar la categoría <strong class="text-gray-900">{{ itemToDelete?.nombre
+        <p class="text-sm text-gray-600 dark:text-slate-400">
+          ¿Estás seguro de que deseas eliminar la categoría <strong class="text-gray-900 dark:text-slate-200">{{ itemToDelete?.nombre
           }}</strong>? Esta acción no se puede deshacer.
         </p>
       </div>
 
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="isDeleteModalOpen = false"
-            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
           <button @click="submitDelete" :disabled="loading"
             class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="loading"
