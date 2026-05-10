@@ -7,6 +7,11 @@ export function useProducts() {
     const loading = ref(false)
     const searchQuery = ref('')
     const filterCondition = ref('todos')
+    const filterCategoria = ref('todas')
+    const filterProveedor = ref('todos')
+    const filterVencimiento = ref('todas')
+    const filterDesperdicio = ref('todos')
+    const filterRentabilidad = ref('todas')
 
     const fetchProductos = async () => {
         loading.value = true
@@ -98,6 +103,49 @@ export function useProducts() {
             if (filterCondition.value === 'vencidos' && !isVencido) return false
             if (filterCondition.value === 'por_vencer' && !isPorVencer) return false
             if (filterCondition.value === 'stock_bajo' && !isStockBajo) return false
+            if (filterCondition.value === 'agotados' && stockActualParaFiltro > 0) return false
+
+            if (filterCategoria.value !== 'todas') {
+                const catId = p.categoria_id || p.categoria?.id || p.categorias?.id
+                if (String(catId) !== String(filterCategoria.value)) return false
+            }
+
+            if (filterProveedor.value !== 'todos') {
+                const provId = p.proveedor_id || p.proveedor?.id || p.proveedores?.id
+                if (String(provId) !== String(filterProveedor.value)) return false
+            }
+
+            if (filterVencimiento.value !== 'todas') {
+                if (!expiryDateStr || expiryDateStr === 'N/A') return false
+                const expDate = new Date(expiryDateStr)
+                if (filterVencimiento.value === 'este_mes') {
+                    if (expDate.getMonth() !== now.getMonth() || expDate.getFullYear() !== now.getFullYear()) return false
+                } else if (filterVencimiento.value === 'proximos_30_dias') {
+                    const diffTime = expDate.getTime() - now.getTime()
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+                    if (diffDays < 0 || diffDays > 30) return false
+                }
+            }
+
+            if (filterDesperdicio.value !== 'todos') {
+                const desperdicioKg = Number(p.desperdicio) || 0
+                const totalBruto = Number(p.kilogramos || 0) + desperdicioKg
+                const porcentaje = totalBruto > 0 ? (desperdicioKg / totalBruto) * 100 : 0
+                
+                if (filterDesperdicio.value === 'alto' && porcentaje <= 10) return false
+                if (filterDesperdicio.value === 'normal' && (porcentaje === 0 || porcentaje > 10)) return false
+                if (filterDesperdicio.value === 'cero' && desperdicioKg > 0) return false
+            }
+
+            if (filterRentabilidad.value !== 'todas') {
+                const pCompra = Number(p.precio_compra) || 0
+                const pVenta = Number(p.precio_venta_kg) || 0
+                const margen = pCompra > 0 ? ((pVenta - pCompra) / pCompra) * 100 : 0
+                
+                if (filterRentabilidad.value === 'alta' && margen <= 40) return false
+                if (filterRentabilidad.value === 'media' && (margen < 15 || margen > 40)) return false
+                if (filterRentabilidad.value === 'baja' && margen >= 15) return false
+            }
 
             return true
         })
@@ -135,6 +183,11 @@ export function useProducts() {
         loading,
         searchQuery,
         filterCondition,
+        filterCategoria,
+        filterProveedor,
+        filterVencimiento,
+        filterDesperdicio,
+        filterRentabilidad,
         fetchProductos,
         createProducto,
         updateProducto,

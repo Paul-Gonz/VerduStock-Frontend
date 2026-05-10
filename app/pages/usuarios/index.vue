@@ -1,28 +1,34 @@
 <template>
   <div class="usuarios-page p-6">
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>
-        <button @click="openNewUserDialog"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          Nuevo Usuario
-        </button>
+    <!-- Integrated Table Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+      
+      <!-- Unified Header Section -->
+      <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="w-full flex-1">
+            <BaseSearch v-model="search" placeholder="Buscar usuario..." class="w-full" />
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button @click="fetchUsers" :disabled="loading"
+              class="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors border border-green-200 dark:border-green-800/50">
+              <span v-if="loading"
+                class="w-4 h-4 border-2 border-green-700 dark:border-green-400 border-t-transparent rounded-full animate-spin"></span>
+              <span class="mdi mdi-refresh"></span>
+              <span>Actualizar</span>
+            </button>
+
+            <button @click="openNewUserDialog"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
+              <span class="mdi mdi-plus-box"></span>
+              Nuevo Usuario
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <BaseSearch v-model="search" placeholder="Buscar usuario..." class="flex-1" />
-        <button @click="fetchUsers" :disabled="loading"
-          class="bg-green-50 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors border border-green-200">
-          <span v-if="loading"
-            class="w-4 h-4 border-2 border-green-700 border-t-transparent rounded-full animate-spin"></span>
-          <span>Actualizar</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable :columns="headers" :rows="filteredUsuarios" :searchable="false" :loading="loading"
+      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="headers" :rows="filteredUsuarios" :searchable="false" :loading="loading"
         emptyText="No se encontraron usuarios">
         <template #nombre="{ row }">
           <div class="flex items-center gap-3">
