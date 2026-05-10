@@ -1,16 +1,18 @@
 import { ref, computed } from 'vue'
+import type { Producto } from '~/types'
 
 export type EstadoProducto = 'ok' | 'bajo' | 'por_vencer' | 'vencido'
 
 export function useProducts() {
     const { api } = useApi()
 
-    const productos = ref<any[]>([])
+    const productos = ref<Producto[]>([])
     const loading = ref(false)
+
     const searchQuery = ref('')
     const filterCondition = ref('todos')
-    const filterCategoria = ref('todas')
-    const filterProveedor = ref('todos')
+    const filterCategoria = ref<any[]>([])  // Ahora es un array para multi-select
+    const filterProveedor = ref<any[]>([])
     const filterVencimiento = ref('todas')
     const filterDesperdicio = ref('todos')
     const filterRentabilidad = ref('todas')
@@ -62,7 +64,6 @@ export function useProducts() {
         }
     }
 
-    // Helpers
     const parseDetalle = (detalle: any): Record<string, any> => {
         if (!detalle) return {}
         if (typeof detalle === 'string') {
@@ -87,7 +88,6 @@ export function useProducts() {
         return 'ok'
     }
 
-    // Stats panel (computed from ALL products, not filtered)
     const stats = computed(() => {
         let totalValor = 0
         let bajosCount = 0
@@ -123,10 +123,16 @@ export function useProducts() {
             if (!matchesSearch) return false
 
             // Filtro por categoría (multi-select)
-            if (categoriaFilter.value.length > 0 && !categoriaFilter.value.includes(p.categoria_id)) return false
+            if (filterCategoria.value.length > 0) {
+                if (!filterCategoria.value.some(id => String(id) === String(p.categoria_id))) return false
+            }
 
             const detalleObj = parseDetalle(p.detalle)
             const estado = getEstado(p, detalleObj)
+            const isVencido = estado === 'vencido'
+            const isPorVencer = estado === 'por_vencer'
+            const now = new Date()
+            const expiryDateStr = detalleObj.fecha_vencimiento
 
             let stockThresholds: Record<string, number> = {}
             if (typeof window !== 'undefined') {
@@ -143,14 +149,9 @@ export function useProducts() {
             if (filterCondition.value === 'stock_bajo' && !isStockBajo) return false
             if (filterCondition.value === 'agotados' && stockActualParaFiltro > 0) return false
 
-            if (filterCategoria.value !== 'todas') {
-                const catId = p.categoria_id || p.categoria?.id || p.categorias?.id
-                if (String(catId) !== String(filterCategoria.value)) return false
-            }
-
-            if (filterProveedor.value !== 'todos') {
+            if (filterProveedor.value.length > 0) {
                 const provId = p.proveedor_id || p.proveedor?.id || p.proveedores?.id
-                if (String(provId) !== String(filterProveedor.value)) return false
+                if (!filterProveedor.value.some(id => String(id) === String(provId))) return false
             }
 
             if (filterVencimiento.value !== 'todas') {
@@ -179,9 +180,8 @@ export function useProducts() {
                 const pCompra = Number(p.precio_compra) || 0
                 const pVenta = Number(p.precio_venta_kg) || 0
                 const margen = pCompra > 0 ? ((pVenta - pCompra) / pCompra) * 100 : 0
-
                 if (filterRentabilidad.value === 'alta' && margen <= 40) return false
-                if (filterRentabilidad.value === 'media' && (margen < 15 || margen > 40)) return false
+                if (filterRentabilidad.value === 'media' && (margen <= 15 || margen > 40)) return false
                 if (filterRentabilidad.value === 'baja' && margen >= 15) return false
             }
 
@@ -189,25 +189,28 @@ export function useProducts() {
         })
 
         return filtered.map(p => {
-            const pCompra = Number(p.precio_compra) || 0
-            const pVenta = Number(p.precio_venta_kg) || 0
-            const kg = Number(p.kilogramos) || 0
             const detalleObj = parseDetalle(p.detalle)
-            const stockActual = detalleObj.stock_actual !== undefined ? Number(detalleObj.stock_actual) : kg
+            const estado = getEstado(p, detalleObj)
+            const stockActual = detalleObj.stock_actual !== undefined
+                ? Number(detalleObj.stock_actual)
+                : Number(p.kilogramos || 0)
 
             return {
                 id: p.id,
-                raw: p,
                 nombre: p.nombre,
-                categoria: p.categoria_nombre || p.categoria?.nombre || 'N/A',
-                proveedor: p.proveedor_nombre || p.proveedor?.nombre || 'N/A',
-                stock_actual: stockActual,
-                precio_compra: pCompra,
-                precio_venta: pVenta,
-                estado: getEstado(p, detalleObj),
-                // Guardamos datos extra para el modal de edición
+                categoria: p.categoria?.nombre || p.categoria_nombre || '—',
+                proveedor: p.proveedor?.nombre || p.proveedor_nombre || '—',
+                stock_actual: stockActual.toFixed(2),
+                cantidad_disponible: Number(p.kilogramos || 0).toFixed(2),
+                precio_compra: Number(p.precio_compra || 0).toFixed(2),
+                precio_venta: Number(p.precio_venta_kg || 0).toFixed(2),
+                estado,
+                raw: p,
+                // Campos extra expuestos para el drawer/modal
+                categoria_id: p.categoria_id,
+                proveedor_id: p.proveedor_id,
+                stock_minimo: p.stock_minimo,
                 fecha_vencimiento: detalleObj.fecha_vencimiento || null,
-                cantidad_disponible: kg,  // mantenemos para el modal
             }
         })
     })
@@ -222,11 +225,11 @@ export function useProducts() {
         filterVencimiento,
         filterDesperdicio,
         filterRentabilidad,
+        stats,
+        tableRows,
         fetchProductos,
         createProducto,
         updateProducto,
         deleteProducto,
-        tableRows,
-        stats
     }
 }

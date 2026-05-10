@@ -1,52 +1,10 @@
 <template>
-  <div class="inventario-page p-6 flex flex-col gap-5">
-
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">Inventario de Productos</h1>
-      <div class="flex items-center gap-3">
-        <NuxtLink to="/reportes"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-          <span class="mdi mdi-chart-box"></span>
-          Reportes
-        </NuxtLink>
-        <button @click="openModal()"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          + Nuevo Producto
-        </button>
-      </div>
-    </div>
-
+  <div class="inventario-page p-6 flex flex-col gap-6">
     <!-- Stats Panel -->
-    <!-- <StatsPanel :stats="panelStats" /> -->
-
-    <!-- Filters -->
-    <!-- <FilterBar v-model:search="searchQuery" search-placeholder="Buscar por nombre o proveedor...">
-      <BaseMultiSelect
-        v-model="categoriaFilter"
-        :options="categorias"
-        placeholder="Todas las categorías"
-      />
-      <BaseSelect
-        v-model="filterCondition"
-        :options="statusOptions"
-        placeholder="Todos los estados"
-      />
-    </FilterBar> -->
-
-    <!-- Main Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false"
-        emptyText="No se encontraron productos">
-
-        <!-- <template #stock_actual="{ value, row }">
-          <div v-if="editingStockId === row.id" class="flex items-center gap-1">
-            <span class="text-slate-700 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType === 'add' ? '+' : '-' }}</span>
-            <input type="number" v-model="stockAdjustmentValue"
-              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 rounded outline-none focus:border-slate-500 text-center"
-  <div class="inventario-page p-6">
+    <StatsPanel :stats="panelStats" />
+    
     <!-- Integrated Table Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col">
       
       <!-- Unified Header Section -->
       <div class="p-4 sm:p-5 flex flex-col gap-5 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
@@ -75,65 +33,39 @@
         <div class="flex flex-col sm:flex-row justify-between items-end gap-4 min-h-[44px]">
           <div class="flex flex-wrap items-end gap-4 w-full sm:w-auto">
             <!-- Estado Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-20">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Estado del Producto</span>
-              <select v-model="filterCondition" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todos">Todos los estados</option>
-                <option value="por_vencer">Por vencer (7 días)</option>
-                <option value="vencidos">Vencidos</option>
-                <option value="stock_bajo">Stock bajo</option>
-                <option value="agotados">Agotados (0 Kg)</option>
-              </select>
+              <BaseSelect v-model="filterCondition" :options="estadoOptions" class="w-full sm:w-[200px]" />
             </div>
 
             <!-- Categoría Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[19]">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
-              <select v-model="filterCategoria" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todas">Todas las categorías</option>
-                <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
-              </select>
+              <BaseMultiSelect v-model="filterCategoria" :options="categorias" placeholder="Todas las categorías" class="w-full sm:w-[200px]" />
             </div>
 
             <!-- Proveedor Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[18]">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Proveedor</span>
-              <select v-model="filterProveedor" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todos">Todos los proveedores</option>
-                <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">{{ prov.nombre }}</option>
-              </select>
+              <BaseMultiSelect v-model="filterProveedor" :options="proveedores" placeholder="Todos los proveedores" class="w-full sm:w-[200px]" />
             </div>
 
             <!-- Vencimiento Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[17]">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Vencimiento</span>
-              <select v-model="filterVencimiento" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todas">Todas las fechas</option>
-                <option value="este_mes">Vencen este mes</option>
-                <option value="proximos_30_dias">Próximos 30 días</option>
-              </select>
+              <BaseSelect v-model="filterVencimiento" :options="vencimientoOptions" class="w-full sm:w-[200px]" />
             </div>
 
             <!-- Desperdicio Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[16]">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Mermas</span>
-              <select v-model="filterDesperdicio" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todos">Todos los niveles</option>
-                <option value="alto">Alta (>10%)</option>
-                <option value="normal">Normal (1-10%)</option>
-                <option value="cero">Sin mermas</option>
-              </select>
+              <BaseSelect v-model="filterDesperdicio" :options="desperdicioOptions" class="w-full sm:w-[200px]" />
             </div>
 
             <!-- Rentabilidad Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[15]">
               <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Rentabilidad</span>
-              <select v-model="filterRentabilidad" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
-                <option value="todas">Todos los márgenes</option>
-                <option value="alta">Alta (>40%)</option>
-                <option value="media">Media (15-40%)</option>
-                <option value="baja">Baja (<15%)</option>
-              </select>
+              <BaseSelect v-model="filterRentabilidad" :options="rentabilidadOptions" class="w-full sm:w-[200px]" />
             </div>
           </div>
 
@@ -154,61 +86,41 @@
       </div>
 
       <!-- Main Table -->
-      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false"
+      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false" :showFooter="true"
         emptyText="No se encontraron productos">
-        <template #precio_venta="{ value }">
-          ${{ Number(value).toFixed(2) }}
-        </template>
-        <template #precio_compra="{ value }">
-          ${{ Number(value).toFixed(2) }}
-        </template>
-        <template #cantidad_disponible="{ value }">
-          <span class="text-gray-700 dark:text-slate-300">{{ value }} kg</span>
-        </template>
-        <template #stock_actual="{ value, row }">
-          <div v-if="editingStockId === row.id" class="flex items-center gap-1">
-            <span class="text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType ===
-              'add' ? '+' : '-' }}</span>
-            <input type="number" v-model="stockAdjustmentValue"
-              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 text-center"
-              min="0.1" step="0.1" autofocus @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust()"
-              :disabled="stockAdjustLoading" />
-            <button v-if="!stockAdjustLoading" @click.stop="submitStockAdjust(row)"
-              class="text-slate-500 hover:text-green-600 p-0.5 rounded transition-colors" title="Confirmar">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-            </button>
-            <button v-if="!stockAdjustLoading" @click.stop="cancelStockAdjust()"
-              class="text-slate-400 hover:text-red-500 p-0.5 rounded transition-colors" title="Cancelar">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <span v-if="stockAdjustLoading" class="w-3 h-3 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
-          </div>
-          <div v-else class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="text-slate-700 dark:text-slate-300 font-medium">{{ value }} kg</span>
-            <div class="flex items-center opacity-40 hover:opacity-100 transition-opacity">
-              <button @click.stop="openStockAdjust(row, 'add')"
-                class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center justify-center transition-all px-0.5"
-                title="Sumar stock">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+
+        <template #stock_actual="{ row, value }">
+          <div class="flex items-center gap-2 group min-h-[28px]">
+            <span class="font-medium text-gray-800 dark:text-slate-200">{{ Number(value).toFixed(2) }} kg</span>
+            <div class="flex items-center ml-1" v-if="editingStockId !== row.id">
+              <button @click.stop="openStockAdjust(row, 'subtract')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Restar stock">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
               </button>
-              <button @click.stop="openStockAdjust(row, 'subtract')"
-                class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center justify-center transition-all px-0.5"
-                title="Restar stock">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-                </svg>
+              <button @click.stop="openStockAdjust(row, 'add')" class="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors" title="Sumar stock">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              </button>
+            </div>
+            <!-- Inline Stock Adjust Edit -->
+            <div v-else class="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm px-1.5 py-1" @click.stop>
+              <span class="text-[11px] font-bold" :class="stockAdjustmentType === 'add' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                {{ stockAdjustmentType === 'add' ? '+' : '-' }}
+              </span>
+              <input v-model="stockAdjustmentValue" type="number" min="0.01" step="0.01" class="w-14 text-sm border-b border-gray-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-500 bg-transparent dark:text-white focus:outline-none px-0.5 text-center" placeholder="Cant." @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust" autofocus />
+              <button @click.stop="submitStockAdjust(row)" class="text-green-600 dark:text-green-400 p-0.5 hover:bg-green-50 dark:hover:bg-green-900/20 rounded">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              </button>
+              <button @click.stop="cancelStockAdjust" class="text-gray-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 p-0.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
           </div>
-        </template> -->
+        </template>
 
         <template #precio_compra="{ value }">
-          <span class="text-gray-700">${{ Number(value).toFixed(2) }}</span>
+          <span class="text-red-600 dark:text-red-400 font-medium">${{ Number(value).toFixed(2) }}</span>
         </template>
         <template #precio_venta="{ value }">
-          <span class="text-gray-700">${{ Number(value).toFixed(2) }}</span>
+          <span class="text-emerald-600 dark:text-emerald-400 font-medium">${{ Number(value).toFixed(2) }}</span>
         </template>
 
         <template #estado="{ value }">
@@ -219,13 +131,13 @@
 
         <template #acciones="{ row }">
           <div class="flex items-center gap-1">
-            <!-- <button @click.stop="selectedProduct = row" class="text-gray-400 hover:text-violet-600 p-1 transition-colors" title="Ver detalle">
+            <button @click.stop="selectedProduct = row" class="text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 p-1 transition-colors" title="Ver detalle">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-            </button> -->
-            <button @click.stop="openModal(row)" class="text-blue-600 hover:text-blue-800 p-1 transition-colors" title="Editar">
+            </button>
+            <button @click.stop="openModal(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors" title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </button>
-            <button @click.stop="deleteSingle(row)" class="text-red-600 hover:text-red-800 p-1 transition-colors" title="Eliminar">
+            <button @click.stop="deleteSingle(row)" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors" title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
@@ -239,14 +151,14 @@
         <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
           <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-1 col-span-2">
-              <label class="text-sm font-medium text-gray-700">Nombre del producto</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Nombre del producto</label>
               <input v-model="formData.nombre" type="text" required
-                class="border border-gray-300 rounded-lg px-3 py-2" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Categoría</label>
-              <select v-model="formData.categoria_id" required class="border border-gray-300 rounded-lg px-3 py-2">
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Categoría</label>
+              <select v-model="formData.categoria_id" required class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
                 <option value="" disabled>Seleccione una categoría</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
                   {{ cat.nombre }}
@@ -254,8 +166,8 @@
               </select>
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Proveedor</label>
-              <select v-model="formData.proveedor_id" required class="border border-gray-300 rounded-lg px-3 py-2">
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Proveedor</label>
+              <select v-model="formData.proveedor_id" required class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
                 <option value="" disabled>Seleccione un proveedor</option>
                 <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
                   {{ prov.nombre }}
@@ -264,75 +176,75 @@
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Stock Mínimo</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Stock Mínimo</label>
               <input v-model="formData.stock_minimo" type="number" step="0.01" required
-                class="border border-gray-300 rounded-lg px-3 py-2" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Cantidad Comprada (Kg) <span
-                  class="text-xs text-gray-400 font-normal">Bruto</span></label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Cantidad Comprada (Kg) <span
+                  class="text-xs text-gray-400 dark:text-slate-500 font-normal">Bruto</span></label>
               <input v-model="cantidadBruta" type="number" step="0.01" required
-                class="border border-gray-300 rounded-lg px-3 py-2" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Desperdicio (Kg) <span
-                  class="text-xs text-blue-500 font-normal cursor-pointer"
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Desperdicio (Kg) <span
+                  class="text-xs text-gray-400 dark:text-slate-500 font-normal cursor-pointer"
                   title="Auto-calculado al 5% pero puedes ajustarlo">(~5%)</span></label>
               <input v-model="desperdicioKg" type="number" step="0.01"
-                class="border border-gray-300 rounded-lg px-3 py-2 bg-yellow-50" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Stock Inicial (Kg) <span
-                  class="text-xs text-gray-400 font-normal">Neto</span></label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Stock Inicial (Kg) <span
+                  class="text-xs text-gray-400 dark:text-slate-500 font-normal">Neto</span></label>
               <input v-model="formData.kilogramos" type="number" step="0.01" required readonly
-                class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-900 text-gray-600 dark:text-slate-400 outline-none cursor-not-allowed" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-blue-700">Stock Actual (Kg)</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Stock Actual (Kg)</label>
               <input v-model="formData.stock_actual" type="number" step="0.01" required
-                class="border border-blue-300 rounded-lg px-3 py-2 bg-blue-50 focus:ring-blue-500" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Costo Total Compra ($)</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Costo Total Compra ($)</label>
               <input v-model="costoTotalCompra" type="number" step="0.01" required
-                class="border border-gray-300 rounded-lg px-3 py-2" placeholder="Pago total al proveedor" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" placeholder="Pago total al proveedor" />
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Precio de Compra por Kg ($)</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Precio de Compra por Kg ($)</label>
               <input v-model="formData.precio_compra" type="number" step="0.01" required readonly
-                class="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-900 text-gray-600 dark:text-slate-400 outline-none cursor-not-allowed" />
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium text-gray-700">Precio Venta por Kg ($)</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Precio Venta por Kg ($)</label>
               <input v-model="formData.precio_venta_kg" type="number" step="0.01" required
-                class="border border-gray-300 rounded-lg px-3 py-2" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
             </div>
 
             <div class="flex flex-col gap-2 col-span-2 mt-2">
-              <label class="text-sm font-medium text-gray-700 border-b pb-1">Vencimiento</label>
+              <label class="text-sm font-medium text-gray-700 dark:text-slate-300 border-b dark:border-slate-700 pb-1">Vencimiento</label>
               <div class="flex gap-4 items-center">
-                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <label class="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                   <input type="radio" v-model="vencimientoMode" value="Días" class="accent-green-600" /> Días
                 </label>
-                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <label class="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                   <input type="radio" v-model="vencimientoMode" value="Calendario" class="accent-green-600" />
                   Calendario
                 </label>
-                <label class="flex items-center gap-1 text-sm cursor-pointer">
+                <label class="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                   <input type="radio" v-model="vencimientoMode" value="No aplica" class="accent-green-600" /> No aplica
                 </label>
               </div>
 
               <div v-if="vencimientoMode === 'Días'" class="mt-1">
                 <input v-model.number="vencimientoDias" type="number" min="1" placeholder="Cantidad de días"
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                  class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" />
               </div>
               <div v-else-if="vencimientoMode === 'Calendario'" class="mt-1">
                 <input v-model="vencimientoFecha" type="date"
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                  class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white dark:[color-scheme:dark]" />
               </div>
             </div>
           </div>
@@ -340,9 +252,9 @@
       </div>
 
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="closeModal"
-            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
           <button @click="handleSubmit" :disabled="formLoading"
             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="formLoading"
@@ -354,12 +266,12 @@
     </BaseModal>
 
     <!-- Product Drawer -->
-    <!-- <ProductDrawer
+    <ProductDrawer
       :isOpen="!!selectedProduct"
       :product="selectedProduct"
       @close="selectedProduct = null"
       @edit="(row) => { selectedProduct = null; openModal(row) }"
-    /> -->
+    />
   </div>
 </template>
 
@@ -384,12 +296,41 @@ const {
   stats
 } = useProducts()
 
+// Select options para filtros
+const estadoOptions = [
+  { value: 'todos', label: 'Todos los estados' },
+  { value: 'por_vencer', label: 'Por vencer (7 días)' },
+  { value: 'vencidos', label: 'Vencidos' },
+  { value: 'stock_bajo', label: 'Stock bajo' },
+  { value: 'agotados', label: 'Agotados (0 Kg)' }
+]
+
+const vencimientoOptions = [
+  { value: 'todas', label: 'Todas las fechas' },
+  { value: 'este_mes', label: 'Vencen este mes' },
+  { value: 'proximos_30_dias', label: 'Próximos 30 días' }
+]
+
+const desperdicioOptions = [
+  { value: 'todos', label: 'Todos los niveles' },
+  { value: 'alto', label: 'Alta (>10%)' },
+  { value: 'normal', label: 'Normal (1-10%)' },
+  { value: 'cero', label: 'Sin mermas' }
+]
+
+const rentabilidadOptions = [
+  { value: 'todas', label: 'Todos los márgenes' },
+  { value: 'alta', label: 'Alta (>40%)' },
+  { value: 'media', label: 'Media (15-40%)' },
+  { value: 'baja', label: 'Baja (<15%)' }
+]
+
 // Estado badge helpers
 const estadoBadgeClass = (estado: string) => ({
-  'bg-green-100 text-green-700': estado === 'ok',
-  'bg-amber-100 text-amber-700': estado === 'bajo',
-  'bg-orange-100 text-orange-700': estado === 'por_vencer',
-  'bg-red-100 text-red-700': estado === 'vencido',
+  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': estado === 'ok',
+  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': estado === 'bajo',
+  'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': estado === 'por_vencer',
+  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': estado === 'vencido',
 })
 const estadoLabel = (estado: string) => ({
   ok:        'OK',

@@ -32,18 +32,18 @@
         emptyText="No se encontraron usuarios">
         <template #nombre="{ row }">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">
+            <div class="w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-700 dark:text-green-400 font-bold">
               {{ row.nombre.charAt(0).toUpperCase() }}
             </div>
             <div>
-              <div class="font-medium text-gray-900">{{ row.nombre }}</div>
-              <div class="text-xs text-gray-500">ID: {{ row.id }}</div>
+              <div class="font-medium text-gray-900 dark:text-slate-200">{{ row.nombre }}</div>
+              <div class="text-xs text-gray-500 dark:text-slate-400">ID: {{ row.id }}</div>
             </div>
           </div>
         </template>
         <template #status="{ row }">
           <span
-            :class="['px-3 py-1 rounded-full text-xs font-medium', (row.status === 'activo' || !row.status) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+            :class="['px-3 py-1 rounded-full text-xs font-medium', (row.status === 'activo' || !row.status) ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400']">
             {{ row.status || 'activo' }}
           </span>
         </template>
@@ -52,7 +52,7 @@
         </template>
         <template #acciones="{ row }">
           <div class="flex items-center justify-center gap-3">
-            <button @click.stop="viewDialog = true; selectedUser = row" class="text-gray-500 hover:text-gray-700 p-1"
+            <button @click.stop="viewDialog = true; selectedUser = row" class="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 p-1"
               title="Ver detalles">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -60,13 +60,13 @@
                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </button>
-            <button @click.stop="editUser(row)" class="text-blue-600 hover:text-blue-800 p-1" title="Editar">
+            <button @click.stop="editUser(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors" title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button @click.stop="confirmDelete(row)" class="text-red-600 hover:text-red-800 p-1" title="Eliminar">
+            <button @click.stop="confirmDelete(row)" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors" title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -82,41 +82,41 @@
       <div class="p-4">
         <form @submit.prevent="handleSave" id="userForm" class="flex flex-col gap-4">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-gray-700">Nombre *</label>
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Nombre *</label>
             <input v-model="form.nombre" type="text" required
-              class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-green-500" />
+              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500" />
           </div>
 
-          <div v-if="isEditing" class="flex flex-col gap-1 p-3 bg-yellow-50 rounded-lg mb-2">
-            <p class="text-xs text-yellow-800">Para poder actualizar o guardar los cambios del usuario, debes confirmar
+          <div v-if="isEditing" class="flex flex-col gap-1 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-2">
+            <p class="text-xs text-yellow-800 dark:text-yellow-400">Para poder actualizar o guardar los cambios del usuario, debes confirmar
               ingresando su contraseña actual.</p>
-            <label class="text-sm font-medium text-gray-700 mt-2">Contraseña actual *</label>
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300 mt-2">Contraseña actual *</label>
             <input v-model="form.current_password" type="password" required
-              class="border border-yellow-300 rounded-lg px-3 py-2 outline-none focus:border-yellow-500" />
+              class="border border-yellow-300 dark:border-yellow-700/50 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500" />
           </div>
 
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-gray-700">
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">
               {{ isEditing ? 'Nueva contraseña (Opcional)' : 'Contraseña * ' }}
             </label>
             <input v-model="form.password" type="password" :required="!isEditing"
-              class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-green-500" />
+              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500" />
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-gray-700">
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">
               {{ isEditing ? 'Confirmar nueva contraseña' : 'Confirmar Contraseña * ' }}
             </label>
             <input v-model="form.password_confirmation" type="password" :required="!isEditing && form.password"
-              class="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-green-500" />
+              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500" />
           </div>
 
           <div v-if="errorMessage" class="text-red-500 text-sm py-2">{{ errorMessage }}</div>
         </form>
       </div>
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="closeDialog"
-            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
           <button type="submit" form="userForm" :disabled="saving"
             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="saving"
@@ -130,21 +130,21 @@
     <!-- Modal Eliminar -->
     <BaseModal :isOpen="deleteDialog" @close="deleteDialog = false" title="Confirmar Eliminación">
       <div class="p-4">
-        <p class="text-gray-700 mb-4">Para eliminar a <strong>{{ userToDelete?.nombre }}</strong>, debes ingresar tu
+        <p class="text-gray-700 dark:text-slate-300 mb-4">Para eliminar a <strong class="text-gray-900 dark:text-white">{{ userToDelete?.nombre }}</strong>, debes ingresar tu
           contraseña actual de administrador por seguridad.</p>
         <form @submit.prevent="handleDelete" id="deleteForm" class="flex flex-col gap-4">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-gray-700">Contraseña *</label>
+            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Contraseña *</label>
             <input v-model="deletePassword" type="password" required
-              class="border border-red-300 rounded-lg px-3 py-2 outline-none focus:border-red-500" />
+              class="border border-red-300 dark:border-red-700/50 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500" />
           </div>
           <div v-if="deleteError" class="text-red-500 text-sm py-2">{{ deleteError }}</div>
         </form>
       </div>
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="deleteDialog = false"
-            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
           <button type="submit" form="deleteForm" :disabled="deleting"
             class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="deleting"
@@ -158,25 +158,25 @@
     <!-- View Modal -->
     <BaseModal :isOpen="viewDialog" @close="viewDialog = false" title="Detalle de Usuario">
       <div class="p-4 flex flex-col gap-3" v-if="selectedUser">
-        <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+        <div class="flex items-center gap-4 border-b border-gray-100 dark:border-slate-800 pb-4">
           <div
-            class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl">
+            class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-700 dark:text-green-400 font-bold text-2xl">
             {{ selectedUser.nombre.charAt(0).toUpperCase() }}
           </div>
           <div>
-            <h3 class="text-lg font-bold">{{ selectedUser.nombre }}</h3>
-            <p class="text-gray-500 text-sm">ID: {{ selectedUser.id }}</p>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedUser.nombre }}</h3>
+            <p class="text-gray-500 dark:text-slate-400 text-sm">ID: {{ selectedUser.id }}</p>
           </div>
         </div>
         <div class="flex flex-col gap-1 py-2">
-          <span class="text-xs text-gray-500 uppercase font-medium">Registro</span>
-          <span>{{ formatDate(selectedUser.created_at) }}</span>
+          <span class="text-xs text-gray-500 dark:text-slate-400 uppercase font-medium">Registro</span>
+          <span class="text-gray-900 dark:text-slate-200">{{ formatDate(selectedUser.created_at) }}</span>
         </div>
       </div>
       <template #footer>
-        <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+        <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button @click="viewDialog = false"
-            class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">Cerrar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cerrar</button>
         </div>
       </template>
     </BaseModal>

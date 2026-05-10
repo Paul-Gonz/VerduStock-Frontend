@@ -35,13 +35,9 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-between items-end gap-4">
-                    <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+                    <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-20">
                         <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
-                        <select v-model="selectedCategory"
-                            class="p-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-800 w-full sm:w-auto">
-                            <option value="Todas">Todas las categorías</option>
-                            <option v-for="cat in categoriasLista" :key="cat" :value="cat">{{ cat }}</option>
-                        </select>
+                        <BaseMultiSelect v-model="selectedCategory" :options="categoryOptions" placeholder="Todas las categorías" class="w-full sm:w-[220px]" />
                     </div>
                 </div>
             </div>
@@ -50,27 +46,27 @@
                 :searchable="false" empty-text="No hay gastos registrados aún.">
 
                 <template #fecha="{ value }">
-                    <span class="text-gray-600 text-sm">{{ value }}</span>
+                    <span class="text-gray-600 dark:text-slate-400 text-sm">{{ value }}</span>
                 </template>
 
                 <template #categoria="{ value }">
                     <span
-                        class="px-2.5 py-1 rounded-lg text-[0.65rem] font-black uppercase tracking-tighter bg-blue-50 text-blue-600 border border-blue-100">
+                        class="px-2.5 py-1 rounded-lg text-[0.65rem] font-black uppercase tracking-tighter bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
                         {{ value }}
                     </span>
                 </template>
 
                 <template #descripcion="{ value }">
-                    <span class="text-gray-500 text-sm italic line-clamp-1">{{ value || 'Sin detalle' }}</span>
+                    <span class="text-gray-500 dark:text-slate-400 text-sm italic line-clamp-1">{{ value || 'Sin detalle' }}</span>
                 </template>
 
                 <template #monto="{ value }">
-                    <span class="font-bold text-gray-900">{{ formatCurrency(Number(value)) }}</span>
+                    <span class="font-bold text-gray-900 dark:text-slate-200">{{ formatCurrency(Number(value)) }}</span>
                 </template>
 
                 <template #acciones="{ row }">
                     <div class="flex items-center gap-3">
-                        <button @click="openModal(row)" class="text-blue-600 hover:text-blue-800 p-1 transition-colors"
+                        <button @click="openModal(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors"
                             title="Editar">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -78,7 +74,7 @@
                             </svg>
                         </button>
                         <button @click="confirmDelete(row.id!)" :disabled="loading"
-                            class="text-red-600 hover:text-red-800 p-1 transition-colors disabled:opacity-50"
+                            class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors disabled:opacity-50"
                             title="Eliminar">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -95,38 +91,38 @@
                 <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="text-sm font-medium text-gray-700">Categoría</label>
+                            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Categoría</label>
                             <select v-model="form.categoria" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none bg-gray-50/50">
+                                class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none bg-gray-50/50 dark:bg-slate-800 dark:text-white">
                                 <option value="" disabled>Seleccionar...</option>
                                 <option v-for="cat in categoriasLista" :key="cat" :value="cat">{{ cat }}</option>
                             </select>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="text-sm font-medium text-gray-700">Monto ($)</label>
+                            <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Monto ($)</label>
                             <input v-model="form.monto" type="number" step="0.01" required placeholder="0.00"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none font-bold" />
+                                class="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none font-bold" />
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium text-gray-700">Fecha del Pago</label>
+                        <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Fecha del Pago</label>
                         <input v-model="form.fecha_gasto" type="date" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none" />
+                            class="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none" />
                     </div>
 
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium text-gray-700">Nota / Descripción</label>
+                        <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Nota / Descripción</label>
                         <textarea v-model="form.descripcion" rows="3" placeholder="Ej: Pago flete de mercancía"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 resize-none focus:ring-2 focus:ring-green-500 outline-none italic text-sm"></textarea>
+                            class="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 resize-none focus:ring-2 focus:ring-green-500 outline-none italic text-sm"></textarea>
                     </div>
                 </form>
             </div>
 
             <template #footer>
-                <div class="flex gap-3 justify-end w-full border-t border-gray-100 p-4">
+                <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
                     <button type="button" @click="isModalOpen = false"
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancelar</button>
+                        class="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
                     <button @click="handleSubmit" :disabled="loading"
                         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
                         <span v-if="loading"
@@ -146,7 +142,7 @@ const { gastos, totalGastos, loading, error, fetchGastos, saveGasto, deleteGasto
 
 // --- ESTADOS DE FILTROS ---
 const search = ref('')
-const selectedCategory = ref('Todas')
+const selectedCategory = ref<string[]>([])
 const isModalOpen = ref(false)
 
 const form = ref<any>({
@@ -158,6 +154,7 @@ const form = ref<any>({
 })
 
 const categoriasLista = ['Alquiler', 'Bolsas', 'Nómina', 'Servicios', 'Transporte', 'Otros']
+const categoryOptions = computed(() => categoriasLista.map(cat => ({ id: cat, nombre: cat })))
 
 const columns = [
     { key: 'fecha', label: 'Fecha' },
@@ -172,7 +169,7 @@ const gastosFiltrados = computed(() => {
     return gastos.value.filter(g => {
         const textMatch = g.descripcion?.toLowerCase().includes(search.value.toLowerCase()) ||
             g.categoria.toLowerCase().includes(search.value.toLowerCase())
-        const categoryMatch = selectedCategory.value === 'Todas' || g.categoria === selectedCategory.value
+        const categoryMatch = selectedCategory.value.length === 0 || selectedCategory.value.includes(g.categoria)
         return textMatch && categoryMatch
     })
 })

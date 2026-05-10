@@ -3,7 +3,7 @@
     <div
       v-for="stat in stats"
       :key="stat.label"
-      class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 transition-shadow hover:shadow-md"
+      class="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm p-4 flex items-center gap-3 transition-shadow hover:shadow-md"
     >
       <div
         :class="iconBg[stat.color]"
@@ -28,7 +28,7 @@
       </div>
 
       <div class="min-w-0">
-        <p class="text-xs text-gray-400 font-medium truncate">{{ stat.label }}</p>
+        <p class="text-xs text-gray-400 dark:text-slate-500 font-medium truncate">{{ stat.label }}</p>
         <p :class="valueColor[stat.color]" class="text-2xl font-bold leading-tight">{{ stat.value }}</p>
       </div>
     </div>
@@ -49,16 +49,16 @@ export interface StatCard {
 defineProps<{ stats: StatCard[] }>()
 
 const iconBg: Record<StatColor, string> = {
-  green: 'bg-green-50 text-green-600',
-  blue:  'bg-blue-50 text-blue-600',
-  amber: 'bg-amber-50 text-amber-500',
-  red:   'bg-red-50 text-red-500',
+  green: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  blue:  'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  amber: 'bg-amber-50 text-amber-500 dark:bg-amber-900/30 dark:text-amber-400',
+  red:   'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const valueColor: Record<StatColor, string> = {
-  green: 'text-gray-800',
-  blue:  'text-gray-800',
-  amber: 'text-gray-800',
-  red:   'text-gray-800',
+  green: 'text-gray-800 dark:text-white',
+  blue:  'text-gray-800 dark:text-white',
+  amber: 'text-gray-800 dark:text-white',
+  red:   'text-gray-800 dark:text-white',
 }
 </script>

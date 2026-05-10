@@ -4,13 +4,13 @@
     <button
       type="button"
       @click="open = !open"
-      class="flex items-center gap-2 h-10 px-4 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all min-w-[180px] justify-between"
+      class="flex items-center gap-2 h-10 px-4 rounded-lg border border-gray-300 dark:border-slate-700/80 bg-white dark:bg-slate-800 text-sm text-gray-700 dark:text-white hover:border-green-400 dark:hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 dark:focus:ring-green-500/50 transition-all min-w-[180px] justify-between"
     >
-      <span :class="selectedLabel === placeholder ? 'text-gray-400' : 'text-gray-700'">
+      <span :class="selectedLabel === placeholder ? 'text-gray-400 dark:text-slate-500' : 'text-gray-700 dark:text-white'">
         {{ selectedLabel }}
       </span>
       <svg
-        class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+        class="w-4 h-4 text-gray-400 dark:text-slate-500 transition-transform duration-200 shrink-0"
         :class="{ 'rotate-180': open }"
         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
       >
@@ -29,18 +29,18 @@
     >
       <div
         v-if="open"
-        class="absolute z-50 mt-1.5 w-full min-w-[200px] bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+        class="absolute z-50 mt-1.5 w-full min-w-[200px] bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-lg overflow-hidden"
       >
-        <div class="py-1">
+        <div class="p-1.5 max-h-[300px] overflow-y-auto flex flex-col gap-0.5">
           <button
             v-for="opt in options"
             :key="opt.value"
             type="button"
             @click="select(opt.value)"
-            class="w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors"
+            class="w-full flex items-center justify-between px-3 py-2 text-sm transition-colors rounded-md"
             :class="modelValue === opt.value
-              ? 'bg-green-50 text-green-700 font-medium'
-              : 'text-gray-700 hover:bg-gray-50'"
+              ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium'
+              : 'text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50'"
           >
             <span>{{ opt.label }}</span>
             <svg
