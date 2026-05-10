@@ -1,43 +1,52 @@
 <template>
     <div class="gastos-page p-6">
-        <div class="flex flex-col gap-4 mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Gastos</h1>
-                    <p class="text-sm text-gray-500">Total acumulado: <span class="font-bold text-red-600">{{
-                        formatCurrency(totalGastos) }}</span></p>
-                </div>
-                <button @click="openModal()"
-                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm active:scale-95">
-                    Registrar Pago
-                </button>
-            </div>
-
-            <div class="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex-1 min-w-250px">
-                    <BaseSearch v-model="search" placeholder="Buscar por descripción..." @search="setFilter" />
-                </div>
-
-                <select v-model="selectedCategory"
-                    class="p-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-green-500 outline-none bg-gray-50/50">
-                    <option value="Todas">Todas las categorías</option>
-                    <option v-for="cat in categoriasLista" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
-            </div>
-        </div>
-
-        <div v-if="error"
-            class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+        <!-- Error -->
+        <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
             </svg>
             {{ error }}
             <button @click="fetchGastos" class="ml-auto underline hover:text-red-900">Reintentar</button>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <BaseTable :columns="columns" :rows="gastosFiltrados" :loading="loading" :selectable="false"
+        <!-- Integrated Table Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+            
+            <!-- Unified Header Section -->
+            <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="w-full flex-1">
+                        <BaseSearch v-model="search" placeholder="Buscar por descripción..." class="w-full" @search="setFilter" />
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-lg">
+                            <span class="text-xs text-red-600 dark:text-red-400 font-medium">Total:</span>
+                            <span class="font-bold text-red-700 dark:text-red-300">{{ formatCurrency(totalGastos) }}</span>
+                        </div>
+                        
+                        <button @click="openModal()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm shadow-sm active:scale-95">
+                            <span class="mdi mdi-plus-box"></span>
+                            Registrar Pago
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-end gap-4">
+                    <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+                        <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
+                        <select v-model="selectedCategory"
+                            class="p-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-800 w-full sm:w-auto">
+                            <option value="Todas">Todas las categorías</option>
+                            <option v-for="cat in categoriasLista" :key="cat" :value="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="gastosFiltrados" :loading="loading" :selectable="false"
                 :searchable="false" empty-text="No hay gastos registrados aún.">
 
                 <template #fecha="{ value }">

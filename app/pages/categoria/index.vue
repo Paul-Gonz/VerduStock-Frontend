@@ -1,33 +1,35 @@
-﻿<template>
+<template>
   <div class="categoria-page p-6">
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">Categorías</h1>
-        <button @click="onAdd"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          Nueva Categoría
-        </button>
-      </div>
-
-      <div class="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <BaseSearch v-model="search" placeholder="Buscar categoría..." class="flex-1" @search="setFilter" />
-      </div>
-    </div>
-
     <!-- Error -->
-    <div v-if="error"
-      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+    <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
       <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
       </svg>
       {{ error }}
       <button @click="fetchCategories" class="ml-auto underline hover:text-red-900">Reintentar</button>
     </div>
 
-    <!-- Main Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable :columns="columns" :rows="categories" :loading="loading" :selectable="false" :searchable="false"
+    <!-- Integrated Table Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+      
+      <!-- Unified Header Section -->
+      <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="w-full flex-1">
+            <BaseSearch v-model="search" placeholder="Buscar categoría..." class="w-full" @search="setFilter" />
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button @click="onAdd"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
+              <span class="mdi mdi-plus-box"></span>
+              Nueva Categoría
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="categories" :loading="loading" :selectable="false" :searchable="false"
         empty-text="No hay categorías registradas aún.">
         <!-- ID -->
         <template #id="{ value }">

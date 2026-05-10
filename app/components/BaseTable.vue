@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col bg-white rounded-1xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
     <!-- Barra superior opcional (search + acciones) -->
-    <div v-if="$slots.toolbar || searchable" class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+    <div v-if="$slots.toolbar || searchable" class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-slate-800">
       <BaseSearch
         v-if="searchable"
         v-model="search"
@@ -13,12 +13,12 @@
     </div>
 
     <!-- Tabla -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto custom-scrollbar">
       <table class="min-w-full text-sm">
         <thead>
-          <tr class="bg-gray-50/60 border-b border-gray-100">
+          <tr class="bg-gray-50/60 dark:bg-transparent border-b border-gray-100 dark:border-slate-800/60">
             <!-- Checkbox header -->
-            <th v-if="selectable" class="w-12 pl-6 py-4">
+            <th v-if="selectable" class="w-10 pl-4 py-3">
               <div class="flex items-center">
                 <input
                   type="checkbox"
@@ -32,7 +32,7 @@
             <th
               v-for="col in columns"
               :key="col.key"
-              class="px-6 py-4 text-left text-[11px] font-bold text-gray-500 uppercase tracking-widest whitespace-nowrap"
+              class="px-2 sm:px-3 py-3 text-left text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide whitespace-nowrap"
               :class="col.align === 'right' ? 'text-right' : ''"
             >
               {{ col.label }}
@@ -40,15 +40,15 @@
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-gray-50">
+        <tbody class="divide-y divide-gray-50 dark:divide-slate-800/50">
           <!-- Loading skeleton -->
           <template v-if="loading">
             <tr v-for="n in _skeletonRows" :key="n">
-              <td v-if="selectable" class="pl-5 py-3.5">
-                <div class="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+              <td v-if="selectable" class="pl-4 py-3">
+                <div class="w-4 h-4 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
               </td>
-              <td v-for="col in columns" :key="col.key" class="px-5 py-3.5">
-                <div class="h-4 bg-gray-100 rounded animate-pulse" :class="col.key === 'actions' ? 'w-16' : 'w-full max-w-[160px]'" />
+              <td v-for="col in columns" :key="col.key" class="px-2 sm:px-3 py-3">
+                <div class="h-4 bg-gray-100 dark:bg-slate-800 rounded animate-pulse" :class="col.key === 'actions' ? 'w-16' : 'w-full max-w-[160px]'" />
               </td>
             </tr>
           </template>
@@ -58,11 +58,11 @@
             <tr
               v-for="(row, idx) in rows"
               :key="row.id ?? idx"
-              class="hover:bg-green-50/50 transition-colors duration-200 group relative"
-              :class="{ 'bg-green-600/5': selectedIds.has(row.id) }"
+              class="hover:bg-green-50/50 dark:hover:bg-slate-800 transition-colors duration-200 group relative"
+              :class="{ 'bg-green-50/50 dark:bg-slate-800/80': selectedIds.has(row.id) }"
             >
               <!-- Checkbox -->
-              <td v-if="selectable" class="pl-6 py-4">
+              <td v-if="selectable" class="pl-4 py-3">
                 <div class="flex items-center">
                   <input
                     type="checkbox"
@@ -77,7 +77,7 @@
               <td
                 v-for="col in columns"
                 :key="col.key"
-                class="px-6 py-4 text-sm text-gray-600 font-medium"
+                class="px-2 sm:px-3 py-3 text-[13px] text-gray-600 dark:text-slate-300 font-medium"
                 :class="[col.align === 'right' ? 'text-right' : '', col.nowrap ? 'whitespace-nowrap' : '']"
               >
                 <div v-if="selectedIds.has(row.id) && col === columns[0]" class="absolute left-0 top-0 bottom-0 w-1 bg-green-600 rounded-r-full"></div>
@@ -86,7 +86,7 @@
                   <span v-if="row[col.key] !== null && row[col.key] !== undefined">
                     {{ row[col.key] }}
                   </span>
-                  <span v-else class="text-gray-300 text-xs">—</span>
+                  <span v-else class="text-gray-300 dark:text-slate-600 text-xs">—</span>
                 </slot>
               </td>
             </tr>
@@ -95,7 +95,7 @@
           <!-- Estado vacío -->
           <tr v-else>
             <td :colspan="selectable ? columns.length + 1 : columns.length" class="text-center py-16">
-              <div class="flex flex-col items-center text-gray-400">
+              <div class="flex flex-col items-center text-gray-400 dark:text-slate-500">
                 <svg class="w-10 h-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0H4" />
                 </svg>
@@ -108,8 +108,8 @@
     </div>
 
     <!-- Footer: info de filas + paginación -->
-    <div v-if="$slots.pagination || _showFooter" class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
-      <p class="text-xs text-gray-500">
+    <div v-if="$slots.pagination || _showFooter" class="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-800/50">
+      <p class="text-xs text-gray-500 dark:text-slate-400">
         <slot name="footer-info">
           <span v-if="total !== undefined && total >= rows.length">Mostrando {{ rows.length }} de {{ total }} registros</span>
           <span v-else>Mostrando {{ rows.length }} registros</span>

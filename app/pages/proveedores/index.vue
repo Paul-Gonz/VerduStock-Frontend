@@ -1,22 +1,26 @@
 <template>
   <div class="p-6">
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">Directorio de Proveedores</h1>
-        <button @click="openNewDialog"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          Nuevo Proveedor
-        </button>
+    <!-- Integrated Table Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+      
+      <!-- Unified Header Section -->
+      <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="w-full flex-1">
+            <BaseSearch v-model="search" placeholder="Buscar por nombre, teléfono o dirección..." class="w-full" />
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <button @click="openNewDialog"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
+              <span class="mdi mdi-plus-box"></span>
+              Nuevo Proveedor
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
-        <BaseSearch v-model="search" placeholder="Buscar por nombre, teléfono o dirección..." class="flex-1" />
-      </div>
-    </div>
-
-    <!-- Main Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable :columns="columns" :rows="proveedoresFiltrados" :searchable="false" :loading="loading"
+      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="proveedoresFiltrados" :searchable="false" :loading="loading"
         emptyText="No se encontraron proveedores">
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">

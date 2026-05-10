@@ -1,50 +1,116 @@
 ```vue
 <template>
   <div class="inventario-page p-6">
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-800">Inventario de Productos</h1>
-        <div class="flex items-center gap-3">
-          <NuxtLink to="/reportes"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
-            <span class="mdi mdi-chart-box"></span>
-            Reportes
-          </NuxtLink>
-          <button @click="openModal()"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-            Nuevo Producto
-          </button>
+    <!-- Integrated Table Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+      
+      <!-- Unified Header Section -->
+      <div class="p-4 sm:p-5 flex flex-col gap-5 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+        
+        <!-- Search and Main Actions -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="w-full flex-1">
+            <BaseSearch v-model="searchQuery" placeholder="Buscar por nombre o proveedor..." class="w-full" />
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <NuxtLink to="/reportes"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
+              <span class="mdi mdi-chart-box"></span>
+              Reportes
+            </NuxtLink>
+            <button @click="openModal()"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm">
+              <span class="mdi mdi-plus-box"></span>
+              Nuevo Producto
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters and Bulk Actions -->
+        <div class="flex flex-col sm:flex-row justify-between items-end gap-4 min-h-[44px]">
+          <div class="flex flex-wrap items-end gap-4 w-full sm:w-auto">
+            <!-- Estado Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Estado del Producto</span>
+              <select v-model="filterCondition" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todos">Todos los estados</option>
+                <option value="por_vencer">Por vencer (7 días)</option>
+                <option value="vencidos">Vencidos</option>
+                <option value="stock_bajo">Stock bajo</option>
+                <option value="agotados">Agotados (0 Kg)</option>
+              </select>
+            </div>
+
+            <!-- Categoría Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
+              <select v-model="filterCategoria" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todas">Todas las categorías</option>
+                <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
+              </select>
+            </div>
+
+            <!-- Proveedor Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Proveedor</span>
+              <select v-model="filterProveedor" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todos">Todos los proveedores</option>
+                <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">{{ prov.nombre }}</option>
+              </select>
+            </div>
+
+            <!-- Vencimiento Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Vencimiento</span>
+              <select v-model="filterVencimiento" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todas">Todas las fechas</option>
+                <option value="este_mes">Vencen este mes</option>
+                <option value="proximos_30_dias">Próximos 30 días</option>
+              </select>
+            </div>
+
+            <!-- Desperdicio Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Mermas</span>
+              <select v-model="filterDesperdicio" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todos">Todos los niveles</option>
+                <option value="alto">Alta (>10%)</option>
+                <option value="normal">Normal (1-10%)</option>
+                <option value="cero">Sin mermas</option>
+              </select>
+            </div>
+
+            <!-- Rentabilidad Filter -->
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Rentabilidad</span>
+              <select v-model="filterRentabilidad" class="border border-gray-300 dark:border-slate-700/80 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white outline-none text-sm w-full sm:w-auto focus:ring-2 focus:ring-green-500/50 transition-colors shadow-sm">
+                <option value="todas">Todos los márgenes</option>
+                <option value="alta">Alta (>40%)</option>
+                <option value="media">Media (15-40%)</option>
+                <option value="baja">Baja (<15%)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bulk Actions Toolbar -->
+          <div v-if="selectedIds.size > 0" class="flex gap-2 items-center bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-900/50 w-full sm:w-auto justify-center shadow-sm">
+            <span class="text-blue-800 dark:text-blue-400 font-medium text-sm px-1">{{ selectedIds.size }} seleccionado(s)</span>
+            <div class="h-4 w-[1px] bg-blue-200 dark:bg-blue-800 mx-1"></div>
+            <button v-if="selectedIds.size === 1" @click="handleEditSelected"
+              class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium transition-colors px-2">
+              Editar
+            </button>
+            <button @click="handleBulkDelete"
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium transition-colors px-2">
+              Eliminar
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <BaseSearch v-model="searchQuery" placeholder="Buscar por nombre o proveedor..." class="flex-1" />
-        <select v-model="filterCondition" class="border border-gray-300 rounded-lg px-4 py-2 bg-white outline-none">
-          <option value="todos">Todos los estados</option>
-          <option value="por_vencer">Por vencer (7 días)</option>
-          <option value="vencidos">Vencidos</option>
-          <option value="stock_bajo">Stock bajo</option>
-        </select>
-      </div>
-
-      <!-- Actions Toolbar -->
-      <div v-if="selectedIds.size > 0"
-        class="hidden gap-3 items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
-        <span class="text-blue-800 font-medium px-2">{{ selectedIds.size }} seleccionado(s)</span>
-        <button v-if="selectedIds.size === 1" @click="handleEditSelected"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          Editar Seleccionado
-        </button>
-        <button @click="handleBulkDelete"
-          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          Eliminar Seleccionados ({{ selectedIds.size }})
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <BaseTable :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false"
+      <!-- Main Table -->
+      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false"
         emptyText="No se encontraron productos">
         <template #precio_venta="{ value }">
           ${{ Number(value).toFixed(2) }}
@@ -53,14 +119,14 @@
           ${{ Number(value).toFixed(2) }}
         </template>
         <template #cantidad_disponible="{ value }">
-          <span class="text-gray-700">{{ value }} kg</span>
+          <span class="text-gray-700 dark:text-slate-300">{{ value }} kg</span>
         </template>
         <template #stock_actual="{ value, row }">
           <div v-if="editingStockId === row.id" class="flex items-center gap-1">
-            <span class="text-slate-700 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType ===
+            <span class="text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap text-sm">{{ value }}{{ stockAdjustmentType ===
               'add' ? '+' : '-' }}</span>
             <input type="number" v-model="stockAdjustmentValue"
-              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 rounded outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 text-center"
+              class="w-12 text-[11px] px-1 py-0.5 border border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200 text-center"
               min="0.1" step="0.1" autofocus @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust()"
               :disabled="stockAdjustLoading" />
             <button v-if="!stockAdjustLoading" @click.stop="submitStockAdjust(row)"
@@ -79,17 +145,17 @@
               class="w-3 h-3 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
           <div v-else class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="text-slate-700 font-medium">{{ value }} kg</span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">{{ value }} kg</span>
             <div class="flex items-center opacity-40 hover:opacity-100 transition-opacity">
               <button @click.stop="openStockAdjust(row, 'add')"
-                class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5"
+                class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center justify-center transition-all px-0.5"
                 title="Sumar stock">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
               </button>
               <button @click.stop="openStockAdjust(row, 'subtract')"
-                class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded flex items-center justify-center transition-all px-0.5"
+                class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded flex items-center justify-center transition-all px-0.5"
                 title="Restar stock">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
@@ -269,6 +335,11 @@ const {
   loading,
   searchQuery,
   filterCondition,
+  filterCategoria,
+  filterProveedor,
+  filterVencimiento,
+  filterDesperdicio,
+  filterRentabilidad,
   fetchProductos,
   createProducto,
   updateProducto,
