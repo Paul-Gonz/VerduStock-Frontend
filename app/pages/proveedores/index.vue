@@ -1,10 +1,12 @@
 <template>
   <div class="p-6">
     <!-- Integrated Table Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
-      
+    <div
+      class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+
       <!-- Unified Header Section -->
-      <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+      <div
+        class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="w-full flex-1">
             <BaseSearch v-model="search" placeholder="Buscar por nombre, teléfono o dirección..." class="w-full" />
@@ -20,18 +22,20 @@
         </div>
       </div>
 
-      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="proveedoresFiltrados" :searchable="false" :loading="loading"
-        emptyText="No se encontraron proveedores">
+      <BaseTable class="border-0 shadow-none bg-transparent! pt-4" :columns="columns" :rows="proveedoresFiltrados"
+        :searchable="false" :loading="loading" emptyText="No se encontraron proveedores">
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">
-            <button @click.stop="editProveedor(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors"
+            <button @click.stop="editProveedor(row)"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors"
               title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button @click.stop="confirmDelete(row)" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors"
+            <button @click.stop="confirmDelete(row)"
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors"
               title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -55,6 +59,7 @@
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Teléfono</label>
             <input v-model="form.telefono" type="text"
+              @input="form.telefono = form.telefono.replace(/[^0-9+()-\s]/g, '')"
               class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 dark:focus:border-green-400 focus:ring-1 focus:ring-green-500" />
           </div>
           <div class="flex flex-col gap-1">
@@ -87,7 +92,9 @@
     <!-- Modal Delete -->
     <BaseModal :isOpen="deleteDialog" @close="deleteDialog = false" title="¿Eliminar este proveedor?">
       <div class="p-4">
-        <p class="text-gray-700 dark:text-slate-400">Esta acción eliminará a <b class="text-gray-900 dark:text-slate-200">{{ proveedorToDelete?.nombre }}</b>. Los datos no podrán
+        <p class="text-gray-700 dark:text-slate-400">Esta acción eliminará a <b
+            class="text-gray-900 dark:text-slate-200">{{
+              proveedorToDelete?.nombre }}</b>. Los datos no podrán
           recuperarse.</p>
       </div>
       <template #footer>
