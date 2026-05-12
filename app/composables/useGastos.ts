@@ -4,20 +4,17 @@ export interface Gasto {
     id?: number;
     categoria: string;
     monto: number;
-    fecha_gasto?: string;
+    fecha_gasto: string; // Unificado
     descripcion?: string;
-    fecha?: string;
 }
 
 export const useGastos = () => {
     const { api } = useApi()
-
     const gastos = ref<Gasto[]>([])
     const totalGastos = ref<number>(0)
     const loading = ref<boolean>(false)
     const error = ref<string | null>(null)
 
-    // 1. Cargar lista y total
     const fetchGastos = async (): Promise<void> => {
         loading.value = true
         error.value = null
@@ -27,7 +24,13 @@ export const useGastos = () => {
                 api('/gastos/total', { method: 'GET' })
             ])
 
-            gastos.value = listaRes.data || listaRes
+            // Mapeo de seguridad para asegurar que el campo se llame fecha_gasto
+            const rawData = listaRes.data || listaRes
+            gastos.value = rawData.map((g: any) => ({
+                ...g,
+                fecha_gasto: g.fecha_gasto || g.fecha // Soporta ambos nombres del server
+            }))
+
             totalGastos.value = Number(totalRes?.total_gastos) || 0
         } catch (err: any) {
             error.value = err.data?.message || 'Error al obtener gastos'
@@ -36,16 +39,14 @@ export const useGastos = () => {
         }
     }
 
-    // 2. Guardar (Crear o Actualizar)
     const saveGasto = async (form: Gasto) => {
         loading.value = true
         const isUpdate = !!form.id
         const url = isUpdate ? `/gastos/${form.id}` : '/gastos'
         const method = isUpdate ? 'PUT' : 'POST'
-
         try {
             await api(url, { method, body: form })
-            await fetchGastos() // Refrescar la tabla automáticamente
+            await fetchGastos()
             return { success: true }
         } catch (err: any) {
             return {
@@ -57,10 +58,7 @@ export const useGastos = () => {
         }
     }
 
-    // 3. Eliminar (Soft Delete)
     const deleteGasto = async (id: number): Promise<void> => {
-        if (!confirm('¿Seguro que quieres eliminar este gasto?')) return
-
         try {
             await api(`/gastos/${id}`, { method: 'DELETE' })
             await fetchGastos()
@@ -69,13 +67,5 @@ export const useGastos = () => {
         }
     }
 
-    return {
-        gastos,
-        totalGastos,
-        loading,
-        error,
-        fetchGastos,
-        saveGasto,
-        deleteGasto
-    }
+    return { gastos, totalGastos, loading, error, fetchGastos, saveGasto, deleteGasto }
 }
