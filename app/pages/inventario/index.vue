@@ -326,7 +326,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { useProducts } from '~/composables/useProducts'
+import { useProductos } from '~/composables/useProductos'
 
 const {
   tableRows,
@@ -343,7 +343,7 @@ const {
   updateProducto,
   deleteProducto,
   stats
-} = useProducts()
+} = useProductos()
 
 // Select options para filtros
 const estadoOptions = [

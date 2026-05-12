@@ -1,17 +1,17 @@
 import { ref, computed } from 'vue'
-import type { Producto } from '~/types'
 
 export type EstadoProducto = 'ok' | 'bajo' | 'por_vencer' | 'vencido'
 
-export function useProducts() {
+export function useProductos() {
     const { api } = useApi()
 
-    const productos = ref<Producto[]>([])
+    // Usamos Record<string, any> como fallback si Producto no se encuentra
+    const productos = ref<any[]>([])
     const loading = ref(false)
 
     const searchQuery = ref('')
     const filterCondition = ref('todos')
-    const filterCategoria = ref<any[]>([])  // Ahora es un array para multi-select
+    const filterCategoria = ref<any[]>([])
     const filterProveedor = ref<any[]>([])
     const filterVencimiento = ref('todas')
     const filterDesperdicio = ref('todos')
@@ -21,12 +21,11 @@ export function useProducts() {
         loading.value = true
         try {
             const response: any = await api('/productos', { method: 'GET' })
-            productos.value = Array.isArray(response.data)
-                ? response.data
-                : (response?.data?.data || response || [])
-            if (!Array.isArray(productos.value)) productos.value = []
+            const rawData = response?.data?.data || response?.data || response || []
+            productos.value = Array.isArray(rawData) ? rawData : []
         } catch (error) {
             console.error('Error fetching products:', error)
+            productos.value = []
         } finally {
             loading.value = false
         }
@@ -72,6 +71,7 @@ export function useProducts() {
         return detalle
     }
 
+    // Corregido: Añadimos tipo 'any' explícito a 'p' para evitar el error ts(7006)
     const getEstado = (p: any, detalleObj: Record<string, any>): EstadoProducto => {
         const now = new Date()
         const expiryStr = detalleObj.fecha_vencimiento
@@ -93,7 +93,7 @@ export function useProducts() {
         let bajosCount = 0
         let alertaCount = 0
 
-        productos.value.forEach(p => {
+        productos.value.forEach((p: any) => {
             const detalleObj = parseDetalle(p.detalle)
             const stockActual = detalleObj.stock_actual !== undefined
                 ? Number(detalleObj.stock_actual)
@@ -115,14 +115,13 @@ export function useProducts() {
     })
 
     const tableRows = computed(() => {
-        let filtered = productos.value.filter(p => {
+        let filtered = productos.value.filter((p: any) => {
             const provName = p.proveedor_nombre || p.proveedor?.nombre || ''
             const matchesSearch =
                 (p.nombre || '').toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                 provName.toLowerCase().includes(searchQuery.value.toLowerCase())
             if (!matchesSearch) return false
 
-            // Filtro por categoría (multi-select)
             if (filterCategoria.value.length > 0) {
                 if (!filterCategoria.value.some(id => String(id) === String(p.categoria_id))) return false
             }
@@ -188,7 +187,7 @@ export function useProducts() {
             return true
         })
 
-        return filtered.map(p => {
+        return filtered.map((p: any) => {
             const detalleObj = parseDetalle(p.detalle)
             const estado = getEstado(p, detalleObj)
             const stockActual = detalleObj.stock_actual !== undefined
@@ -206,7 +205,6 @@ export function useProducts() {
                 precio_venta: Number(p.precio_venta_kg || 0).toFixed(2),
                 estado,
                 raw: p,
-                // Campos extra expuestos para el drawer/modal
                 categoria_id: p.categoria_id,
                 proveedor_id: p.proveedor_id,
                 stock_minimo: p.stock_minimo,
