@@ -1,22 +1,23 @@
 <template>
   <div class="categoria-page p-6">
-    <!-- Error -->
-    <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+    <div v-if="error"
+      class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
       <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
       </svg>
       {{ error }}
       <button @click="fetchCategories" class="ml-auto underline hover:text-red-900">Reintentar</button>
     </div>
 
-    <!-- Integrated Table Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
-      
-      <!-- Unified Header Section -->
-      <div class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+    <div
+      class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
+
+      <div
+        class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="w-full flex-1">
-            <BaseSearch v-model="search" placeholder="Buscar categoría..." class="w-full" @search="setFilter" />
+            <BaseSearch v-model="search" placeholder="Buscar categoría..." class="w-full" />
           </div>
 
           <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -29,33 +30,31 @@
         </div>
       </div>
 
-      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="categories" :loading="loading" :selectable="false" :searchable="false"
-        empty-text="No hay categorías registradas aún.">
-        <!-- ID -->
-        <template #id="{ value }">
-          <span class="font-semibold text-gray-600 dark:text-slate-400">#{{ value }}</span>
-        </template>
+      <BaseTable class="border-0 shadow-none bg-transparent! pt-4" :columns="columns" :rows="categoriesFiltradas"
+        :loading="loading" :selectable="false" :searchable="false" :sort-by="sortBy" :sort-order="sortOrder"
+        @sort="handleSort" empty-text="No hay categorías registradas aún.">
 
-        <!-- Nombre -->
         <template #nombre="{ value, row }">
           <span class="font-medium text-gray-900 dark:text-slate-200">{{ row.emoji }} {{ value }}</span>
         </template>
 
-        <!-- Descripción -->
         <template #detalle="{ value }">
           <span class="text-gray-500 dark:text-slate-400 text-sm line-clamp-1">{{ value || '—' }}</span>
         </template>
 
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">
-            <button @click="onEdit(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors" title="Editar">
+            <button @click.stop="onEdit(row)"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors"
+              title="Editar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button @click="onDelete(row)" :disabled="loading"
-              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors disabled:opacity-50" title="Eliminar">
+            <button @click.stop="onDelete(row)" :disabled="loading"
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors disabled:opacity-50"
+              title="Eliminar">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -66,7 +65,6 @@
       </BaseTable>
     </div>
 
-    <!-- Modal Form (Create/Edit) -->
     <BaseModal :isOpen="isFormModalOpen" :title="isEditing ? 'Editar Categoría' : 'Nueva Categoría'"
       @close="closeFormModal">
       <div class="p-4">
@@ -122,11 +120,11 @@
       </template>
     </BaseModal>
 
-    <!-- Modal Delete -->
     <BaseModal :isOpen="isDeleteModalOpen" title="Eliminar Categoría" @close="isDeleteModalOpen = false">
       <div class="p-4">
         <p class="text-sm text-gray-600 dark:text-slate-400">
-          ¿Estás seguro de que deseas eliminar la categoría <strong class="text-gray-900 dark:text-slate-200">{{ itemToDelete?.nombre
+          ¿Estás seguro de que deseas eliminar la categoría <strong class="text-gray-900 dark:text-slate-200">{{
+            itemToDelete?.nombre
           }}</strong>? Esta acción no se puede deshacer.
         </p>
       </div>
@@ -148,14 +146,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useCategories, type Category } from '~/composables/useCategories'
 import EmojiPicker from 'vue3-emoji-picker'
 
-// @ts-ignore - El componente BaseTable no tiene tipos definidos, pero sabemos que funciona bien
+// @ts-ignore - Evita que TypeScript se queje por la importación del CSS
 import 'vue3-emoji-picker/css'
 
-// Extraemos todo del composable centralizado
+// --- Composables y Estados Base ---
 const {
   categories,
   loading,
@@ -164,20 +162,56 @@ const {
   createCategory,
   updateCategory,
   deleteCategory,
-  setFilter,
 } = useCategories()
 
 const search = ref('')
 
-// Sincronizamos el input de búsqueda con la lógica del composable
-watch(search, (val) => {
-  setFilter(val)
+// --- Ordenamiento Local (Solo Nombre) ---
+const sortBy = ref('nombre')
+const sortOrder = ref('asc')
+
+const handleSort = (key: string) => {
+  // Solo permitimos interactuar con la columna 'nombre'
+  if (key !== 'nombre') return
+
+  if (sortBy.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = key
+    sortOrder.value = 'asc'
+  }
+}
+
+// --- Lógica de Filtro + Ordenamiento Reactivo ---
+const categoriesFiltradas = computed(() => {
+  let data = [...(categories.value || [])]
+
+  // 1. Filtrado por búsqueda
+  if (search.value) {
+    const s = search.value.toLowerCase()
+    data = data.filter(c =>
+      c.nombre?.toLowerCase().includes(s) ||
+      c.detalle?.toLowerCase().includes(s)
+    )
+  }
+
+  // 2. Ordenamiento (Afecta solo a la columna activa, por defecto nombre)
+  data.sort((a, b) => {
+    let valA = (a[sortBy.value as keyof Category] || '').toString().toLowerCase()
+    let valB = (b[sortBy.value as keyof Category] || '').toString().toLowerCase()
+
+    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1
+    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1
+    return 0
+  })
+
+  return data
 })
 
+// --- Configuración de Columnas ---
 const columns = [
-  { key: 'id', label: 'ID' },
-  { key: 'nombre', label: 'Nombre' },
-  { key: 'detalle', label: 'Descripción' },
+  { key: 'nombre', label: 'Nombre', sortable: true },
+  { key: 'detalle', label: 'Descripción', sortable: false },
   { key: 'acciones', label: 'Acciones', align: 'left' as const }
 ]
 
@@ -219,7 +253,6 @@ const onEdit = (row: Category) => {
 
 const closeFormModal = () => {
   isFormModalOpen.value = false
-  // Reset después de que cierre la animación
   setTimeout(() => {
     formData.value = { ...initialFormState }
   }, 200)
@@ -234,7 +267,6 @@ const submitForm = async () => {
     }
     closeFormModal()
   } catch (e) {
-    // El error ya se gestiona en el composable (error.value)
     console.error('Error en formulario:', e)
   }
 }
