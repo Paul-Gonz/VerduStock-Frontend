@@ -1,8 +1,9 @@
 <template>
     <div class="min-h-screen p-6 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <div class="max-w-[1500px] w-full mx-auto flex flex-col gap-6">
+        <div class="max-w-375 w-full mx-auto flex flex-col gap-6">
             <div v-if="loadingDashboard || dashboardError" class="flex flex-col gap-3">
-                <div v-if="loadingDashboard" class="w-full bg-slate-200 dark:bg-slate-900 h-1 rounded-full overflow-hidden">
+                <div v-if="loadingDashboard"
+                    class="w-full bg-slate-200 dark:bg-slate-900 h-1 rounded-full overflow-hidden">
                     <div class="bg-green-500 h-full animate-progress-indeterminate"></div>
                 </div>
                 <div v-if="dashboardError"
@@ -20,34 +21,38 @@
                         <!-- Summary Cards (2/3) -->
                         <section class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <article v-for="card in resumenTarjetas" :key="card.title"
-                                class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 flex flex-col transition-all hover:translate-y-[-2px]">
+                                class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 flex flex-col transition-all hover:translate-y--2px">
                                 <div class="flex justify-between items-start mb-4">
-                                    <div class="p-2.5 rounded-xl transition-colors" 
-                                         :class="{
-                                            'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400': card.color === 'green',
-                                            'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': card.color === 'blue',
-                                            'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400': card.color === 'orange',
-                                            'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400': card.color === 'red'
-                                         }">
+                                    <div class="p-2.5 rounded-xl transition-colors" :class="{
+                                        'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400': card.color === 'green',
+                                        'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': card.color === 'blue',
+                                        'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400': card.color === 'orange',
+                                        'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400': card.color === 'red'
+                                    }">
                                         <div class="w-6 h-6" v-html="card.icon"></div>
                                     </div>
                                     <div class="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold"
-                                         :class="card.trend === 'up' ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
-                                                 card.trend === 'neutral' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' : 
-                                                 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'">
-                                        <i :class="card.trendIcon || (card.trend === 'up' ? 'mdi mdi-trending-up' : 'mdi mdi-trending-down')"></i>
+                                        :class="card.trend === 'up' ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                                            card.trend === 'neutral' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
+                                                'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'">
+                                        <i
+                                            :class="card.trendIcon || (card.trend === 'up' ? 'mdi mdi-trending-up' : 'mdi mdi-trending-down')"></i>
                                         {{ card.detail }}
                                     </div>
                                 </div>
-                                
+
                                 <div class="flex justify-between items-end">
                                     <div class="flex-1">
-                                        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{{ card.title }}</p>
-                                        <p class="text-2xl font-bold text-slate-900 dark:text-gray-100">{{ card.value }}</p>
+                                        <p
+                                            class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+                                            {{ card.title }}</p>
+                                        <p class="text-2xl font-bold text-slate-900 dark:text-gray-100">{{ card.value }}
+                                        </p>
                                     </div>
                                     <div class="w-24 h-12">
                                         <client-only>
-                                            <component :is="Apexchart" v-if="Apexchart" type="area" height="48" :options="card.sparklineOptions" :series="card.series" />
+                                            <component :is="Apexchart" v-if="Apexchart" type="area" height="48"
+                                                :options="card.sparklineOptions" :series="card.series" />
                                         </client-only>
                                     </div>
                                 </div>
@@ -55,45 +60,64 @@
                         </section>
 
                         <!-- Distribucion (1/3) -->
-                        <article class="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 flex flex-col justify-between">
+                        <article
+                            class="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 flex flex-col justify-between">
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-lg font-bold text-slate-900 dark:text-gray-100">Distribución</h3>
-                                <div class="px-2 py-1 flex items-center gap-1 cursor-pointer text-[11px] font-bold text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200 uppercase tracking-wide">
+                                <div
+                                    class="px-2 py-1 flex items-center gap-1 cursor-pointer text-[11px] font-bold text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200 uppercase tracking-wide">
                                     Mensual <i class="mdi mdi-chevron-down"></i>
                                 </div>
                             </div>
-                            
+
                             <div class="flex flex-col h-full">
                                 <div class="flex items-center justify-between mb-4 gap-2">
                                     <!-- Left: Chart -->
-                                    <div class="relative w-[50%] flex-shrink-0">
+                                    <div class="relative w-[50%] shrink-0">
                                         <client-only>
-                                            <component :is="Apexchart" v-if="Apexchart" type="donut" height="180" :options="donutOptions" :series="donutSeries" />
+                                            <component :is="Apexchart" v-if="Apexchart" type="donut" height="180"
+                                                :options="donutOptions" :series="donutSeries" />
                                         </client-only>
                                     </div>
-                                    
+
                                     <!-- Right: Stats -->
                                     <div class="flex flex-col justify-center gap-5 w-[50%]">
                                         <div>
-                                            <p class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center gap-1">{{ kilosFormatter.format(donutSeries.reduce((a,b)=>a+b, 0)) }} <i class="mdi mdi-arrow-up-thin text-sm"></i></p>
-                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-400">Total Almacén</p>
+                                            <p
+                                                class="text-xl font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                {{kilosFormatter.format(donutSeries.reduce((a, b) => a + b, 0))}} <i
+                                                    class="mdi mdi-arrow-up-thin text-sm"></i></p>
+                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-400">Total
+                                                Almacén</p>
                                         </div>
                                         <div>
-                                            <p class="text-lg font-bold text-slate-900 dark:text-gray-100 flex items-center gap-1">{{ formatCurrency(gananciaPotencial) }} <i class="mdi mdi-arrow-down-thin text-sm text-slate-400"></i></p>
-                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-400">Valuación</p>
+                                            <p
+                                                class="text-lg font-bold text-slate-900 dark:text-gray-100 flex items-center gap-1">
+                                                {{ formatCurrency(gananciaPotencial) }} <i
+                                                    class="mdi mdi-arrow-down-thin text-sm text-slate-400"></i></p>
+                                            <p class="text-[10px] font-medium text-slate-500 dark:text-gray-400">
+                                                Valuación</p>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Bottom: Legend -->
-                                <div class="w-full space-y-3 mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <div v-if="categoryDistribution.length === 0" class="text-center text-sm font-semibold text-slate-400">No hay datos suficientes</div>
-                                    <div v-for="(cat, idx) in categoryDistribution.slice(0, 3)" :key="cat.name" class="flex justify-between items-center">
+                                <div
+                                    class="w-full space-y-3 mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <div v-if="categoryDistribution.length === 0"
+                                        class="text-center text-sm font-semibold text-slate-400">No hay datos
+                                        suficientes</div>
+                                    <div v-for="(cat, idx) in categoryDistribution.slice(0, 3)" :key="cat.name"
+                                        class="flex justify-between items-center">
                                         <div class="flex items-center gap-2">
-                                            <span class="w-3 h-3 rounded-full" :style="{ backgroundColor: donutOptions.colors[idx % donutOptions.colors.length] }"></span>
-                                            <span class="text-[11px] font-semibold text-slate-600 dark:text-gray-300 truncate max-w-[100px]">{{ cat.name }}</span>
+                                            <span class="w-3 h-3 rounded-full"
+                                                :style="{ backgroundColor: donutOptions.colors[idx % donutOptions.colors.length] }"></span>
+                                            <span
+                                                class="text-[11px] font-semibold text-slate-600 dark:text-gray-300 truncate max-w-25">{{
+                                                    cat.name }}</span>
                                         </div>
-                                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100">{{ ((cat.value / (donutSeries.reduce((a,b)=>a+b, 0) || 1)) * 100).toFixed(0) }}%</span>
+                                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100">{{((cat.value
+                                            / (donutSeries.reduce((a, b) => a + b, 0) || 1)) * 100).toFixed(0)}}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -104,28 +128,36 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Gasto por Proveedor (2/3) -->
                         <section class="lg:col-span-2">
-                            <article class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 h-full">
+                            <article
+                                class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50 h-full">
                                 <div class="flex justify-between items-center mb-6">
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-900 dark:text-gray-100">Gasto por Proveedor</h3>
-                                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Inversión en inventario actual ($)</p>
+                                        <h3 class="text-lg font-bold text-slate-900 dark:text-gray-100">Gasto por
+                                            Proveedor</h3>
+                                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Inversión en
+                                            inventario actual ($)</p>
                                     </div>
                                 </div>
                                 <client-only>
-                                    <component :is="Apexchart" v-if="Apexchart" type="bar" height="230" :options="barOptions" :series="barSeries" />
+                                    <component :is="Apexchart" v-if="Apexchart" type="bar" height="230"
+                                        :options="barOptions" :series="barSeries" />
                                 </client-only>
                             </article>
                         </section>
 
                         <!-- Más Vendidos (1/3) -->
-                        <article class="lg:col-span-1 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800 h-full">
+                        <article
+                            class="lg:col-span-1 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800 h-full">
                             <div class="flex items-start justify-between mb-1">
                                 <h3 class="text-lg font-bold">Más Vendidos</h3>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xl font-bold text-slate-900 dark:text-white">{{ kilosFormatter.format(totalKilosVendidosMock) }}<span class="text-xs text-slate-400 dark:text-slate-500 font-normal ml-0.5">kg</span></span>
+                                    <span class="text-xl font-bold text-slate-900 dark:text-white">{{
+                                        kilosFormatter.format(totalKilosVendidosMock) }}<span
+                                            class="text-xs text-slate-400 dark:text-slate-500 font-normal ml-0.5">kg</span></span>
                                     <div :class="ventasTrendMock >= 0 ? 'bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'"
-                                         class="px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1">
-                                        <i :class="ventasTrendMock >= 0 ? 'mdi mdi-trending-up' : 'mdi mdi-trending-down'"></i> 
+                                        class="px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1">
+                                        <i
+                                            :class="ventasTrendMock >= 0 ? 'mdi mdi-trending-up' : 'mdi mdi-trending-down'"></i>
                                         {{ Math.abs(ventasTrendMock).toFixed(1) }}%
                                     </div>
                                 </div>
@@ -137,17 +169,20 @@
                                     <div v-for="item in topSellingProducts" :key="item.id" class="flex flex-col gap-2">
                                         <div class="flex justify-between items-center text-sm">
                                             <div class="flex items-center gap-2">
-                                                <div class="w-7 h-5 rounded flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-sm border border-slate-100 dark:border-slate-700">
+                                                <div
+                                                    class="w-7 h-5 rounded flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-sm border border-slate-100 dark:border-slate-700">
                                                     {{ item.emoji }}
                                                 </div>
-                                                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ item.name }}</span>
+                                                <span class="font-semibold text-slate-700 dark:text-slate-200">{{
+                                                    item.name }}</span>
                                             </div>
-                                            <span class="font-bold text-slate-900 dark:text-slate-100">{{ item.percentage }}%</span>
+                                            <span class="font-bold text-slate-900 dark:text-slate-100">{{
+                                                item.percentage }}%</span>
                                         </div>
-                                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-                                            <div class="h-full rounded-full transition-all duration-1000" 
-                                                :class="item.color"
-                                                :style="`width: ${item.percentage}%`"></div>
+                                        <div
+                                            class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                            <div class="h-full rounded-full transition-all duration-1000"
+                                                :class="item.color" :style="`width: ${item.percentage}%`"></div>
                                         </div>
                                     </div>
                                 </template>
@@ -157,35 +192,46 @@
                 </div> <!-- End Main Column -->
 
                 <!-- Left Column (Alerts) -->
-                <aside class="w-full xl:w-[380px] shrink-0 flex flex-col gap-6">
+                <aside class="w-full xl:w-95 shrink-0 flex flex-col gap-6">
                     <!-- Low Stock -->
-                    <article class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50">
+                    <article
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50">
                         <div class="flex items-center justify-between mb-5">
                             <div class="flex items-center gap-3">
                                 <div class="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
                                     <i class="mdi mdi-package-variant-closed-remove text-xl"></i>
                                 </div>
-                                <h3 class="font-bold text-slate-900 dark:text-gray-100">Stock Bajo ({{ lowStockProducts.length }})</h3>
+                                <h3 class="font-bold text-slate-900 dark:text-gray-100">Stock Bajo ({{
+                                    lowStockProducts.length }})</h3>
                             </div>
-                            <NuxtLink to="/productos" class="text-xs font-bold text-green-600 hover:text-green-700 underline">Ver todo</NuxtLink>
+                            <NuxtLink to="/productos"
+                                class="text-xs font-bold text-green-600 hover:text-green-700 underline">Ver todo
+                            </NuxtLink>
                         </div>
-                        
-                        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+
+                        <div class="space-y-3 max-h-75 overflow-y-auto pr-2 custom-scrollbar">
                             <template v-if="lowStockProducts.length">
                                 <div v-for="item in lowStockProducts" :key="item.id"
                                     class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/50 flex items-center justify-between transition-all hover:border-red-200 dark:hover:border-red-900/50">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-red-500 font-bold border border-slate-100 dark:border-slate-800">
+                                        <div
+                                            class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-red-500 font-bold border border-slate-100 dark:border-slate-800">
                                             {{ item.name.charAt(0).toUpperCase() }}
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-none mb-1">{{ item.name }}</p>
-                                            <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">{{ item.category }}</p>
+                                            <p
+                                                class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-none mb-1">
+                                                {{ item.name }}</p>
+                                            <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">{{
+                                                item.category }}</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-black text-red-600 dark:text-red-400 leading-none mb-1">{{ item.stock }}</p>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tight">Mín: {{ item.minimum }}</p>
+                                        <p class="text-sm font-black text-red-600 dark:text-red-400 leading-none mb-1">
+                                            {{ item.stock }}</p>
+                                        <p
+                                            class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tight">
+                                            Mín: {{ item.minimum }}</p>
                                     </div>
                                 </div>
                             </template>
@@ -197,33 +243,45 @@
                     </article>
 
                     <!-- Expiring Products -->
-                    <article class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50">
+                    <article
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] dark:shadow-none border border-slate-100 dark:border-slate-800/50">
                         <div class="flex items-center justify-between mb-5">
                             <div class="flex items-center gap-3">
-                                <div class="p-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg">
+                                <div
+                                    class="p-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg">
                                     <i class="mdi mdi-clock-alert text-xl"></i>
                                 </div>
-                                <h3 class="font-bold text-slate-900 dark:text-gray-100">Por Vencer ({{ expiringProducts.length }})</h3>
+                                <h3 class="font-bold text-slate-900 dark:text-gray-100">Por Vencer ({{
+                                    expiringProducts.length }})</h3>
                             </div>
-                            <NuxtLink to="/productos" class="text-xs font-bold text-green-600 hover:text-green-700 underline">Gestionar</NuxtLink>
+                            <NuxtLink to="/productos"
+                                class="text-xs font-bold text-green-600 hover:text-green-700 underline">Gestionar
+                            </NuxtLink>
                         </div>
-                        
-                        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+
+                        <div class="space-y-3 max-h-75 overflow-y-auto pr-2 custom-scrollbar">
                             <template v-if="expiringProducts.length">
                                 <div v-for="item in expiringProducts" :key="item.id"
                                     class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/50 flex items-center justify-between transition-all hover:border-orange-200 dark:hover:border-orange-900/50">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-orange-500 font-bold border border-slate-100 dark:border-slate-800">
+                                        <div
+                                            class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-orange-500 font-bold border border-slate-100 dark:border-slate-800">
                                             <i class="mdi mdi-calendar"></i>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-none mb-1">{{ item.name }}</p>
-                                            <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">{{ item.category }}</p>
+                                            <p
+                                                class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-none mb-1">
+                                                {{ item.name }}</p>
+                                            <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">{{
+                                                item.category }}</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-black text-orange-600 dark:text-orange-400 leading-none mb-1">{{ item.expiresIn }} día(s)</p>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold">{{ item.date }}</p>
+                                        <p
+                                            class="text-sm font-black text-orange-600 dark:text-orange-400 leading-none mb-1">
+                                            {{ item.expiresIn }} día(s)</p>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold">{{ item.date
+                                        }}</p>
                                     </div>
                                 </div>
                             </template>
@@ -409,16 +467,16 @@ const topSellingProducts = computed(() => {
         })
         .slice(0, 3)
 
-    if(sorted.length === 0) return []
-    
+    if (sorted.length === 0) return []
+
     const colors = ['bg-green-500', 'bg-yellow-400', 'bg-orange-500']
     const percentages = [88, 72, 54]
-    
+
     return sorted.map((p, idx) => {
         let emoji = '📦'
         const cat = (p?.categoria?.nombre || '').toLowerCase()
         const name = (p?.nombre || '').toLowerCase()
-        
+
         if (cat.includes('fruta') || name.includes('fresa') || name.includes('manzana')) emoji = '🍎'
         else if (cat.includes('verdura') || name.includes('lechuga') || name.includes('cebolla')) emoji = '🥦'
         else if (name.includes('papa')) emoji = '🥔'
@@ -452,7 +510,7 @@ const donutOptions = computed(() => ({
     labels: categoryDistribution.value.length ? categoryDistribution.value.map(i => i.name) : ['Sin Datos'],
     colors: categoryDistribution.value.length ? ['#16a34a', '#facc15', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899'] : [isDark.value ? '#334155' : '#e2e8f0'],
     legend: { show: false },
-    dataLabels: { 
+    dataLabels: {
         enabled: true,
         formatter: (val) => `${val.toFixed(0)}%`,
         dropShadow: { enabled: false },
@@ -495,17 +553,17 @@ const barOptions = computed(() => ({
     plotOptions: { bar: { borderRadius: 4, columnWidth: '45%' } },
     dataLabels: { enabled: false },
     theme: { mode: isDark.value ? 'dark' : 'light' },
-    xaxis: { 
+    xaxis: {
         categories: spendBySupplier.value.length ? spendBySupplier.value.map(i => i.name) : ['Sin Datos'],
         axisBorder: { show: false },
         axisTicks: { show: false },
         labels: { style: { colors: isDark.value ? '#94a3b8' : '#64748b' } }
     },
-    yaxis: { 
-        labels: { 
+    yaxis: {
+        labels: {
             style: { colors: isDark.value ? '#94a3b8' : '#64748b' },
-            formatter: (val) => `$${val}` 
-        } 
+            formatter: (val) => `$${val}`
+        }
     },
     grid: { borderColor: isDark.value ? '#1e293b' : '#f1f5f9', strokeDashArray: 4 },
     legend: { show: false },
@@ -570,21 +628,32 @@ const resumenTarjetas = computed(() => [
 }
 
 @keyframes progress-indeterminate {
-    0% { transform: translateX(-100%) scaleX(0.5); }
-    50% { transform: translateX(0%) scaleX(1); }
-    100% { transform: translateX(200%) scaleX(0.5); }
+    0% {
+        transform: translateX(-100%) scaleX(0.5);
+    }
+
+    50% {
+        transform: translateX(0%) scaleX(1);
+    }
+
+    100% {
+        transform: translateX(200%) scaleX(0.5);
+    }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #e2e8f0;
     border-radius: 10px;
 }
+
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #334155;
 }
