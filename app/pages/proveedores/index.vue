@@ -1,10 +1,8 @@
 <template>
   <div class="p-6">
-    <!-- Integrated Table Card -->
     <div
       class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
 
-      <!-- Unified Header Section -->
       <div
         class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -23,7 +21,45 @@
       </div>
 
       <BaseTable class="border-0 shadow-none bg-transparent! pt-4" :columns="columns" :rows="proveedoresFiltrados"
-        :searchable="false" :loading="loading" emptyText="No se encontraron proveedores">
+        :searchable="false" :loading="loading" emptyText="No se encontraron proveedores" @sort="handleSort"
+        icon-pack="mdi" sort-icon="mdi-swap-vertical">
+
+        <template #header-nombre>
+          <div class="flex items-center gap-2 cursor-pointer group" @click="handleSort('nombre')">
+            <span>NOMBRE</span>
+            <span class="mdi text-lg transition-colors" :class="[
+              sortBy === 'nombre' ? 'text-green-500' : 'text-gray-400 opacity-40 group-hover:opacity-100',
+              sortBy === 'nombre' && sortOrder === 'desc' ? 'mdi-sort-descending' :
+                sortBy === 'nombre' && sortOrder === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort'
+            ]">
+            </span>
+          </div>
+        </template>
+
+        <template #header-telefono>
+          <div class="flex items-center gap-2 cursor-pointer group" @click="handleSort('telefono')">
+            <span>TELÉFONO</span>
+            <span class="mdi text-lg transition-colors" :class="[
+              sortBy === 'telefono' ? 'text-green-500' : 'text-gray-400 opacity-40 group-hover:opacity-100',
+              sortBy === 'telefono' && sortOrder === 'desc' ? 'mdi-sort-descending' :
+                sortBy === 'telefono' && sortOrder === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort'
+            ]">
+            </span>
+          </div>
+        </template>
+
+        <template #header-direccion>
+          <div class="flex items-center gap-2 cursor-pointer group" @click="handleSort('direccion')">
+            <span>DIRECCIÓN</span>
+            <span class="mdi text-lg transition-colors" :class="[
+              sortBy === 'direccion' ? 'text-green-500' : 'text-gray-400 opacity-40 group-hover:opacity-100',
+              sortBy === 'direccion' && sortOrder === 'desc' ? 'mdi-sort-descending' :
+                sortBy === 'direccion' && sortOrder === 'asc' ? 'mdi-sort-ascending' : 'mdi-sort'
+            ]">
+            </span>
+          </div>
+        </template>
+
         <template #acciones="{ row }">
           <div class="flex items-center gap-3">
             <button @click.stop="editProveedor(row)"
@@ -47,7 +83,6 @@
       </BaseTable>
     </div>
 
-    <!-- Modal Form -->
     <BaseModal :isOpen="dialog" @close="closeDialog" :title="isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'">
       <div class="p-4">
         <form @submit.prevent="saveProveedor" class="flex flex-col gap-4">
@@ -58,8 +93,7 @@
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Teléfono</label>
-            <input v-model="form.telefono" type="text"
-              @input="form.telefono = form.telefono.replace(/[^0-9+()-\s]/g, '')"
+            <input v-model="form.telefono" type="text" @input="form.telefono = form.telefono.replace(/\D/g, '')"
               class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 dark:focus:border-green-400 focus:ring-1 focus:ring-green-500" />
           </div>
           <div class="flex flex-col gap-1">
@@ -89,7 +123,6 @@
       </template>
     </BaseModal>
 
-    <!-- Modal Delete -->
     <BaseModal :isOpen="deleteDialog" @close="deleteDialog = false" title="¿Eliminar este proveedor?">
       <div class="p-4">
         <p class="text-gray-700 dark:text-slate-400">Esta acción eliminará a <b
@@ -117,7 +150,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useProveedores } from '~/composables/useProveedores'
 
-// Usamos el composable limpio que hereda useApi (CORS corregido)
 const {
   proveedores,
   loading,
@@ -133,34 +165,55 @@ const dialog = ref(false)
 const deleteDialog = ref(false)
 const isEditing = ref(false)
 
+const sortBy = ref('nombre')
+const sortOrder = ref('asc')
+
 const initialForm = { id: null, nombre: '', telefono: '', direccion: '', detalle: '' }
 const form = ref({ ...initialForm })
 const proveedorToDelete = ref(null)
 
 const columns = [
-  { key: 'nombre', label: 'Nombre' },
-  { key: 'telefono', label: 'Teléfono' },
-  { key: 'direccion', label: 'Dirección' },
-  { key: 'detalle', label: 'Detalles' },
-  { key: 'acciones', label: 'Acciones', sortable: false }
+  { key: 'nombre', label: 'NOMBRE', sortable: true },
+  { key: 'telefono', label: 'TELÉFONO', sortable: true },
+  { key: 'direccion', label: 'DIRECCIÓN', sortable: true },
+  { key: 'detalle', label: 'DETALLES', sortable: false },
+  { key: 'acciones', label: 'ACCIONES', sortable: false }
 ]
 
-// Filtro reactivo en el frontend
 const proveedoresFiltrados = computed(() => {
-  const data = proveedores.value || []
-  if (!search.value) return data
-  const s = search.value.toLowerCase()
-  return data.filter(p =>
-    p.nombre?.toLowerCase().includes(s) ||
-    p.telefono?.includes(s) ||
-    p.direccion?.toLowerCase().includes(s)
-  )
+  let data = [...(proveedores.value || [])]
+
+  if (search.value) {
+    const s = search.value.toLowerCase()
+    data = data.filter(p =>
+      p.nombre?.toLowerCase().includes(s) ||
+      p.telefono?.includes(s) ||
+      p.direccion?.toLowerCase().includes(s)
+    )
+  }
+
+  data.sort((a, b) => {
+    let valA = (a[sortBy.value] || '').toString().toLowerCase()
+    let valB = (b[sortBy.value] || '').toString().toLowerCase()
+
+    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1
+    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1
+    return 0
+  })
+
+  return data
 })
 
-// --- ACCIONES ---
+const handleSort = (key) => {
+  if (sortBy.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = key
+    sortOrder.value = 'asc'
+  }
+}
 
 const saveProveedor = async () => {
-  // El composable ya se encarga del try/catch y de refrescar la lista
   const result = await saveProveedorApi(isEditing.value, form.value)
   if (result) closeDialog()
 }
@@ -170,8 +223,6 @@ const deleteProveedor = async () => {
   const result = await deleteProveedorApi(proveedorToDelete.value.id)
   if (result) deleteDialog.value = false
 }
-
-// --- GESTIÓN DE MODALES ---
 
 const openNewDialog = () => {
   isEditing.value = false
@@ -192,7 +243,6 @@ const confirmDelete = (p) => {
 
 const closeDialog = () => {
   dialog.value = false
-  // Limpiamos después de cerrar para evitar saltos visuales
   setTimeout(() => { form.value = { ...initialForm } }, 200)
 }
 
