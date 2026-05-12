@@ -43,30 +43,13 @@
                         <BaseMultiSelect v-model="selectedCategory" :options="categoryOptions" placeholder="Todas"
                             class="w-full" />
                     </div>
-
-                    <div class="flex flex-col gap-1.5 w-full md:w-auto">
-                        <span
-                            class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Periodo
-                            (Desde - Hasta)</span>
-                        <div class="flex items-center gap-2">
-                            <input v-model="startDate" type="date"
-                                class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 outline-none transition-all" />
-                            <span class="text-gray-400 dark:text-slate-600 mdi mdi-arrow-right-thin text-xl"></span>
-                            <input v-model="endDate" type="date"
-                                class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 text-xs rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 outline-none transition-all" />
-
-                            <button v-if="startDate || endDate" @click="startDate = ''; endDate = ''"
-                                class="p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Limpiar fechas">
-                                <span class="mdi mdi-close-circle-outline text-xl"></span>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             <BaseTable class="border-0 shadow-none bg-transparent! pt-4" :columns="columns" :rows="gastosFiltrados"
                 :loading="loading" :selectable="false" :searchable="false" :sort-by="sortBy" :sort-order="sortOrder"
-                @sort="handleSort" empty-text="No hay gastos registrados en este periodo.">
+                @sort="handleSort" empty-text="No hay gastos registrados.">
+
                 <template #fecha_gasto="{ value }">
                     <span class="text-gray-600 dark:text-slate-400 text-sm font-medium">{{ value }}</span>
                 </template>
@@ -162,11 +145,9 @@ import { type TableColumn } from '~/components/BaseTable.vue'
 
 const { gastos, loading, error, fetchGastos, saveGasto, deleteGasto } = useGastos()
 
-// Filtros y UI States
+// UI States y Filtros Básicos
 const search = ref('')
 const selectedCategory = ref<string[]>([])
-const startDate = ref('')
-const endDate = ref('')
 const isModalOpen = ref(false)
 
 // Ordenamiento
@@ -195,7 +176,7 @@ const categoryOptions = computed(() => categoriasLista.map(cat => ({ id: cat, no
 const gastosFiltrados = computed(() => {
     let data = [...gastos.value]
 
-    // Filtro de Texto
+    // Filtro de Búsqueda
     if (search.value) {
         const s = search.value.toLowerCase()
         data = data.filter(g =>
@@ -204,17 +185,9 @@ const gastosFiltrados = computed(() => {
         )
     }
 
-    // Filtro de Categoría (Multiselect)
+    // Filtro de Categoría
     if (selectedCategory.value.length > 0) {
         data = data.filter(g => selectedCategory.value.includes(g.categoria))
-    }
-
-    // Filtro de Fechas con validación de existencia
-    if (startDate.value) {
-        data = data.filter(g => g.fecha_gasto && g.fecha_gasto >= startDate.value)
-    }
-    if (endDate.value) {
-        data = data.filter(g => g.fecha_gasto && g.fecha_gasto <= endDate.value)
     }
 
     // Lógica de Ordenamiento
@@ -237,7 +210,9 @@ const gastosFiltrados = computed(() => {
     return data
 })
 
-const totalFiltrado = computed(() => gastosFiltrados.value.reduce((acc, curr) => acc + Number(curr.monto), 0))
+const totalFiltrado = computed(() =>
+    gastosFiltrados.value.reduce((acc, curr) => acc + (Number(curr.monto) || 0), 0)
+)
 
 const handleSort = (key: string) => {
     if (sortBy.value === key) {
@@ -259,7 +234,7 @@ const openModal = (gasto: any = null) => {
         form.value = {
             id: undefined,
             categoria: '',
-            monto: 0,
+            monto: null as any,
             fecha_gasto: new Date().toISOString().split('T')[0] as string,
             descripcion: ''
         }
