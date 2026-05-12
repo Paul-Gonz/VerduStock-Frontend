@@ -2,13 +2,15 @@
   <div class="inventario-page p-6 flex flex-col gap-6">
     <!-- Stats Panel -->
     <StatsPanel :stats="panelStats" />
-    
+
     <!-- Integrated Table Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col">
-      
+    <div
+      class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col">
+
       <!-- Unified Header Section -->
-      <div class="p-4 sm:p-5 flex flex-col gap-5 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
-        
+      <div
+        class="p-4 sm:p-5 flex flex-col gap-5 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
+
         <!-- Search and Main Actions -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="w-full flex-1">
@@ -30,49 +32,59 @@
         </div>
 
         <!-- Filters and Bulk Actions -->
-        <div class="flex flex-col sm:flex-row justify-between items-end gap-4 min-h-[44px]">
+        <div class="flex flex-col sm:flex-row justify-between items-end gap-4 min-h-11">
           <div class="flex flex-wrap items-end gap-4 w-full sm:w-auto">
             <!-- Estado Filter -->
             <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-20">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Estado del Producto</span>
-              <BaseSelect v-model="filterCondition" :options="estadoOptions" class="w-full sm:w-[200px]" />
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Estado
+                del Producto</span>
+              <BaseSelect v-model="filterCondition" :options="estadoOptions" class="w-full sm:w-50" />
             </div>
 
             <!-- Categoría Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[19]">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
-              <BaseMultiSelect v-model="filterCategoria" :options="categorias" placeholder="Todas las categorías" class="w-full sm:w-[200px]" />
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-19">
+              <span
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
+              <BaseMultiSelect v-model="filterCategoria" :options="categorias" placeholder="Todas las categorías"
+                class="w-full sm:w-50" />
             </div>
 
             <!-- Proveedor Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[18]">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Proveedor</span>
-              <BaseMultiSelect v-model="filterProveedor" :options="proveedores" placeholder="Todos los proveedores" class="w-full sm:w-[200px]" />
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-18">
+              <span
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Proveedor</span>
+              <BaseMultiSelect v-model="filterProveedor" :options="proveedores" placeholder="Todos los proveedores"
+                class="w-full sm:w-50" />
             </div>
 
             <!-- Vencimiento Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[17]">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Vencimiento</span>
-              <BaseSelect v-model="filterVencimiento" :options="vencimientoOptions" class="w-full sm:w-[200px]" />
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-17">
+              <span
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Vencimiento</span>
+              <BaseSelect v-model="filterVencimiento" :options="vencimientoOptions" class="w-full sm:w-50" />
             </div>
 
             <!-- Desperdicio Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[16]">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Mermas</span>
-              <BaseSelect v-model="filterDesperdicio" :options="desperdicioOptions" class="w-full sm:w-[200px]" />
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-16">
+              <span
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Mermas</span>
+              <BaseSelect v-model="filterDesperdicio" :options="desperdicioOptions" class="w-full sm:w-50" />
             </div>
 
             <!-- Rentabilidad Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-[15]">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Rentabilidad</span>
-              <BaseSelect v-model="filterRentabilidad" :options="rentabilidadOptions" class="w-full sm:w-[200px]" />
+            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-15">
+              <span
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Rentabilidad</span>
+              <BaseSelect v-model="filterRentabilidad" :options="rentabilidadOptions" class="w-full sm:w-50" />
             </div>
           </div>
 
           <!-- Bulk Actions Toolbar -->
-          <div v-if="selectedIds.size > 0" class="flex gap-2 items-center bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-900/50 w-full sm:w-auto justify-center shadow-sm">
-            <span class="text-blue-800 dark:text-blue-400 font-medium text-sm px-1">{{ selectedIds.size }} seleccionado(s)</span>
-            <div class="h-4 w-[1px] bg-blue-200 dark:bg-blue-800 mx-1"></div>
+          <div v-if="selectedIds.size > 0"
+            class="flex gap-2 items-center bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-900/50 w-full sm:w-auto justify-center shadow-sm">
+            <span class="text-blue-800 dark:text-blue-400 font-medium text-sm px-1">{{ selectedIds.size }}
+              seleccionado(s)</span>
+            <div class="h-4 w-px bg-blue-200 dark:bg-blue-800 mx-1"></div>
             <button v-if="selectedIds.size === 1" @click="handleEditSelected"
               class="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium transition-colors px-2">
               Editar
@@ -86,31 +98,51 @@
       </div>
 
       <!-- Main Table -->
-      <BaseTable class="border-0 shadow-none !bg-transparent pt-4" :columns="columns" :rows="tableRows" :searchable="false" :loading="loading" :selectable="false" :showFooter="true"
+      <BaseTable class="border-0 shadow-none bg-transparent! pt-4" :columns="columns" :rows="tableRows"
+        :searchable="false" :loading="loading" :selectable="false" :showFooter="true"
         emptyText="No se encontraron productos">
 
         <template #stock_actual="{ row, value }">
-          <div class="flex items-center gap-2 group min-h-[28px]">
+          <div class="flex items-center gap-2 group min-h-7">
             <span class="font-medium text-gray-800 dark:text-slate-200">{{ Number(value).toFixed(2) }} kg</span>
             <div class="flex items-center ml-1" v-if="editingStockId !== row.id">
-              <button @click.stop="openStockAdjust(row, 'subtract')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Restar stock">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+              <button @click.stop="openStockAdjust(row, 'subtract')"
+                class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                title="Restar stock">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                </svg>
               </button>
-              <button @click.stop="openStockAdjust(row, 'add')" class="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors" title="Sumar stock">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              <button @click.stop="openStockAdjust(row, 'add')"
+                class="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors"
+                title="Sumar stock">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
               </button>
             </div>
             <!-- Inline Stock Adjust Edit -->
-            <div v-else class="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm px-1.5 py-1" @click.stop>
-              <span class="text-[11px] font-bold" :class="stockAdjustmentType === 'add' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            <div v-else
+              class="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm px-1.5 py-1"
+              @click.stop>
+              <span class="text-[11px] font-bold"
+                :class="stockAdjustmentType === 'add' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
                 {{ stockAdjustmentType === 'add' ? '+' : '-' }}
               </span>
-              <input v-model="stockAdjustmentValue" type="number" min="0.01" step="0.01" class="w-14 text-sm border-b border-gray-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-500 bg-transparent dark:text-white focus:outline-none px-0.5 text-center" placeholder="Cant." @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust" autofocus />
-              <button @click.stop="submitStockAdjust(row)" class="text-green-600 dark:text-green-400 p-0.5 hover:bg-green-50 dark:hover:bg-green-900/20 rounded">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input v-model="stockAdjustmentValue" type="number" min="0.01" step="0.01"
+                class="w-14 text-sm border-b border-gray-300 dark:border-slate-600 focus:border-green-500 dark:focus:border-green-500 bg-transparent dark:text-white focus:outline-none px-0.5 text-center"
+                placeholder="Cant." @keyup.enter="submitStockAdjust(row)" @keyup.esc="cancelStockAdjust" autofocus />
+              <button @click.stop="submitStockAdjust(row)"
+                class="text-green-600 dark:text-green-400 p-0.5 hover:bg-green-50 dark:hover:bg-green-900/20 rounded">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
               </button>
-              <button @click.stop="cancelStockAdjust" class="text-gray-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 p-0.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <button @click.stop="cancelStockAdjust"
+                class="text-gray-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 p-0.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -124,21 +156,38 @@
         </template>
 
         <template #estado="{ value }">
-          <span :class="estadoBadgeClass(value)" class="px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
+          <span :class="estadoBadgeClass(value)"
+            class="px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
             {{ estadoLabel(value) }}
           </span>
         </template>
 
         <template #acciones="{ row }">
           <div class="flex items-center gap-1">
-            <button @click.stop="selectedProduct = row" class="text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 p-1 transition-colors" title="Ver detalle">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            <button @click.stop="selectedProduct = row"
+              class="text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 p-1 transition-colors"
+              title="Ver detalle">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
             </button>
-            <button @click.stop="openModal(row)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors" title="Editar">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            <button @click.stop="openModal(row)"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 transition-colors"
+              title="Editar">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </button>
-            <button @click.stop="deleteSingle(row)" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors" title="Eliminar">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            <button @click.stop="deleteSingle(row)"
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 transition-colors"
+              title="Eliminar">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </button>
           </div>
         </template>
@@ -158,7 +207,8 @@
 
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Categoría</label>
-              <select v-model="formData.categoria_id" required class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
+              <select v-model="formData.categoria_id" required
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
                 <option value="" disabled>Seleccione una categoría</option>
                 <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
                   {{ cat.nombre }}
@@ -167,7 +217,8 @@
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Proveedor</label>
-              <select v-model="formData.proveedor_id" required class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
+              <select v-model="formData.proveedor_id" required
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white">
                 <option value="" disabled>Seleccione un proveedor</option>
                 <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
                   {{ prov.nombre }}
@@ -208,7 +259,8 @@
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Costo Total Compra ($)</label>
               <input v-model="costoTotalCompra" type="number" step="0.01" required
-                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white" placeholder="Pago total al proveedor" />
+                class="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white"
+                placeholder="Pago total al proveedor" />
             </div>
 
             <div class="flex flex-col gap-1">
@@ -224,7 +276,8 @@
             </div>
 
             <div class="flex flex-col gap-2 col-span-2 mt-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-slate-300 border-b dark:border-slate-700 pb-1">Vencimiento</label>
+              <label
+                class="text-sm font-medium text-gray-700 dark:text-slate-300 border-b dark:border-slate-700 pb-1">Vencimiento</label>
               <div class="flex gap-4 items-center">
                 <label class="flex items-center gap-1 text-sm cursor-pointer dark:text-slate-300">
                   <input type="radio" v-model="vencimientoMode" value="Días" class="accent-green-600" /> Días
@@ -244,7 +297,7 @@
               </div>
               <div v-else-if="vencimientoMode === 'Calendario'" class="mt-1">
                 <input v-model="vencimientoFecha" type="date"
-                  class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white dark:[color-scheme:dark]" />
+                  class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 dark:text-white dark:color-scheme:dark" />
               </div>
             </div>
           </div>
@@ -266,12 +319,8 @@
     </BaseModal>
 
     <!-- Product Drawer -->
-    <ProductDrawer
-      :isOpen="!!selectedProduct"
-      :product="selectedProduct"
-      @close="selectedProduct = null"
-      @edit="(row) => { selectedProduct = null; openModal(row) }"
-    />
+    <ProductDrawer :isOpen="!!selectedProduct" :product="selectedProduct" @close="selectedProduct = null"
+      @edit="(row) => { selectedProduct = null; openModal(row) }" />
   </div>
 </template>
 
@@ -333,10 +382,10 @@ const estadoBadgeClass = (estado: string) => ({
   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': estado === 'vencido',
 })
 const estadoLabel = (estado: string) => ({
-  ok:        'OK',
-  bajo:      'Stock Bajo',
+  ok: 'OK',
+  bajo: 'Stock Bajo',
   por_vencer: 'Por Vencer',
-  vencido:   'Vencido',
+  vencido: 'Vencido',
 }[estado] ?? estado)
 
 // Formato de moneda: $1.234,56
@@ -345,10 +394,10 @@ const formatCurrency = (value: number) =>
 
 // Datos para StatsPanel
 const panelStats = computed(() => [
-  { label: 'Total Productos',        value: stats.value.total,                      icon: 'box' as const,      color: 'green' as const },
-  { label: 'Valor Inventario',       value: formatCurrency(stats.value.totalValor), icon: 'money' as const,    color: 'blue' as const  },
-  { label: 'Stock Bajo',             value: stats.value.bajosCount,                 icon: 'warning' as const,  color: 'amber' as const },
-  { label: 'Alerta de vencimiento',  value: stats.value.alertaCount,                icon: 'calendar' as const, color: 'red' as const   },
+  { label: 'Total Productos', value: stats.value.total, icon: 'box' as const, color: 'green' as const },
+  { label: 'Valor Inventario', value: formatCurrency(stats.value.totalValor), icon: 'money' as const, color: 'blue' as const },
+  { label: 'Stock Bajo', value: stats.value.bajosCount, icon: 'warning' as const, color: 'amber' as const },
+  { label: 'Alerta de vencimiento', value: stats.value.alertaCount, icon: 'calendar' as const, color: 'red' as const },
 ])
 
 const isModalOpen = ref(false)
@@ -419,9 +468,9 @@ const columns = [
 ]
 
 const statusOptions = [
-  { value: 'todos',      label: 'Todos los estados' },
+  { value: 'todos', label: 'Todos los estados' },
   { value: 'por_vencer', label: 'Por vencer (7 días)' },
-  { value: 'vencidos',   label: 'Vencidos' },
+  { value: 'vencidos', label: 'Vencidos' },
   { value: 'stock_bajo', label: 'Stock bajo' },
 ]
 
