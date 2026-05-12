@@ -3,7 +3,6 @@
     <!-- Integrated Table Card -->
     <div
       class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col overflow-hidden">
-
       <!-- Unified Header Section -->
       <div
         class="p-4 sm:p-5 flex flex-col gap-4 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/30 dark:bg-transparent">
@@ -51,22 +50,38 @@
     <BaseModal :isOpen="dialog" @close="closeDialog" :title="isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'">
       <div class="p-4">
         <form @submit.prevent="saveProveedor" class="flex flex-col gap-4">
+          <!-- Campo Nombre -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Nombre *</label>
-            <input v-model="form.nombre" type="text" required
-              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 dark:focus:border-green-400 focus:ring-1 focus:ring-green-500" />
+            <input v-model="form.nombre" type="text" required :class="[
+              'border rounded-lg px-3 py-2 outline-none focus:ring-1 transition-colors',
+              errors?.nombre ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-700 focus:border-green-500'
+            ]" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white" />
+            <span v-if="errors?.nombre" class="text-xs text-red-500">{{ errors.nombre[0] }}</span>
           </div>
+
+          <!-- Campo Teléfono (Validación de solo números) -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Teléfono</label>
-            <input v-model="form.telefono" type="text"
-              @input="form.telefono = form.telefono.replace(/[^0-9+()-\s]/g, '')"
-              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 dark:focus:border-green-400 focus:ring-1 focus:ring-green-500" />
+            <input v-model="form.telefono" type="text" @input="form.telefono = form.telefono.replace(/\D/g, '')"
+              placeholder="Solo números" :class="[
+                'border rounded-lg px-3 py-2 outline-none focus:ring-1 transition-colors',
+                errors?.telefono ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-700 focus:border-green-500'
+              ]" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white" />
+            <span v-if="errors?.telefono" class="text-xs text-red-500 mt-1">{{ errors.telefono[0] }}</span>
           </div>
+
+          <!-- Campo Dirección -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Dirección</label>
-            <input v-model="form.direccion" type="text"
-              class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 outline-none focus:border-green-500 dark:focus:border-green-400 focus:ring-1 focus:ring-green-500" />
+            <input v-model="form.direccion" type="text" :class="[
+              'border rounded-lg px-3 py-2 outline-none focus:ring-1 transition-colors',
+              errors?.direccion ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-slate-700 focus:border-green-500'
+            ]" class="bg-white dark:bg-slate-800 text-gray-900 dark:text-white" />
+            <span v-if="errors?.direccion" class="text-xs text-red-500">{{ errors.direccion[0] }}</span>
           </div>
+
+          <!-- Campo Notas -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-gray-700 dark:text-slate-300">Notas adicionales</label>
             <textarea v-model="form.detalle" rows="3"
@@ -78,7 +93,9 @@
       <template #footer>
         <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="closeDialog"
-            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+            Cancelar
+          </button>
           <button @click="saveProveedor" :disabled="saving"
             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="saving"
@@ -92,15 +109,17 @@
     <!-- Modal Delete -->
     <BaseModal :isOpen="deleteDialog" @close="deleteDialog = false" title="¿Eliminar este proveedor?">
       <div class="p-4">
-        <p class="text-gray-700 dark:text-slate-400">Esta acción eliminará a <b
-            class="text-gray-900 dark:text-slate-200">{{
-              proveedorToDelete?.nombre }}</b>. Los datos no podrán
-          recuperarse.</p>
+        <p class="text-gray-700 dark:text-slate-400">
+          Esta acción eliminará a <b class="text-gray-900 dark:text-slate-200">{{ proveedorToDelete?.nombre }}</b>. Los
+          datos no podrán recuperarse.
+        </p>
       </div>
       <template #footer>
         <div class="flex gap-3 justify-end w-full border-t border-gray-100 dark:border-slate-800 p-4">
           <button type="button" @click="deleteDialog = false"
-            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+            class="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+            Cancelar
+          </button>
           <button @click="deleteProveedor" :disabled="deleting"
             class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <span v-if="deleting"
@@ -117,15 +136,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useProveedores } from '~/composables/useProveedores'
 
-// Usamos el composable limpio que hereda useApi (CORS corregido)
 const {
   proveedores,
   loading,
   saving,
   deleting,
+  errors, // Asumimos que el composable expone esto para los errores 422 de Laravel
   fetchProveedores,
   saveProveedor: saveProveedorApi,
-  deleteProveedor: deleteProveedorApi
+  deleteProveedor: deleteProveedorApi,
 } = useProveedores()
 
 const search = ref('')
@@ -142,25 +161,25 @@ const columns = [
   { key: 'telefono', label: 'Teléfono' },
   { key: 'direccion', label: 'Dirección' },
   { key: 'detalle', label: 'Detalles' },
-  { key: 'acciones', label: 'Acciones', sortable: false }
+  { key: 'acciones', label: 'Acciones', sortable: false },
 ]
 
-// Filtro reactivo en el frontend
 const proveedoresFiltrados = computed(() => {
   const data = proveedores.value || []
   if (!search.value) return data
   const s = search.value.toLowerCase()
-  return data.filter(p =>
-    p.nombre?.toLowerCase().includes(s) ||
-    p.telefono?.includes(s) ||
-    p.direccion?.toLowerCase().includes(s)
+  return data.filter(
+    (p) =>
+      p.nombre?.toLowerCase().includes(s) ||
+      p.telefono?.includes(s) ||
+      p.direccion?.toLowerCase().includes(s)
   )
 })
 
 // --- ACCIONES ---
 
 const saveProveedor = async () => {
-  // El composable ya se encarga del try/catch y de refrescar la lista
+  // El composable maneja el try/catch y llena el ref 'errors' si falla la validación
   const result = await saveProveedorApi(isEditing.value, form.value)
   if (result) closeDialog()
 }
@@ -175,12 +194,14 @@ const deleteProveedor = async () => {
 
 const openNewDialog = () => {
   isEditing.value = false
+  if (errors.value) errors.value = {} // Limpiar errores previos al abrir
   form.value = { ...initialForm }
   dialog.value = true
 }
 
 const editProveedor = (p) => {
   isEditing.value = true
+  if (errors.value) errors.value = {} // Limpiar errores previos al abrir
   form.value = { ...p }
   dialog.value = true
 }
@@ -192,8 +213,10 @@ const confirmDelete = (p) => {
 
 const closeDialog = () => {
   dialog.value = false
-  // Limpiamos después de cerrar para evitar saltos visuales
-  setTimeout(() => { form.value = { ...initialForm } }, 200)
+  if (errors.value) errors.value = {} // Limpiar errores al cerrar
+  setTimeout(() => {
+    form.value = { ...initialForm }
+  }, 200)
 }
 
 onMounted(fetchProveedores)
