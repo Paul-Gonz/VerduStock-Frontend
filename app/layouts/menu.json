@@ -5,6 +5,11 @@
         "icon": "mdi-home"
     },
     {
+        "title": "Transacciones",
+        "route": "/transacciones",
+        "icon": "mdi-swap-horizontal"
+    },
+    {
         "title": "Inventario",
         "route": "/inventario",
         "icon": "mdi-food-apple"
