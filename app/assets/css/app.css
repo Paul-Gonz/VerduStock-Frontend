@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Global Custom Scrollbar */
 ::-webkit-scrollbar {
@@ -13,21 +13,25 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1; /* slate-300 */
+    background-color: #cbd5e1;
+    /* slate-300 */
     border-radius: 10px;
     border: 2px solid transparent;
     background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8; /* slate-400 */
+    background-color: #94a3b8;
+    /* slate-400 */
 }
 
 /* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-thumb {
-    background-color: #1e293b; /* slate-800 */
+    background-color: #1e293b;
+    /* slate-800 */
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-    background-color: #334155; /* slate-700 */
+    background-color: #334155;
+    /* slate-700 */
 }

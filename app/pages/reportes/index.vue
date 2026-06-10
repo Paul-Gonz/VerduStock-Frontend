@@ -10,16 +10,6 @@
           </div>
         </div>
         <div class="flex gap-3">
-          <!-- Botón Exportar a Excel -->
-          <!--<button 
-            @click="exportarExcelCompleto" 
-            :disabled="exportandoExcel"
-            class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <span class="mdi mdi-microsoft-excel text-xl"></span>
-            {{ exportandoExcel ? 'Exportando...' : 'Exportar Todo a Excel' }}
-          </button>-->
-
           <button @click="$router.push('/inventario')"
             class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
             <span class="mdi mdi-arrow-left"></span>
@@ -29,7 +19,6 @@
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
-        <!-- Reporte de Inventario Completo -->
         <div
           class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-md">
           <div class="flex items-center gap-4">
@@ -74,7 +63,6 @@
           </div>
         </div>
 
-        <!-- Reporte de Stock Bajo -->
         <div
           class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-md">
           <div class="flex items-center gap-4">
@@ -109,7 +97,6 @@
           </div>
         </div>
 
-        <!-- Reporte de Desperdicios -->
         <div
           class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-md">
           <div class="flex items-center gap-4">
@@ -154,7 +141,6 @@
           </div>
         </div>
 
-        <!-- Análisis de Rentabilidad -->
         <div
           class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-md">
           <div class="flex items-center gap-4">
@@ -204,10 +190,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const { api } = useApi()
-//const API_URL = 'http://localhost:8000'
 
 // Estados
 const categorias = ref([])
@@ -281,7 +266,7 @@ const generarPDF = async (tipo) => {
   generandoPDF.value = tipo
 
   try {
-    let url = `${api}/api/reportes/${tipo}`
+    let ruta = `/reportes/${tipo}`
     const params = new URLSearchParams()
 
     const agregarFiltro = (categoriaId, proveedorId) => {
@@ -309,25 +294,40 @@ const generarPDF = async (tipo) => {
     }
 
     if (params.toString()) {
-      url += `?${params.toString()}`
+      ruta += `?${params.toString()}`
     }
 
-    window.open(url, '_blank')
+    // Usamos api para que pase el token de Sanctum
+    const response = await api(ruta, {
+      method: 'GET',
+      responseType: 'blob' // Esencial para descargar archivos
+    })
+
+    // Crear enlace y forzar descarga invisible
+    const urlArchivo = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = urlArchivo
+    link.setAttribute('download', `reporte-${tipo}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+
+    // Limpieza
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(urlArchivo)
 
   } catch (error) {
     console.error('Error generando PDF:', error)
-    alert('Error al generar el PDF: ' + error.message)
+    alert('Error al generar el PDF. Verifica la consola para más detalles.')
   } finally {
     generandoPDF.value = null
   }
 }
 
-// NUEVO: Método para exportar a Excel
 const exportarExcel = async (tipo) => {
   exportandoExcelTipo.value = tipo
 
   try {
-    let url = `${api}/api/reportes/${tipo}/excel`
+    let ruta = `/reportes/${tipo}/excel`
     const params = new URLSearchParams()
 
     const agregarFiltro = (categoriaId, proveedorId) => {
@@ -355,27 +355,54 @@ const exportarExcel = async (tipo) => {
     }
 
     if (params.toString()) {
-      url += `?${params.toString()}`
+      ruta += `?${params.toString()}`
     }
 
-    console.log('Exportando Excel desde:', url)
-    window.open(url, '_blank')
+    // Usamos api para que pase el token de Sanctum
+    const response = await api(ruta, {
+      method: 'GET',
+      responseType: 'blob' // Esencial para descargar archivos
+    })
+
+    // Crear enlace y forzar descarga invisible
+    const urlArchivo = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = urlArchivo
+    link.setAttribute('download', `reporte-${tipo}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+
+    // Limpieza
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(urlArchivo)
 
   } catch (error) {
     console.error('Error exportando Excel:', error)
-    alert('Error al generar el archivo Excel: ' + error.message)
+    alert('Error al generar el archivo Excel. Verifica la consola para más detalles.')
   } finally {
     exportandoExcelTipo.value = null
   }
 }
 
-// Exportar todo (todos los reportes en un solo Excel con múltiples hojas)
+// Exportar todo
 const exportarExcelCompleto = async () => {
   exportandoExcel.value = true
 
   try {
-    const url = `${api}/api/reportes/completo/excel`
-    window.open(url, '_blank')
+    const response = await api('/reportes/completo/excel', {
+      method: 'GET',
+      responseType: 'blob'
+    })
+
+    const urlArchivo = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = urlArchivo
+    link.setAttribute('download', 'reporte-completo.xlsx')
+    document.body.appendChild(link)
+    link.click()
+
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(urlArchivo)
   } catch (error) {
     console.error('Error exportando Excel completo:', error)
     alert('Error al generar el archivo Excel completo')
@@ -390,4 +417,6 @@ onMounted(() => {
   fetchCategorias()
   fetchProveedores()
 })
+
+
 </script>
