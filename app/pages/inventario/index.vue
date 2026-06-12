@@ -32,50 +32,49 @@
         </div>
 
         <!-- Filters and Bulk Actions -->
-        <div class="flex flex-col sm:flex-row justify-between items-end gap-4 min-h-11">
-          <div class="flex flex-wrap items-end gap-4 w-full sm:w-auto">
+        <div class="flex flex-col xl:flex-row justify-between items-end gap-4 min-h-11">
+          <div class="flex flex-nowrap items-end gap-2 sm:gap-3 w-full overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 hide-scrollbar">
             <!-- Estado Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-20">
-              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Estado
-                del Producto</span>
-              <BaseSelect v-model="filterCondition" :options="estadoOptions" class="w-full sm:w-50" />
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-20">
+              <span class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Estado del Producto</span>
+              <BaseSelect v-model="filterCondition" :options="estadoOptions" class="w-full" />
             </div>
 
             <!-- Categoría Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-19">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-19">
               <span
-                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Categoría</span>
-              <BaseMultiSelect v-model="filterCategoria" :options="categorias" placeholder="Todas las categorías"
-                class="w-full sm:w-50" />
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Categoría</span>
+              <BaseMultiSelect v-model="filterCategoria" :options="categorias" placeholder="Categorías"
+                class="w-full" />
             </div>
 
             <!-- Proveedor Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-18">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-18">
               <span
-                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Proveedor</span>
-              <BaseMultiSelect v-model="filterProveedor" :options="proveedores" placeholder="Todos los proveedores"
-                class="w-full sm:w-50" />
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Proveedor</span>
+              <BaseMultiSelect v-model="filterProveedor" :options="proveedores" placeholder="Proveedores"
+                class="w-full" />
             </div>
 
             <!-- Vencimiento Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-17">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-17">
               <span
-                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Vencimiento</span>
-              <BaseSelect v-model="filterVencimiento" :options="vencimientoOptions" class="w-full sm:w-50" />
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Vencimiento</span>
+              <BaseSelect v-model="filterVencimiento" :options="vencimientoOptions" class="w-full" />
             </div>
 
             <!-- Desperdicio Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-16">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-16">
               <span
-                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Mermas</span>
-              <BaseSelect v-model="filterDesperdicio" :options="desperdicioOptions" class="w-full sm:w-50" />
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Mermas</span>
+              <BaseSelect v-model="filterDesperdicio" :options="desperdicioOptions" class="w-full" />
             </div>
 
             <!-- Rentabilidad Filter -->
-            <div class="flex flex-col gap-1.5 w-full sm:w-auto relative z-15">
+            <div class="flex flex-col gap-1.5 flex-1 min-w-[130px] relative z-15">
               <span
-                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1">Rentabilidad</span>
-              <BaseSelect v-model="filterRentabilidad" :options="rentabilidadOptions" class="w-full sm:w-50" />
+                class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide px-1 truncate">Rentabilidad</span>
+              <BaseSelect v-model="filterRentabilidad" :options="rentabilidadOptions" class="w-full" />
             </div>
           </div>
 

@@ -14,9 +14,77 @@ export class TasaDolarService {
     }
 
     /**
-     * Obtiene la tasa de cambio desde la API
+     * Obtiene la tasa manual si fue guardada hoy
+     */
+    obtenerTasaManual() {
+        if (typeof window === 'undefined') return null;
+        
+        try {
+            const manualRateData = localStorage.getItem('tasa_manual_bcv');
+            if (!manualRateData) return null;
+            
+            const { valor, fecha } = JSON.parse(manualRateData);
+            const hoy = new Date().toLocaleDateString('es-VE');
+            
+            if (fecha === hoy) {
+                return {
+                    nombre: 'oficial',
+                    fuente: 'Manual',
+                    compra: parseFloat(valor),
+                    venta: parseFloat(valor),
+                    promedio: parseFloat(valor),
+                    fechaActualizacion: new Date().toISOString(),
+                    timestamp: Date.now(),
+                    esManual: true
+                };
+            } else {
+                this.eliminarTasaManual();
+                return null;
+            }
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Guarda una tasa manual para el día de hoy
+     */
+    guardarTasaManual(valor) {
+        if (typeof window === 'undefined') return false;
+        try {
+            const data = {
+                valor: parseFloat(valor),
+                fecha: new Date().toLocaleDateString('es-VE')
+            };
+            localStorage.setItem('tasa_manual_bcv', JSON.stringify(data));
+            this.cache.data = null;
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Elimina la tasa manual
+     */
+    eliminarTasaManual() {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('tasa_manual_bcv');
+            this.cache.data = null;
+        }
+    }
+
+    /**
+     * Obtiene la tasa de cambio desde la API o manual si existe
      */
     async obtenerTasa(tipo = 'oficial') {
+        // Verificar tasa manual primero
+        const tasaManual = this.obtenerTasaManual();
+        if (tasaManual && tipo === 'oficial') {
+            console.log('📊 Usando tasa manual:', tipo);
+            return tasaManual;
+        }
+
         // Verificar caché primero
         if (this.cache.data && 
             Date.now() - this.cache.timestamp < this.cacheTime &&

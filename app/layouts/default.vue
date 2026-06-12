@@ -158,15 +158,40 @@
                 <div class="flex justify-between items-center px-1">
                   <span class="text-xs text-slate-500 dark:text-gray-400 font-medium whitespace-nowrap mr-2">Fuente:</span>
                   <span
-                    class="text-[10px] font-bold text-slate-800 dark:text-gray-200 bg-slate-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-right">BCV</span>
+                    class="text-[10px] font-bold text-slate-800 dark:text-gray-200 bg-slate-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-right">{{ tasaDolar?.esManual ? 'Manual' : 'BCV' }}</span>
                 </div>
                 <div class="flex justify-between items-center px-1">
                   <span class="text-xs text-slate-500 dark:text-gray-400 font-medium">Actualizado:</span>
-                  <span class="text-[11px] font-semibold text-slate-600 dark:text-gray-300 text-right">{{ tasaDolar.fechaActualizacion ?
+                  <span class="text-[11px] font-semibold text-slate-600 dark:text-gray-300 text-right">{{ tasaDolar?.fechaActualizacion ?
                     new Date(tasaDolar.fechaActualizacion).toLocaleString('es-VE') : 'N/A' }}</span>
                 </div>
+
+                <div class="border-t border-slate-100 dark:border-gray-700 mt-2 pt-2">
+                    <label class="text-[11px] text-slate-500 dark:text-gray-400 font-bold block mb-1">Fijar Tasa Manual (Sólo por hoy)</label>
+                    <div class="flex gap-2">
+                        <div class="relative w-full">
+                            <input type="number" step="0.01" min="0" v-model="manualRateInput" placeholder="Ej: 36.50" 
+                                class="w-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-md pl-2 pr-6 py-1 text-xs outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                            <div class="absolute right-1 top-0 bottom-0 flex flex-col justify-center items-center py-1 -space-y-1.5">
+                                <button @click="manualRateInput = (parseFloat(manualRateInput || 0) + 0.01).toFixed(2)" class="text-green-500 hover:text-green-600 focus:outline-none flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 15l7-7 7 7"></path></svg>
+                                </button>
+                                <button @click="manualRateInput = Math.max(0, parseFloat(manualRateInput || 0) - 0.01).toFixed(2)" class="text-green-500 hover:text-green-600 focus:outline-none flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button @click="saveManualRate" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-xs font-medium transition-colors shadow-sm">Guardar</button>
+                    </div>
+                </div>
+                <div v-if="tasaDolar?.esManual" class="mt-2">
+                    <button @click="restoreApiRate" class="w-full text-xs text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/30 py-1.5 rounded-md transition-colors font-medium">
+                        Restaurar Tasa
+                    </button>
+                </div>
+
                 <button @click="showTasaDetails = false"
-                  class="w-full mt-1 text-xs text-center text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 py-1 transition-colors">
+                  class="w-full mt-2 text-xs text-center text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 py-1 transition-colors font-medium">
                   Cerrar
                 </button>
               </div>
@@ -335,22 +360,41 @@ onMounted(async () => {
   }
 })
 
+const manualRateInput = ref('')
+
+const cargarTasa = async () => {
+  if (!tasaService.value) return
+  try {
+    const data = await tasaService.value.obtenerTasa('oficial')
+    tasaDolar.value = data
+    tasaError.value = false
+  } catch (error) {
+    tasaError.value = true
+  } finally {
+    tasaLoading.value = false
+  }
+}
+
+const saveManualRate = async () => {
+  if (!manualRateInput.value || parseFloat(manualRateInput.value) <= 0) return
+  if (tasaService.value) {
+    tasaService.value.guardarTasaManual(manualRateInput.value)
+    manualRateInput.value = ''
+    await cargarTasa()
+  }
+}
+
+const restoreApiRate = async () => {
+  if (tasaService.value) {
+    tasaService.value.eliminarTasaManual()
+    await cargarTasa()
+  }
+}
+
 onMounted(async () => {
   if (!import.meta.client) return
 
   tasaService.value = window?.TasaDolar || new TasaDolarService()
-
-  const cargarTasa = async () => {
-    try {
-      const data = await tasaService.value.obtenerTasa('oficial')
-      tasaDolar.value = data
-      tasaError.value = false
-    } catch (error) {
-      tasaError.value = true
-    } finally {
-      tasaLoading.value = false
-    }
-  }
 
   await cargarTasa()
   tasaTimer.value = setInterval(cargarTasa, 5 * 60 * 1000)

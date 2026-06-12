@@ -514,7 +514,7 @@ const donutOptions = computed(() => ({
         enabled: true,
         formatter: (val) => `${val.toFixed(0)}%`,
         dropShadow: { enabled: false },
-        style: { colors: ['#ffffff'], fontWeight: 700 }
+        style: { colors: [isDark.value ? '#ffffff' : '#1e293b'], fontWeight: 700 }
     },
     theme: { mode: isDark.value ? 'dark' : 'light' },
     stroke: { show: true, colors: [isDark.value ? '#0f172a' : '#ffffff'], width: 2 },
