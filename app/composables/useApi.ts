@@ -11,9 +11,12 @@ export const useApi = () => {
         async onRequest({ options }) {
             const headers = new Headers(options.headers);
 
+            // 1. ESTO VA AFUERA: Siempre avisa que esperamos JSON
+            headers.set('Accept', 'application/json');
+
+            // 2. Solo manda el Authorization si hay token
             if (token.value) {
                 headers.set('Authorization', `Bearer ${token.value}`);
-                headers.set('Accept', 'application/json');
             }
 
             options.headers = headers;
