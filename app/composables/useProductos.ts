@@ -21,8 +21,20 @@ export function useProductos() {
         loading.value = true
         try {
             const response: any = await api('/productos', { method: 'GET' })
-            const rawData = response?.data?.data || response?.data || response || []
-            productos.value = Array.isArray(rawData) ? rawData : []
+
+            // Extraemos los datos dependiendo de la estructura que nos llegue
+            let rawData = [];
+
+            if (Array.isArray(response)) {
+                rawData = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                rawData = response.data;
+            } else if (response?.data?.data && Array.isArray(response.data.data)) {
+                rawData = response.data.data;
+            }
+
+            productos.value = rawData;
+
         } catch (error) {
             console.error('Error fetching products:', error)
             productos.value = []
@@ -30,7 +42,6 @@ export function useProductos() {
             loading.value = false
         }
     }
-
     const createProducto = async (payload: any) => {
         try {
             const response = await api('/productos', { method: 'POST', body: payload })
