@@ -42,10 +42,46 @@ export function useProductos() {
             loading.value = false
         }
     }
+
+    // 🔹 NUEVO: Método para forzar recarga desde el servidor
+    const refreshProductos = async () => {
+        loading.value = true
+        try {
+            const response: any = await api('/productos', { 
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            })
+
+            let rawData = [];
+
+            if (Array.isArray(response)) {
+                rawData = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                rawData = response.data;
+            } else if (response?.data?.data && Array.isArray(response.data.data)) {
+                rawData = response.data.data;
+            }
+
+            productos.value = rawData;
+            console.log('✅ Productos recargados desde el servidor:', productos.value.length)
+            return productos.value
+
+        } catch (error) {
+            console.error('Error refreshing products:', error)
+            productos.value = []
+            throw error
+        } finally {
+            loading.value = false
+        }
+    }
+
     const createProducto = async (payload: any) => {
         try {
             const response = await api('/productos', { method: 'POST', body: payload })
-            await fetchProductos()
+            await refreshProductos()
             return response
         } catch (error) {
             console.error('Error al crear producto:', error)
@@ -56,7 +92,7 @@ export function useProductos() {
     const updateProducto = async (id: number, payload: any) => {
         try {
             const response = await api(`/productos/${id}`, { method: 'PUT', body: payload })
-            await fetchProductos()
+            await refreshProductos()
             return response
         } catch (error) {
             console.error(`Error al actualizar producto ${id}:`, error)
@@ -67,7 +103,7 @@ export function useProductos() {
     const deleteProducto = async (id: number) => {
         try {
             await api(`/productos/${id}`, { method: 'DELETE' })
-            await fetchProductos()
+            await refreshProductos()
         } catch (error) {
             console.error(`Error al eliminar producto ${id}:`, error)
             throw error
@@ -201,16 +237,19 @@ export function useProductos() {
         return filtered.map((p: any) => {
             const detalleObj = parseDetalle(p.detalle)
             const estado = getEstado(p, detalleObj)
-            const stockActual = detalleObj.stock_actual !== undefined
-                ? Number(detalleObj.stock_actual)
-                : Number(p.kilogramos || 0)
+            const stockActual = Number(p.kilogramos || 0) 
+        const stockInicial = detalleObj.stock_actual !== undefined 
+            ? Number(detalleObj.stock_actual) 
+            : stockActual
+
 
             return {
                 id: p.id,
                 nombre: p.nombre,
                 categoria: p.categoria?.nombre || p.categoria_nombre || '—',
                 proveedor: p.proveedor?.nombre || p.proveedor_nombre || '—',
-                stock_actual: stockActual.toFixed(2),
+                stock_actual: stockActual.toFixed(2), 
+                stock_inicial: stockInicial.toFixed(2),
                 cantidad_disponible: Number(p.kilogramos || 0).toFixed(2),
                 precio_compra: Number(p.precio_compra || 0).toFixed(2),
                 precio_venta: Number(p.precio_venta_kg || 0).toFixed(2),
@@ -237,6 +276,7 @@ export function useProductos() {
         stats,
         tableRows,
         fetchProductos,
+        refreshProductos,
         createProducto,
         updateProducto,
         deleteProducto,

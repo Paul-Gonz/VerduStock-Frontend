@@ -568,22 +568,36 @@ const openModal = (row: any = null) => {
   suspendWatchers.value = true
   if (row) {
     isEditing.value = true
+    
+    // Obtener el stock_actual del detalle o usar kilogramos
+    let stockActual = row.stock_actual || row.cantidad_disponible || 0
+    if (row.raw?.detalle) {
+      try {
+        const detalle = typeof row.raw.detalle === 'string' ? JSON.parse(row.raw.detalle) : row.raw.detalle
+        if (detalle.stock_actual !== undefined) {
+          stockActual = detalle.stock_actual
+        }
+      } catch (e) {}
+    }
+    
     formData.value = {
       id: row.id,
       nombre: row.nombre,
       categoria_id: row.raw?.categoria_id || row.categoria_id || '',
       proveedor_id: row.raw?.proveedor_id || row.proveedor_id || '',
-      stock_minimo: row.stock_minimo,
-      kilogramos: row.cantidad_disponible, stock_actual: row.stock_actual !== undefined ? row.stock_actual : row.cantidad_disponible, precio_compra: row.precio_compra,
-      precio_venta_kg: row.precio_venta,
-      fecha_vencimiento: '' // Computed below
+      stock_minimo: row.stock_minimo || 0,
+      kilogramos: row.cantidad_disponible || 0,
+      stock_actual: stockActual, // Usar el stock_actual del detalle
+      precio_compra: row.precio_compra || 0,
+      precio_venta_kg: row.precio_venta || 0,
+      fecha_vencimiento: '' 
     }
 
     const rawDesperdicio = Number(row.raw?.desperdicio) || 0
     cantidadBruta.value = Number(row.cantidad_disponible) + rawDesperdicio
     desperdicioKg.value = rawDesperdicio
 
-    // Calcular costo total inverso para el pre-llenado si es edición
+    // Calcular costo total inverso
     costoTotalCompra.value = row.cantidad_disponible && row.precio_compra
       ? Number((Number(row.cantidad_disponible) * Number(row.precio_compra)).toFixed(2))
       : ''
@@ -591,7 +605,6 @@ const openModal = (row: any = null) => {
     const dbFecha = row.fecha_vencimiento && row.fecha_vencimiento !== 'N/A' ? row.fecha_vencimiento : null
     if (dbFecha) {
       vencimientoMode.value = 'Calendario'
-      // Format as YYYY-MM-DD for input type="date"
       vencimientoFecha.value = new Date(dbFecha).toISOString().split('T')[0] || ''
       vencimientoDias.value = null
     } else {
@@ -639,43 +652,49 @@ const handleSubmit = async () => {
   try {
     const fn_vencimiento = calculateFechaVencimiento()
 
-    // Obtener detalles previos si es una edición
-    let detalleOriginal = {}
-    if (isEditing.value) {
-      const row = tableRows.value.find((r: any) => r.id === formData.value.id)
-      if (row && row.raw && row.raw.detalle) {
-        try { detalleOriginal = typeof row.raw.detalle === 'string' ? JSON.parse(row.raw.detalle) : row.raw.detalle }
-        catch (e) { }
-      }
-    }
-
-    // Asignar nueva fecha de vencimiento a los detalles
-    const detalleObj = {
-      ...detalleOriginal,
-      fecha_vencimiento: fn_vencimiento,
-      stock_actual: formData.value.stock_actual
-    }
-
+    // SIMPLIFICAR: En lugar de enviar detalle con stock_actual, 
+    // usa el campo kilogramos directamente
     const payload: any = {
-      ...formData.value,
-      desperdicio: Number(desperdicioKg.value) || 0,
-      detalle: JSON.stringify(detalleObj)
+      nombre: formData.value.nombre.trim(),
+      categoria_id: parseInt(formData.value.categoria_id),
+      proveedor_id: parseInt(formData.value.proveedor_id),
+      stock_minimo: parseFloat(formData.value.stock_minimo) || 0,
+      kilogramos: parseFloat(formData.value.kilogramos) || 0,
+      precio_compra: parseFloat(formData.value.precio_compra) || 0,
+      precio_venta_kg: parseFloat(formData.value.precio_venta_kg) || 0,
+      desperdicio: parseFloat(String(desperdicioKg.value)) || 0,
+    };
+
+    // Solo agregar detalle si hay fecha de vencimiento
+    if (fn_vencimiento) {
+      payload.detalle = JSON.stringify({
+        fecha_vencimiento: fn_vencimiento
+        // NO incluir stock_actual aquí, ya que se usa kilogramos
+      });
+    } else {
+      // Si no hay vencimiento, enviar null o un objeto vacío
+      payload.detalle = null;
     }
-    delete payload.stock_actual // Asegurarse de que no de error SQL de columna inexistente en backend
+
+    console.log('Payload final:', payload);
 
     if (isEditing.value) {
-      await updateProducto(Number(payload.id), payload)
+      const id = Number(formData.value.id);
+      if (!id || isNaN(id) || id <= 0) {
+        throw new Error(`ID inválido: ${formData.value.id}`);
+      }
+      await updateProducto(id, payload);
     } else {
-      await createProducto(payload)
+      await createProducto(payload);
     }
 
-    closeModal()
-    await fetchProductos()
-  } catch (error) {
-    console.error('Error guardando producto:', error)
-    alert('Ocurrió un error al guardar el producto')
+    closeModal();
+    await fetchProductos();
+  } catch (error: any) {
+    console.error('Error guardando producto:', error);
+    alert('Ocurrió un error al guardar el producto: ' + (error.message || ''));
   } finally {
-    formLoading.value = false
+    formLoading.value = false;
   }
 }
 
@@ -710,24 +729,29 @@ const submitStockAdjust = async (row: any) => {
     }
 
     const val = Number(stockAdjustmentValue.value)
-    const currentStock = Number(row.stock_actual) || Number(row.cantidad_disponible)
+    const currentStock = Number(row.stock_actual) || Number(row.cantidad_disponible) || 0
     const newStock = stockAdjustmentType.value === 'add' ? currentStock + val : currentStock - val
+
+    // Actualizar tanto kilogramos como stock_actual en detalle
+    const newKilogramos = stockAdjustmentType.value === 'add' 
+      ? (Number(row.cantidad_disponible) + val) 
+      : (Number(row.cantidad_disponible) - val)
 
     const detalleObj = {
       ...detalleOriginal,
+      fecha_vencimiento: detalleOriginal.fecha_vencimiento || null,
       stock_actual: newStock
     }
 
-    // Construimos el payload de actualización excluyendo el read-only stock_actual de la forma original
     const payload: any = {
       nombre: raw.nombre,
       categoria_id: raw.categoria_id,
       proveedor_id: raw.proveedor_id,
-      stock_minimo: raw.stock_minimo,
-      kilogramos: raw.kilogramos,
-      precio_compra: raw.precio_compra,
-      precio_venta_kg: raw.precio_venta_kg,
-      desperdicio: raw.desperdicio,
+      stock_minimo: raw.stock_minimo || 0,
+      kilogramos: newKilogramos, // Actualizar kilogramos
+      precio_compra: raw.precio_compra || 0,
+      precio_venta_kg: raw.precio_venta_kg || 0,
+      desperdicio: raw.desperdicio || 0,
       detalle: JSON.stringify(detalleObj)
     }
 

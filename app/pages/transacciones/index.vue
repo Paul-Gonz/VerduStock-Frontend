@@ -110,17 +110,30 @@
                         <label class="block text-sm text-gray-500 dark:text-slate-400 mb-2">Producto</label>
                         <div class="flex gap-2">
                             <select v-model="form.producto_id" required
-    class="w-[240px] bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition truncate">
+    class="w-[240px] bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-2 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition truncate"
+    @change="onProductoChange">
     <option value="">Seleccione producto...</option>
     <option v-for="p in listaProductos" :key="p.id" :value="p.id" class="truncate">
         {{ p.nombre }} ({{ (p.kilogramos || 0).toFixed(1) }} kg)
     </option>
 </select>
-<button type="button" @click="abrirModalProducto" 
-    class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-white font-medium transition">
-    +
-</button>
+                            <button type="button" @click="abrirModalProducto" 
+                                class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-white font-medium transition">
+                                +
+                            </button>
                         </div>
+                    </div>
+
+                    <div v-if="form.precio_venta_kg && form.producto_id" 
+                         class="flex items-center gap-2 text-sm p-2 rounded-lg"
+                         :class="form.tipo === 'gasto' ? 'bg-red-50 dark:bg-red-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'">
+                        <span class="text-gray-600 dark:text-slate-400">
+                            Precio por kg ({{ form.tipo === 'gasto' ? 'compra' : 'venta' }}):
+                        </span>
+                        <span class="font-bold" 
+                             :class="form.tipo === 'gasto' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'">
+                            ${{ form.precio_venta_kg.toFixed(2) }}
+                        </span>
                     </div>
 
                     <!-- Cantidad en KG -->
@@ -130,9 +143,11 @@
                         </label>
                         <input v-model.number="form.cantidad" type="number" step="0.001" min="0.001" required
                             class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
-                            placeholder="0.000">
+                            placeholder="0.000"
+                            @input="recalcularMonto">
                         <div v-if="form.cantidad && form.monto && form.producto_id" class="mt-2 text-xs text-gray-500">
-                            Precio por kg: ${{ (form.monto / form.cantidad).toFixed(2) }}
+                            Precio por kg ({{ form.tipo === 'gasto' ? 'compra' : 'venta' }}): 
+                            ${{ (form.monto / form.cantidad).toFixed(2) }}
                         </div>
                     </div>
 
@@ -147,9 +162,19 @@
                     <!-- Proveedor (solo para compras) -->
                     <div v-if="form.tipo === 'gasto'">
                         <label class="block text-sm text-gray-500 dark:text-slate-400 mb-2">Proveedor</label>
-                        <input v-model="form.proveedor" type="text"
-                            class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
-                            placeholder="Nombre del proveedor">
+                        <div class="flex gap-2">
+                            <select v-model="form.proveedor_id" 
+                                class="flex-1 bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition">
+                                <option value="">Seleccione un proveedor...</option>
+                                <option v-for="prov in proveedores" :key="prov.id" :value="prov.id">
+                                    {{ prov.nombre }}
+                                </option>
+                            </select>
+                            <button type="button" @click="abrirModalProveedor" 
+                                class="px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-white font-medium transition">
+                                +
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" :disabled="cargandoMovimiento"
@@ -739,14 +764,84 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para crear proveedor -->
+<div v-if="showModalProveedor" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-[#151e2f] rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200 dark:border-slate-700">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">➕ Nuevo Proveedor</h3>
+            <button @click="showModalProveedor = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form @submit.prevent="guardarProveedor">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                        Nombre del proveedor <span class="text-red-500">*</span>
+                    </label>
+                    <input v-model="nuevoProveedor.nombre" type="text" required
+                        class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Ej. Proveedor XYZ">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                        Teléfono
+                    </label>
+                    <input v-model="nuevoProveedor.telefono" type="text"
+                        class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Ej. 0412-1234567">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                        Dirección
+                    </label>
+                    <input v-model="nuevoProveedor.direccion" type="text"
+                        class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Ej. Calle Principal #123">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                        Detalles / Observaciones
+                    </label>
+                    <textarea v-model="nuevoProveedor.detalle" rows="3"
+                        class="w-full bg-gray-50 dark:bg-[#0f1522] border border-gray-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition resize-none"
+                        placeholder="Información adicional sobre el proveedor..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
+                <button type="button" @click="showModalProveedor = false"
+                    class="flex-1 px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-700 dark:text-slate-300 font-medium transition">
+                    Cancelar
+                </button>
+                <button type="submit" :disabled="guardandoProveedor"
+                    class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <span v-if="guardandoProveedor" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span v-else>Guardar Proveedor</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { useProductos } from '~/composables/useProductos'
+
+
 
 // Estados
 const { api } = useApi()
+const { refreshProductos } = useProductos()
 const cargando = ref(false)
 const cargandoMovimiento = ref(false)
 const cargandoMovimientos = ref(false)
@@ -765,6 +860,9 @@ const eliminando = ref(false)
 const showModalExitoProducto = ref(false)
 const productoRecienCreado = ref('')
 const productoRecienStock = ref(0)
+const showModalProveedor = ref(false)
+const nuevoProveedor = ref({    nombre: '',    telefono: '',    direccion: '',    detalle: ''})
+const guardandoProveedor = ref(false)
 
 // Datos
 const movimientos = ref([])
@@ -779,7 +877,9 @@ const form = ref({
     monto: null,
     cantidad: null,
     producto_id: '',
-    proveedor: ''
+    proveedor: '',
+    proveedor_id: null,
+    precio_venta_kg: null
 })
 
 // Nuevo producto
@@ -828,8 +928,16 @@ const cargarMovimientos = async () => {
 // Cargar productos
 const cargarProductos = async () => {
     try {
-        const response = await api('/productos')
+        await refreshProductos()
+        const response = await api('/productos', {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        })
         listaProductos.value = response.data || (Array.isArray(response) ? response : [])
+        console.log('Productos recargados:', listaProductos.value.length)
     } catch (error) {
         console.error('Error cargando productos:', error)
     }
@@ -901,15 +1009,133 @@ const registrarMovimiento = async () => {
             producto_id: '',
             proveedor: ''
         }
+
+        await refreshProductos()
+
         
+        // IMPORTANTE: Recargar productos después de cada transacción
         await cargarProductos()
+        
+        // También mostrar el stock actualizado en el select
+        console.log('Stock actualizado después de transacción')
         
     } catch (error) {
         console.error('Error registrando movimiento:', error)
-        alert(error.message || 'Error al registrar el movimiento')
+        mensajeError.value = error.message || 'Error al registrar el movimiento'
+        showModalError.value = true
     } finally {
         cargandoMovimiento.value = false
     }
+}
+
+const onProductoChange = () => {
+    if (form.value.producto_id) {
+        const producto = listaProductos.value.find(p => p.id === form.value.producto_id)
+        if (producto) {
+            // Cargar precio según tipo
+            const precio = obtenerPrecioProducto(producto)
+            form.value.precio_venta_kg = precio
+            
+            // Cargar el proveedor del producto (si existe)
+            if (producto.proveedor_id) {
+                form.value.proveedor_id = producto.proveedor_id
+                // También actualizar el nombre del proveedor para el backend
+                const proveedor = proveedores.value.find(p => p.id === producto.proveedor_id)
+                form.value.proveedor = proveedor ? proveedor.nombre : ''
+            } else {
+                form.value.proveedor_id = null
+                form.value.proveedor = ''
+            }
+            
+            if (form.value.cantidad && form.value.cantidad > 0) {
+                form.value.monto = precio * form.value.cantidad
+            }
+            
+            const tipoTexto = form.value.tipo === 'gasto' ? 'compra' : 'venta'
+            console.log(`Precio de ${tipoTexto} de ${producto.nombre}: $${precio} por kg`)
+            if (producto.proveedor_id) {
+                console.log(`Proveedor: ${form.value.proveedor}`)
+            }
+        }
+    } else {
+        form.value.precio_venta_kg = null
+        form.value.proveedor_id = null
+        form.value.proveedor = ''
+    }
+}
+
+// Función para recalcular el monto cuando cambia la cantidad
+const recalcularMonto = () => {
+    if (form.value.cantidad && form.value.cantidad > 0 && form.value.precio_venta_kg) {
+        form.value.monto = form.value.cantidad * form.value.precio_venta_kg
+    }
+}
+
+watch(() => form.value.producto_id, (nuevoId) => {
+    if (nuevoId) {
+        const producto = listaProductos.value.find(p => p.id === nuevoId)
+        if (producto) {
+            const precio = obtenerPrecioProducto(producto)
+            form.value.precio_venta_kg = precio
+            
+            // Cargar el proveedor del producto
+            if (producto.proveedor_id) {
+                form.value.proveedor_id = producto.proveedor_id
+                const proveedor = proveedores.value.find(p => p.id === producto.proveedor_id)
+                form.value.proveedor = proveedor ? proveedor.nombre : ''
+            } else {
+                form.value.proveedor_id = null
+                form.value.proveedor = ''
+            }
+            
+            if (form.value.cantidad && form.value.cantidad > 0) {
+                form.value.monto = precio * form.value.cantidad
+            }
+        }
+    } else {
+        form.value.precio_venta_kg = null
+        form.value.proveedor_id = null
+        form.value.proveedor = ''
+    }
+}, { immediate: true })
+
+// Watcher para cuando cambia el tipo de operación (venta/compra)
+watch(() => form.value.tipo, () => {
+    // Si hay un producto seleccionado, actualizar el precio
+    if (form.value.producto_id) {
+        const producto = listaProductos.value.find(p => p.id === form.value.producto_id)
+        if (producto) {
+            const precio = obtenerPrecioProducto(producto)
+            form.value.precio_venta_kg = precio
+            
+            // Si es compra, cargar el proveedor del producto
+            if (form.value.tipo === 'gasto' && producto.proveedor_id) {
+                form.value.proveedor_id = producto.proveedor_id
+                const proveedor = proveedores.value.find(p => p.id === producto.proveedor_id)
+                form.value.proveedor = proveedor ? proveedor.nombre : ''
+            } else if (form.value.tipo === 'ingreso') {
+                // Para ventas, limpiar el proveedor
+                form.value.proveedor_id = null
+                form.value.proveedor = ''
+            }
+            
+            if (form.value.cantidad && form.value.cantidad > 0) {
+                form.value.monto = precio * form.value.cantidad
+            }
+        }
+    }
+})
+
+const obtenerPrecioProducto = (producto) => {
+    if (!producto) return 0
+    
+    // Si es compra (gasto), usar precio de compra
+    if (form.value.tipo === 'gasto') {
+        return producto.precio_compra || 0
+    }
+    
+    // Si es venta (ingreso), usar precio de venta
+    return producto.precio_venta_kg || producto.precio_venta || 0
 }
 
 // Eliminar movimiento
@@ -927,6 +1153,9 @@ const confirmarEliminacion = async () => {
     try {
         await api(`/movimientos/${movimientoAEliminar.value.id}`, { method: 'DELETE' })
         movimientos.value = movimientos.value.filter(m => m.id !== movimientoAEliminar.value.id)
+        await refreshProductos()
+
+        // Recargar productos después de eliminar
         await cargarProductos()
         showModalEliminar.value = false
         movimientoAEliminar.value = null
@@ -955,7 +1184,9 @@ const confirmarCierre = async () => {
         showModalCierre.value = false
         showModalExito.value = true
         await cargarMovimientos()
+        // Recargar productos después de cerrar el día
         await cargarProductos()
+        await refreshProductos()
     } catch (error) {
         console.error('Error cerrando día:', error)
         mensajeError.value = error.message || 'Error al cerrar el día'
@@ -1210,7 +1441,69 @@ const abrirModalProducto = () => {
     showModalProducto.value = true
 }
 
+const abrirModalProveedor = () => {
+    nuevoProveedor.value = {
+        nombre: '',
+        telefono: '',
+        direccion: '',
+        detalle: ''
+    }
+    showModalProveedor.value = true
+}
 
+
+const guardarProveedor = async () => {
+    if (!nuevoProveedor.value.nombre || nuevoProveedor.value.nombre.trim() === '') {
+        mensajeError.value = 'El nombre del proveedor es requerido'
+        showModalError.value = true
+        return
+    }
+
+    guardandoProveedor.value = true
+    
+    try {
+        // Preparar el payload con todos los campos
+        const payload = {
+            nombre: nuevoProveedor.value.nombre.trim(),
+            telefono: nuevoProveedor.value.telefono?.trim() || null,
+            direccion: nuevoProveedor.value.direccion?.trim() || null,
+            detalle: nuevoProveedor.value.detalle?.trim() || null
+        }
+        
+        console.log('Guardando proveedor:', payload) // Debug
+
+        const response = await api('/proveedores', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+
+        const proveedor = response.data || response
+        
+        // Agregar a la lista de proveedores
+        proveedores.value.push(proveedor)
+        
+        // Seleccionar el proveedor creado
+        form.value.proveedor_id = proveedor.id
+        form.value.proveedor = proveedor.nombre
+        
+        // Cerrar modal
+        showModalProveedor.value = false
+        
+        // Recargar proveedores para asegurar que la lista esté actualizada
+        await cargarProveedores()
+        
+        // Mostrar mensaje de éxito
+        mensajeError.value = '' // Limpiar error
+        console.log('Proveedor creado:', proveedor.nombre)
+        
+    } catch (error) {
+        console.error('Error guardando proveedor:', error)
+        mensajeError.value = error.message || 'Error al guardar el proveedor'
+        showModalError.value = true
+    } finally {
+        guardandoProveedor.value = false
+    }
+}
 
 // Inicialización
 onMounted(async () => {
